@@ -22,7 +22,6 @@ body {
   font-family:
     Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial,
     sans-serif;
-  overflow-x: hidden;
 }
 
 button,
@@ -243,9 +242,6 @@ input:focus {
 
 .table-wrap {
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: auto;
-  touch-action: pan-y;
   border: 1px solid var(--line);
   border-radius: 8px;
 }
