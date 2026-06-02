@@ -6,6 +6,9 @@ create table if not exists public.stock_ledger_state (
 
 alter table public.stock_ledger_state enable row level security;
 
+grant usage on schema public to anon;
+grant select, insert, update on public.stock_ledger_state to anon;
+
 drop policy if exists "stock ledger read" on public.stock_ledger_state;
 drop policy if exists "stock ledger insert" on public.stock_ledger_state;
 drop policy if exists "stock ledger update" on public.stock_ledger_state;
