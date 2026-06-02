@@ -243,6 +243,9 @@ input:focus {
 
 .table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: auto;
+  touch-action: pan-y;
   border: 1px solid var(--line);
   border-radius: 8px;
 }

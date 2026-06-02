@@ -38,7 +38,51 @@ def build_page() -> str:
             f"<script>{js}</script>"
         ),
     )
+    html = html.replace("</body>", f"{frame_height_script()}</body>")
     return html
+
+
+def frame_height_script() -> str:
+    return """
+<script>
+(() => {
+  const sendStreamlitMessage = (type, payload = {}) => {
+    window.parent.postMessage({ isStreamlitMessage: true, type, ...payload }, "*");
+  };
+
+  let lastHeight = 0;
+  const setFrameHeight = () => {
+    const height = Math.ceil(Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.offsetHeight
+    ) + 32);
+
+    if (Math.abs(height - lastHeight) < 8) return;
+    lastHeight = height;
+    sendStreamlitMessage("streamlit:setFrameHeight", { height });
+  };
+
+  sendStreamlitMessage("streamlit:componentReady", { apiVersion: 1 });
+  window.addEventListener("load", setFrameHeight);
+  window.addEventListener("resize", setFrameHeight);
+
+  if ("ResizeObserver" in window) {
+    new ResizeObserver(setFrameHeight).observe(document.body);
+  }
+
+  new MutationObserver(setFrameHeight).observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+  });
+
+  setFrameHeight();
+  [250, 750, 1500, 3000].forEach((delay) => window.setTimeout(setFrameHeight, delay));
+})();
+</script>
+"""
 
 
 def check_password() -> bool:
@@ -67,4 +111,4 @@ def check_password() -> bool:
 st.set_page_config(page_title="Stock Ledger!", page_icon="📒", layout="wide")
 
 if check_password():
-    st.components.v1.html(build_page(), height=5200, scrolling=True)
+    st.components.v1.html(build_page(), height=1800, scrolling=False)
