@@ -67,7 +67,7 @@ const els = {
   emptyTemplate: document.querySelector("#emptyTemplate"),
 };
 
-els.settlementDate.valueAsDate = new Date();
+els.settlementDate.value = formatDateForInput(todayISO());
 
 els.form.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -151,7 +151,8 @@ els.settleBtn.addEventListener("click", () => {
     return;
   }
 
-  const date = els.settlementDate.value || todayISO();
+  const date = parseDateInput(els.settlementDate.value) || todayISO();
+  els.settlementDate.value = formatDateForInput(date);
   let stockTotal = 0;
   let fundTotal = 0;
   let stockCost = 0;
@@ -266,7 +267,7 @@ els.historyList.addEventListener("click", (event) => {
 
   if (action === "save") {
     const card = button.closest("[data-history-card]");
-    const nextDate = card.querySelector("[data-history-field='date']").value || date;
+    const nextDate = parseDateInput(card.querySelector("[data-history-field='date']").value) || date;
     if (nextDate !== date && state.history.some((item) => item.date === nextDate)) {
       setStatus(`${nextDate} 已經有紀錄，請先改成其他日期。`);
       return;
@@ -446,7 +447,7 @@ function renderHistory() {
       node.innerHTML = `
         <label>
           日期
-          <input data-history-field="date" type="date" value="${escapeHTML(item.date)}" />
+          <input data-history-field="date" type="text" inputmode="numeric" autocomplete="off" value="${escapeHTML(formatDateForInput(item.date))}" />
         </label>
         <label>
           股票總和
@@ -1209,7 +1210,28 @@ function formatNumber(value, digits = 0) {
 }
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatDateForInput(value) {
+  const iso = parseDateInput(value);
+  return iso ? iso.replaceAll("-", "/") : "";
+}
+
+function parseDateInput(value) {
+  const text = String(value || "").trim();
+  const match = text.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if (!match) return "";
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return "";
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
 function escapeHTML(value) {

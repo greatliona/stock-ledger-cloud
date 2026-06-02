@@ -329,6 +329,10 @@ tbody tr:last-child td {
   margin-bottom: 14px;
 }
 
+.date-field input {
+  text-align: center;
+}
+
 .settlement-rows {
   display: grid;
   gap: 10px;
@@ -475,7 +479,7 @@ tbody tr:last-child td {
   text-align: right;
 }
 
-.history-item.is-editing input[type="date"] {
+.history-item.is-editing [data-history-field="date"] {
   text-align: left;
 }
 
