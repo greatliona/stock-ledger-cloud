@@ -49,7 +49,6 @@ const els = {
   importBtn: document.querySelector("#importBtn"),
   importFile: document.querySelector("#importFile"),
   exportBtn: document.querySelector("#exportBtn"),
-  clearHistoryBtn: document.querySelector("#clearHistoryBtn"),
   totalValue: document.querySelector("#totalValue"),
   totalCost: document.querySelector("#totalCost"),
   stockTotal: document.querySelector("#stockTotal"),
@@ -260,12 +259,6 @@ els.importFile.addEventListener("change", async () => {
   } finally {
     els.importFile.value = "";
   }
-});
-
-els.clearHistoryBtn.addEventListener("click", () => {
-  if (!confirm("確定清除所有每日結帳紀錄？持股資料會保留。")) return;
-  state.history = [];
-  saveAndRender("已清除結帳紀錄。");
 });
 
 els.historyList.addEventListener("click", (event) => {
@@ -554,7 +547,7 @@ function drawAssetChart() {
 
   const values = history.map((item) => Math.max(toNumber(item.total), toNumber(item.stockTotal) + toNumber(item.fundTotal)));
   const min = 0;
-  const max = Math.ceil(Math.max(...values) / 1000000) * 1000000 || 1000000;
+  const max = Math.ceil(Math.max(...values) / 500000) * 500000 || 500000;
   const range = max - min || Math.max(max, 1);
 
   drawGrid(context, padding, chartWidth, chartHeight, max);
@@ -923,7 +916,7 @@ function drawGrid(context, padding, chartWidth, chartHeight, max) {
   context.strokeStyle = "#dce2dc";
   context.lineWidth = 1;
   context.beginPath();
-  const step = 1000000;
+  const step = 500000;
   for (let value = 0; value <= max; value += step) {
     const y = padding.top + chartHeight - (value / max) * chartHeight;
     context.moveTo(padding.left, y);
@@ -1197,8 +1190,10 @@ function findFund(id) {
 function keyIcon() {
   return `
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="7.5" cy="14.5" r="3.5"></circle>
-      <path d="M10 12l8-8 3 3-2 2 2 2-2 2-2-2-4 4"></path>
+      <circle cx="5" cy="12" r="3"></circle>
+      <path d="M8 12h12"></path>
+      <path d="M16 12v3"></path>
+      <path d="M20 12v4"></path>
     </svg>
   `;
 }
