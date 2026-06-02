@@ -15,6 +15,13 @@ const pieColorFamilies = [
   ["#f3e8ff", "#e9d5ff", "#d8b4fe", "#c4b5fd"],
 ];
 
+const assetChartColors = {
+  stockFill: "#fed7aa",
+  stockLine: "#fb923c",
+  fundFill: "#bfdbfe",
+  fundLine: "#60a5fa",
+};
+
 const chineseNameSorter = new Intl.Collator("zh-Hant-u-co-stroke", {
   numeric: true,
   sensitivity: "base",
@@ -564,11 +571,11 @@ function drawAssetChart() {
   if (points.length === 1) {
     drawSingleStackedColumn(context, points[0], padding, chartWidth, chartHeight);
   } else {
-    fillStackedArea(context, points, padding.top + chartHeight, "stockY", "rgba(37, 99, 235, 0.5)");
-    fillStackedBand(context, points, "totalY", "stockY", "rgba(31, 138, 91, 0.45)");
+    fillStackedArea(context, points, padding.top + chartHeight, "stockY", assetChartColors.stockFill);
+    fillStackedBand(context, points, "totalY", "stockY", assetChartColors.fundFill);
   }
 
-  context.strokeStyle = "#2563eb";
+  context.strokeStyle = assetChartColors.stockLine;
   context.lineWidth = 2;
   context.beginPath();
   points.forEach((point, index) => {
@@ -577,7 +584,7 @@ function drawAssetChart() {
   });
   context.stroke();
 
-  context.strokeStyle = "#1f8a5b";
+  context.strokeStyle = assetChartColors.fundLine;
   context.lineWidth = 2;
   context.beginPath();
   points.forEach((point, index) => {
@@ -588,14 +595,14 @@ function drawAssetChart() {
 
   for (const point of points) {
     context.fillStyle = "#ffffff";
-    context.strokeStyle = "#2563eb";
+    context.strokeStyle = assetChartColors.stockLine;
     context.lineWidth = 2;
     context.beginPath();
     context.arc(point.x, point.stockY, 4, 0, Math.PI * 2);
     context.fill();
     context.stroke();
 
-    context.strokeStyle = "#1f8a5b";
+    context.strokeStyle = assetChartColors.fundLine;
     context.beginPath();
     context.arc(point.x, point.totalY, 4.5, 0, Math.PI * 2);
     context.fill();
@@ -777,22 +784,22 @@ function drawSingleStackedColumn(context, point, padding, chartWidth, chartHeigh
   const columnWidth = Math.min(120, Math.max(54, chartWidth * 0.22));
   const x = point.x - columnWidth / 2;
 
-  context.fillStyle = "rgba(37, 99, 235, 0.5)";
+  context.fillStyle = assetChartColors.stockFill;
   context.fillRect(x, point.stockY, columnWidth, baselineY - point.stockY);
-  context.fillStyle = "rgba(31, 138, 91, 0.45)";
+  context.fillStyle = assetChartColors.fundFill;
   context.fillRect(x, point.totalY, columnWidth, point.stockY - point.totalY);
 
-  context.strokeStyle = "#2563eb";
+  context.strokeStyle = assetChartColors.stockLine;
   context.lineWidth = 1.5;
   context.strokeRect(x, point.stockY, columnWidth, baselineY - point.stockY);
-  context.strokeStyle = "#1f8a5b";
+  context.strokeStyle = assetChartColors.fundLine;
   context.strokeRect(x, point.totalY, columnWidth, point.stockY - point.totalY);
 }
 
 function drawAssetLegend(context, x, y) {
   const items = [
-    { label: "股票", color: "#2563eb" },
-    { label: "基金", color: "#1f8a5b" },
+    { label: "股票", color: assetChartColors.stockFill },
+    { label: "基金", color: assetChartColors.fundFill },
   ];
   context.font = "12px sans-serif";
   context.textAlign = "left";
