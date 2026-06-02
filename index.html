@@ -13,12 +13,6 @@
           <p class="eyebrow">Portfolio Ledger</p>
           <h1>股票記帳本</h1>
         </div>
-        <div class="top-actions">
-          <button id="refreshPricesBtn" class="secondary-btn" type="button">更新現價</button>
-          <button id="importBtn" class="secondary-btn" type="button">匯入資料</button>
-          <button id="exportBtn" class="secondary-btn" type="button">匯出資料</button>
-          <input id="importFile" type="file" accept="application/json,.json" hidden />
-        </div>
       </header>
 
       <section class="summary-grid" aria-label="投資組合摘要">
@@ -191,6 +185,18 @@
           </div>
         </div>
         <canvas id="stockPieChart" height="320"></canvas>
+      </section>
+
+      <section class="backup-tools" aria-label="資料備份">
+        <div>
+          <p class="eyebrow">Backup</p>
+          <h2>資料備份</h2>
+        </div>
+        <div class="backup-actions">
+          <button id="importBtn" class="secondary-btn" type="button">匯入資料</button>
+          <button id="exportBtn" class="secondary-btn" type="button">匯出資料</button>
+          <input id="importFile" type="file" accept="application/json,.json" hidden />
+        </div>
       </section>
     </main>
 

@@ -41,7 +41,8 @@ button {
 
 .topbar,
 .panel-heading,
-.top-actions {
+.backup-tools,
+.backup-actions {
   display: flex;
   align-items: center;
 }
@@ -52,10 +53,23 @@ button {
   margin-bottom: 20px;
 }
 
-.top-actions {
+.backup-actions {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.backup-tools {
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.backup-tools h2 {
+  margin: 2px 0 0;
+  font-size: 1rem;
 }
 
 .eyebrow {
@@ -531,8 +545,13 @@ tbody tr:last-child td {
     flex-direction: column;
   }
 
-  .top-actions,
-  .top-actions button {
+  .backup-tools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .backup-actions,
+  .backup-actions button {
     width: 100%;
   }
 

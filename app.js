@@ -45,7 +45,6 @@ const els = {
   settlementDate: document.querySelector("#settlementDate"),
   settlementRows: document.querySelector("#settlementRows"),
   settleBtn: document.querySelector("#settleBtn"),
-  refreshPricesBtn: document.querySelector("#refreshPricesBtn"),
   importBtn: document.querySelector("#importBtn"),
   importFile: document.querySelector("#importFile"),
   exportBtn: document.querySelector("#exportBtn"),
@@ -200,31 +199,6 @@ els.settleBtn.addEventListener("click", () => {
   state.history.sort((a, b) => a.date.localeCompare(b.date));
 
   saveAndRender(`已記錄 ${date} 的資產總額。`);
-});
-
-els.refreshPricesBtn.addEventListener("click", async () => {
-  if (!state.holdings.length) {
-    setStatus("請先新增股票。");
-    return;
-  }
-
-  setStatus("正在嘗試更新現價...");
-  els.refreshPricesBtn.disabled = true;
-
-  const results = await Promise.allSettled(
-    state.holdings.map(async (holding) => {
-      const quote = await fetchQuote(holding.symbol);
-      if (quote.price !== null) {
-        holding.currentPrice = quote.price;
-        holding.lastUpdated = quote.source;
-      }
-      return quote.price;
-    }),
-  );
-
-  const count = results.filter((item) => item.status === "fulfilled" && item.value !== null).length;
-  els.refreshPricesBtn.disabled = false;
-  saveAndRender(count ? `已更新 ${count} 檔股票現價。` : "抓價失敗，請手動填入現價。");
 });
 
 els.exportBtn.addEventListener("click", () => {
@@ -940,21 +914,6 @@ function drawGrid(context, padding, chartWidth, chartHeight, max) {
     const labelY = value === max ? y + 6 : y;
     context.fillText(value === 0 ? "0" : `${value / 10000}萬`, padding.left - 12, labelY);
   }
-}
-
-async function fetchQuote(symbol) {
-  const stooqSymbol = symbol.toLowerCase().replace(".tw", ".tw").replace(".t", ".jp");
-  const url = `https://stooq.com/q/l/?s=${encodeURIComponent(stooqSymbol)}&f=sd2t2ohlcv&h&e=csv`;
-  const response = await fetch(url);
-  const text = await response.text();
-  const rows = text.trim().split("\n");
-  const fields = rows[1]?.split(",") || [];
-  const close = Number(fields[6]);
-
-  return {
-    price: Number.isFinite(close) ? close : null,
-    source: "自動",
-  };
 }
 
 function getPortfolioTotals() {
