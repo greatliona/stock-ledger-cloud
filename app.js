@@ -6,6 +6,7 @@ const CLOUD_ROW_ID = CLOUD_CONFIG.rowId || "main";
 const state = loadState();
 let cloudClient = null;
 let cloudSaveTimer = null;
+let editingHistoryDate = "";
 
 const pieColorFamilies = [
   ["#dbeafe", "#bfdbfe", "#93c5fd", "#60a5fa"],
@@ -260,6 +261,61 @@ els.clearHistoryBtn.addEventListener("click", () => {
   saveAndRender("已清除結帳紀錄。");
 });
 
+els.historyList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-history-action]");
+  if (!button) return;
+
+  const date = button.dataset.historyDate;
+  const action = button.dataset.historyAction;
+  const record = state.history.find((item) => item.date === date);
+  if (!record) return;
+
+  if (action === "unlock") {
+    editingHistoryDate = date;
+    renderHistory();
+    return;
+  }
+
+  if (action === "cancel") {
+    editingHistoryDate = "";
+    renderHistory();
+    return;
+  }
+
+  if (action === "delete") {
+    if (!confirm(`確定刪除 ${date} 的歷史紀錄？`)) return;
+    state.history = state.history.filter((item) => item.date !== date);
+    editingHistoryDate = "";
+    saveAndRender(`已刪除 ${date} 的歷史紀錄。`);
+    return;
+  }
+
+  if (action === "save") {
+    const card = button.closest("[data-history-card]");
+    const nextDate = card.querySelector("[data-history-field='date']").value || date;
+    if (nextDate !== date && state.history.some((item) => item.date === nextDate)) {
+      setStatus(`${nextDate} 已經有紀錄，請先改成其他日期。`);
+      return;
+    }
+
+    const stockTotal = toNumber(card.querySelector("[data-history-field='stockTotal']").value);
+    const fundTotal = toNumber(card.querySelector("[data-history-field='fundTotal']").value);
+    const stockCost = toNumber(card.querySelector("[data-history-field='stockCost']").value);
+    const fundCost = toNumber(card.querySelector("[data-history-field='fundCost']").value);
+    record.date = nextDate;
+    record.stockTotal = stockTotal;
+    record.fundTotal = fundTotal;
+    record.stockCost = stockCost;
+    record.fundCost = fundCost;
+    record.total = stockTotal + fundTotal;
+    record.cost = stockCost + fundCost;
+    record.pnl = record.total - record.cost;
+    state.history.sort((a, b) => a.date.localeCompare(b.date));
+    editingHistoryDate = "";
+    saveAndRender(`已更新 ${nextDate} 的歷史紀錄。`);
+  }
+});
+
 window.addEventListener("resize", drawCharts);
 
 function render() {
@@ -409,12 +465,49 @@ function renderHistory() {
   for (const item of latest) {
     const node = document.createElement("div");
     node.className = "history-item";
-    node.innerHTML = `
-      <span>${item.date}</span>
-      <strong>${money(item.total)}</strong>
-      <em>股票 ${money(item.stockTotal || 0)} · 基金 ${money(item.fundTotal || 0)}</em>
-      <em>損益 ${signedMoney(item.pnl || 0)}</em>
-    `;
+    node.dataset.historyCard = item.date;
+
+    if (editingHistoryDate === item.date) {
+      node.classList.add("is-editing");
+      node.innerHTML = `
+        <label>
+          日期
+          <input data-history-field="date" type="date" value="${escapeHTML(item.date)}" />
+        </label>
+        <label>
+          股票總和
+          <input data-history-field="stockTotal" type="number" min="0" step="1" value="${toNumber(item.stockTotal)}" />
+        </label>
+        <label>
+          基金總和
+          <input data-history-field="fundTotal" type="number" min="0" step="1" value="${toNumber(item.fundTotal)}" />
+        </label>
+        <label>
+          股票成本
+          <input data-history-field="stockCost" type="number" min="0" step="1" value="${toNumber(item.stockCost)}" />
+        </label>
+        <label>
+          基金成本
+          <input data-history-field="fundCost" type="number" min="0" step="1" value="${toNumber(item.fundCost)}" />
+        </label>
+        <div class="history-actions">
+          <button type="button" data-history-action="save" data-history-date="${escapeHTML(item.date)}">鎖定</button>
+          <button type="button" data-history-action="cancel" data-history-date="${escapeHTML(item.date)}">取消</button>
+          <button type="button" data-history-action="delete" data-history-date="${escapeHTML(item.date)}">刪除</button>
+        </div>
+      `;
+    } else {
+      node.innerHTML = `
+        <div class="history-card-head">
+          <span>${escapeHTML(item.date)}</span>
+          <button type="button" data-history-action="unlock" data-history-date="${escapeHTML(item.date)}">解鎖</button>
+        </div>
+        <strong>${money(item.total)}</strong>
+        <em>股票 ${money(item.stockTotal || 0)} · 基金 ${money(item.fundTotal || 0)}</em>
+        <em>損益 ${signedMoney(item.pnl || 0)}</em>
+      `;
+    }
+
     els.historyList.append(node);
   }
 }

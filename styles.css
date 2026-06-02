@@ -378,11 +378,18 @@ tbody tr:last-child td {
   background: #fbfcfb;
 }
 
+.history-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
 .history-item span {
   display: block;
   color: var(--muted);
   font-size: 0.8rem;
-  margin-bottom: 5px;
 }
 
 .history-item strong {
@@ -396,6 +403,56 @@ tbody tr:last-child td {
   font-size: 0.78rem;
   font-style: normal;
   margin-top: 5px;
+}
+
+.history-card-head button,
+.history-actions button {
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.history-item.is-editing {
+  border-color: rgba(37, 99, 235, 0.45);
+  background: #ffffff;
+}
+
+.history-item.is-editing label {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.history-item.is-editing input {
+  min-height: 34px;
+  padding: 7px 9px;
+  text-align: right;
+}
+
+.history-item.is-editing input[type="date"] {
+  text-align: left;
+}
+
+.history-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.history-actions button:first-child {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: white;
+}
+
+.history-actions button:last-child {
+  color: var(--red);
 }
 
 #stockPieChart {
