@@ -22,6 +22,7 @@ body {
   font-family:
     Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial,
     sans-serif;
+  overflow-x: hidden;
 }
 
 button,
