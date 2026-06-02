@@ -592,6 +592,7 @@ function drawPieChart() {
   const width = rect.width || 320;
   const compactPie = width < 720;
   const height = compactPie ? 620 : Math.max(620, Math.min(760, width * 0.62));
+  canvas.style.height = `${height}px`;
   canvas.width = Math.max(320, Math.floor(width * ratio));
   canvas.height = Math.floor(height * ratio);
   context.scale(ratio, ratio);

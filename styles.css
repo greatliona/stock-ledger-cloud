@@ -499,7 +499,6 @@ tbody tr:last-child td {
 #stockPieChart {
   display: block;
   width: 100%;
-  height: clamp(500px, 58vw, 650px);
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fbfcfb;
