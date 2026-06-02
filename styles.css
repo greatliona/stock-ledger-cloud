@@ -321,30 +321,27 @@ tbody tr:last-child td {
   margin-bottom: 16px;
 }
 
-.settlement-row {
+.settlement-summary {
   display: grid;
-  grid-template-columns: 1fr 118px;
-  gap: 10px;
-  align-items: end;
-  padding: 10px;
+  gap: 8px;
+  padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fbfcfb;
 }
 
-.fund-row {
-  border-color: rgba(31, 138, 91, 0.28);
+.settlement-summary div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.settlement-row strong,
-.settlement-row span {
-  display: block;
-}
-
-.settlement-row span {
+.settlement-summary span {
   color: var(--muted);
-  font-size: 0.8rem;
-  margin-top: 3px;
+}
+
+.settlement-summary strong {
+  white-space: nowrap;
 }
 
 .status-text {
@@ -473,7 +470,9 @@ tbody tr:last-child td {
     padding: 14px;
   }
 
-  .settlement-row {
-    grid-template-columns: 1fr;
+  .settlement-summary div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
   }
 }

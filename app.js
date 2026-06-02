@@ -154,23 +154,17 @@ els.settleBtn.addEventListener("click", () => {
   const fundValues = {};
 
   for (const holding of state.holdings) {
-    const input = document.querySelector(`[data-settle-id="${holding.id}"]`);
-    const manualPrice = toOptionalNumber(input?.value || "");
-    const price = manualPrice ?? holding.currentPrice ?? holding.avgCost;
+    const price = holding.currentPrice ?? holding.avgCost;
     prices[holding.id] = price;
     holding.currentPrice = price;
-    holding.lastUpdated = manualPrice === null ? holding.lastUpdated : "結帳";
     stockTotal += holding.shares * price;
     stockCost += holding.shares * holding.avgCost;
   }
 
   for (const fund of state.funds) {
-    const input = document.querySelector(`[data-fund-settle-id="${fund.id}"]`);
-    const manualValue = toOptionalNumber(input?.value || "");
-    const value = manualValue ?? fund.currentValue ?? 0;
+    const value = fund.currentValue ?? 0;
     fundValues[fund.id] = value;
     fund.currentValue = value;
-    fund.lastUpdated = manualValue === null ? fund.lastUpdated : "結帳";
     fundTotal += value;
     fundCost += fund.cost || 0;
   }
@@ -388,37 +382,24 @@ function renderSettlementRows() {
     return;
   }
 
-  for (const holding of state.holdings) {
-    const row = document.createElement("div");
-    row.className = "settlement-row";
-    row.innerHTML = `
-      <div>
-        <strong>${escapeHTML(holding.symbol)}</strong>
-        <span>${escapeHTML(holding.name || "未命名")} · 目前 ${unitMoney(holding.currentPrice ?? holding.avgCost)}</span>
-      </div>
-      <label>
-        結帳價
-        <input data-settle-id="${holding.id}" type="number" min="0" step="0.01" placeholder="可空白" />
-      </label>
-    `;
-    els.settlementRows.append(row);
-  }
-
-  for (const fund of state.funds) {
-    const row = document.createElement("div");
-    row.className = "settlement-row fund-row";
-    row.innerHTML = `
-      <div>
-        <strong>${escapeHTML(fund.name)}</strong>
-        <span>基金 · 成本 ${money(fund.cost || 0)} · 目前 ${money(fund.currentValue ?? 0)}</span>
-      </div>
-      <label>
-        結帳總額
-        <input data-fund-settle-id="${fund.id}" type="number" min="0" step="0.01" placeholder="可空白" />
-      </label>
-    `;
-    els.settlementRows.append(row);
-  }
+  const totals = getPortfolioTotals();
+  const summary = document.createElement("div");
+  summary.className = "settlement-summary";
+  summary.innerHTML = `
+    <div>
+      <span>股票</span>
+      <strong>${money(totals.stockTotal)}</strong>
+    </div>
+    <div>
+      <span>基金</span>
+      <strong>${money(totals.fundTotal)}</strong>
+    </div>
+    <div>
+      <span>資產總和</span>
+      <strong>${money(totals.value)}</strong>
+    </div>
+  `;
+  els.settlementRows.append(summary);
 }
 
 function renderHistory() {
