@@ -500,7 +500,9 @@ function renderHistory() {
       node.innerHTML = `
         <div class="history-card-head">
           <span>${escapeHTML(item.date)}</span>
-          <button type="button" data-history-action="unlock" data-history-date="${escapeHTML(item.date)}">解鎖</button>
+          <button class="icon-btn" type="button" data-history-action="unlock" data-history-date="${escapeHTML(item.date)}" aria-label="解鎖 ${escapeHTML(item.date)} 歷史紀錄" title="解鎖">
+            ${keyIcon()}
+          </button>
         </div>
         <strong>${money(item.total)}</strong>
         <em>股票 ${money(item.stockTotal || 0)} · 基金 ${money(item.fundTotal || 0)}</em>
@@ -1183,6 +1185,15 @@ function findHolding(id) {
 
 function findFund(id) {
   return state.funds.find((item) => item.id === id);
+}
+
+function keyIcon() {
+  return `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="7.5" cy="14.5" r="3.5"></circle>
+      <path d="M10 12l8-8 3 3-2 2 2 2-2 2-2-2-4 4"></path>
+    </svg>
+  `;
 }
 
 function normalizeSymbol(value) {

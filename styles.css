@@ -380,7 +380,7 @@ tbody tr:last-child td {
 
 .history-card-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 5px;
@@ -405,7 +405,6 @@ tbody tr:last-child td {
   margin-top: 5px;
 }
 
-.history-card-head button,
 .history-actions button {
   min-height: 30px;
   border: 1px solid var(--line);
@@ -413,6 +412,34 @@ tbody tr:last-child td {
   background: white;
   color: var(--ink);
   font-weight: 800;
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--muted);
+}
+
+.icon-btn:hover {
+  color: var(--ink);
+  border-color: rgba(21, 32, 26, 0.35);
+}
+
+.icon-btn svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .history-item.is-editing {
