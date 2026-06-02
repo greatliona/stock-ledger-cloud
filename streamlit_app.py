@@ -1,4 +1,5 @@
 import json
+import hmac
 from pathlib import Path
 
 import streamlit as st
@@ -40,5 +41,30 @@ def build_page() -> str:
     return html
 
 
+def check_password() -> bool:
+    app_config = st.secrets.get("app", {})
+    expected_password = app_config.get("password", "")
+
+    if not expected_password:
+        st.warning("請先在 Streamlit Secrets 設定 app.password。")
+        return False
+
+    if st.session_state.get("password_ok"):
+        return True
+
+    password = st.text_input("請輸入股票記帳本密碼", type="password")
+    if not password:
+        return False
+
+    if hmac.compare_digest(password, expected_password):
+        st.session_state["password_ok"] = True
+        st.rerun()
+
+    st.error("密碼不正確")
+    return False
+
+
 st.set_page_config(page_title="股票記帳本", page_icon="📒", layout="wide")
-st.components.v1.html(build_page(), height=1800, scrolling=True)
+
+if check_password():
+    st.components.v1.html(build_page(), height=1800, scrolling=True)

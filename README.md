@@ -5,6 +5,9 @@
 部署時需要在 Streamlit Cloud 的 Secrets 裡加入：
 
 ```toml
+[app]
+password = "請換成你自己的登入密碼"
+
 [supabase]
 url = "你的 Supabase Project URL"
 anon_key = "你的 Supabase anon key"
