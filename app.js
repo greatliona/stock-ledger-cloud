@@ -889,16 +889,16 @@ function trimCanvasText(context, text, maxWidth) {
 }
 
 function drawGrid(context, padding, chartWidth, chartHeight, max) {
-  context.strokeStyle = "#dce2dc";
   context.lineWidth = 1;
-  context.beginPath();
   const step = 500000;
   for (let value = 0; value <= max; value += step) {
     const y = padding.top + chartHeight - (value / max) * chartHeight;
+    context.strokeStyle = value === 0 ? "#17211c" : "rgba(108, 117, 111, 0.28)";
+    context.beginPath();
     context.moveTo(padding.left, y);
     context.lineTo(padding.left + chartWidth, y);
+    context.stroke();
   }
-  context.stroke();
 
   context.strokeStyle = "#17211c";
   context.beginPath();
@@ -914,8 +914,13 @@ function drawGrid(context, padding, chartWidth, chartHeight, max) {
   for (let value = 0; value <= max; value += step) {
     const y = padding.top + chartHeight - (value / max) * chartHeight;
     const labelY = value === max ? y + 6 : y;
-    context.fillText(value === 0 ? "0" : `${value / 10000}萬`, padding.left - 12, labelY);
+    context.fillText(formatMillionTick(value), padding.left - 12, labelY);
   }
+}
+
+function formatMillionTick(value) {
+  if (!value) return "0";
+  return `${formatNumber(value / 1000000, 1)}M`;
 }
 
 function getPortfolioTotals() {
