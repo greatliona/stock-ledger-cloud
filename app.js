@@ -480,7 +480,8 @@ function renderHistory() {
           </button>
         </div>
         <strong>${money(item.total)}</strong>
-        <em>股票 ${money(item.stockTotal || 0)} · 基金 ${money(item.fundTotal || 0)}</em>
+        <em>股票 ${money(item.stockTotal || 0)}</em>
+        <em>基金 ${money(item.fundTotal || 0)}</em>
         <em>損益 ${signedMoney(item.pnl || 0)}</em>
       `;
     }
@@ -525,8 +526,6 @@ function drawAssetChart() {
   const max = Math.ceil(Math.max(...values) / 500000) * 500000 || 500000;
   const range = max - min || Math.max(max, 1);
 
-  drawGrid(context, padding, chartWidth, chartHeight, max);
-
   const points = history.map((item, index) => {
     const x = padding.left + (history.length === 1 ? chartWidth / 2 : (index / (history.length - 1)) * chartWidth);
     const stockTotal = toNumber(item.stockTotal);
@@ -542,6 +541,8 @@ function drawAssetChart() {
     fillStackedArea(context, points, padding.top + chartHeight, "stockY", assetChartColors.stockFill);
     fillStackedBand(context, points, "totalY", "stockY", assetChartColors.fundFill);
   }
+
+  drawGrid(context, padding, chartWidth, chartHeight, max);
 
   context.strokeStyle = assetChartColors.stockLine;
   context.lineWidth = 2;
