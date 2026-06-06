@@ -235,7 +235,20 @@ input {
   outline: none;
 }
 
-input:focus {
+textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fbfcfb;
+  min-height: 76px;
+  padding: 9px 11px;
+  outline: none;
+}
+
+input:focus,
+textarea:focus {
   border-color: var(--blue);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.13);
 }
@@ -326,6 +339,10 @@ tbody tr:last-child td {
 }
 
 .date-field {
+  margin-bottom: 14px;
+}
+
+.note-field {
   margin-bottom: 14px;
 }
 
@@ -423,6 +440,16 @@ tbody tr:last-child td {
   margin-top: 5px;
 }
 
+.history-note {
+  margin: 9px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
 .history-actions button {
   min-height: 30px;
   border: 1px solid var(--line);
@@ -477,6 +504,11 @@ tbody tr:last-child td {
   min-height: 34px;
   padding: 7px 9px;
   text-align: right;
+}
+
+.history-item.is-editing textarea {
+  min-height: 72px;
+  padding: 7px 9px;
 }
 
 .history-item.is-editing [data-history-field="date"] {

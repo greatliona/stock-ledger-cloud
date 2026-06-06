@@ -43,6 +43,7 @@ const els = {
   holdingsBody: document.querySelector("#holdingsBody"),
   fundsBody: document.querySelector("#fundsBody"),
   settlementDate: document.querySelector("#settlementDate"),
+  settlementNote: document.querySelector("#settlementNote"),
   settlementRows: document.querySelector("#settlementRows"),
   settleBtn: document.querySelector("#settleBtn"),
   importBtn: document.querySelector("#importBtn"),
@@ -178,6 +179,8 @@ els.settleBtn.addEventListener("click", () => {
 
   state.currentFundTotal = fundTotal;
   const existingIndex = state.history.findIndex((item) => item.date === date);
+  const existingRecord = existingIndex >= 0 ? state.history[existingIndex] : null;
+  const note = els.settlementNote.value.trim() || existingRecord?.note || "";
   const total = stockTotal + fundTotal;
   const cost = stockCost + fundCost;
   const record = {
@@ -191,6 +194,7 @@ els.settleBtn.addEventListener("click", () => {
     pnl: total - cost,
     prices,
     fundValues,
+    note,
   };
   if (existingIndex >= 0) {
     state.history[existingIndex] = record;
@@ -198,6 +202,7 @@ els.settleBtn.addEventListener("click", () => {
     state.history.push(record);
   }
   state.history.sort((a, b) => a.date.localeCompare(b.date));
+  els.settlementNote.value = "";
 
   saveAndRender(`已記錄 ${date} 的資產總額。`);
 });
@@ -277,6 +282,7 @@ els.historyList.addEventListener("click", (event) => {
     const fundTotal = toNumber(card.querySelector("[data-history-field='fundTotal']").value);
     const stockCost = toNumber(card.querySelector("[data-history-field='stockCost']").value);
     const fundCost = toNumber(card.querySelector("[data-history-field='fundCost']").value);
+    const note = card.querySelector("[data-history-field='note']").value.trim();
     record.date = nextDate;
     record.stockTotal = stockTotal;
     record.fundTotal = fundTotal;
@@ -285,6 +291,7 @@ els.historyList.addEventListener("click", (event) => {
     record.total = stockTotal + fundTotal;
     record.cost = stockCost + fundCost;
     record.pnl = record.total - record.cost;
+    record.note = note;
     state.history.sort((a, b) => a.date.localeCompare(b.date));
     editingHistoryDate = "";
     saveAndRender(`已更新 ${nextDate} 的歷史紀錄。`);
@@ -465,6 +472,10 @@ function renderHistory() {
           基金成本
           <input data-history-field="fundCost" type="number" min="0" step="1" value="${toNumber(item.fundCost)}" />
         </label>
+        <label>
+          備註
+          <textarea data-history-field="note" rows="3" placeholder="記錄當天事件">${escapeHTML(item.note || "")}</textarea>
+        </label>
         <div class="history-actions">
           <button type="button" data-history-action="save" data-history-date="${escapeHTML(item.date)}">鎖定</button>
           <button type="button" data-history-action="cancel" data-history-date="${escapeHTML(item.date)}">取消</button>
@@ -483,6 +494,7 @@ function renderHistory() {
         <em>股票 ${money(item.stockTotal || 0)}</em>
         <em>基金 ${money(item.fundTotal || 0)}</em>
         <em>損益 ${signedMoney(item.pnl || 0)}</em>
+        ${item.note ? `<p class="history-note">${escapeHTML(item.note)}</p>` : ""}
       `;
     }
 
@@ -1134,6 +1146,7 @@ function migrateState(value) {
         pnl: Number.isFinite(Number(item.pnl)) ? toNumber(item.pnl) : stockTotal + fundTotal - cost,
         prices: item.prices && typeof item.prices === "object" ? item.prices : {},
         fundValues: item.fundValues && typeof item.fundValues === "object" ? item.fundValues : {},
+        note: String(item.note || ""),
       };
     })
     .sort((a, b) => a.date.localeCompare(b.date));
