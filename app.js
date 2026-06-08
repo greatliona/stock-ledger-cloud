@@ -590,12 +590,30 @@ function drawAssetChart() {
     context.stroke();
   }
 
+  context.fillStyle = "#6c756f";
+  context.font = "12px sans-serif";
   context.textAlign = "center";
-  for (const point of points) {
-    context.fillText(point.item.date.slice(5), point.x, height - 18);
-  }
+  context.textBaseline = "top";
+  points.forEach((point, index) => {
+    const previousDate = points[index - 1]?.item.date || "";
+    const label = formatChartDateLabel(point.item.date, index, points[0].item.date, previousDate);
+    context.fillText(label, point.x, padding.top + chartHeight + 22);
+  });
 
   drawAssetLegend(context, padding.left, 24);
+}
+
+function formatChartDateLabel(date, index, firstDate, previousDate) {
+  const current = String(date || "");
+  const [year, month, day] = current.split("-");
+  if (!year || !month || !day) return current.replaceAll("-", "");
+  if (index === 0) return `${year}${month}${day}`;
+
+  const firstYear = String(firstDate || "").slice(0, 4);
+  const previousYear = String(previousDate || "").slice(0, 4);
+  if (year !== firstYear && year !== previousYear) return `${year}${month}${day}`;
+
+  return `${month}${day}`;
 }
 
 function drawPieChart() {
