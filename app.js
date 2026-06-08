@@ -442,9 +442,9 @@ function renderSettlementRows() {
 
 function renderHistory() {
   els.historyList.innerHTML = "";
-  const latest = [...state.history].slice(-8);
+  const historyItems = [...state.history];
 
-  for (const item of latest) {
+  for (const item of historyItems) {
     const node = document.createElement("div");
     node.className = "history-item";
     node.dataset.historyCard = item.date;
