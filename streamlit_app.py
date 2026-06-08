@@ -52,7 +52,7 @@ def check_password() -> bool:
     if st.session_state.get("password_ok"):
         return True
 
-    password = st.text_input("請輸入股票記帳本密碼", type="password")
+    password = st.text_input("Ledger, passwords please!", type="password")
     if not password:
         return False
 
