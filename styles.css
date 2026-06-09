@@ -401,53 +401,61 @@ tbody tr:last-child td {
 
 .history-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 10px;
-  margin-top: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .history-item {
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 11px 12px;
+  padding: 9px 10px;
   background: #fbfcfb;
 }
 
 .history-card-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 5px;
+  gap: 6px;
+  margin-bottom: 4px;
 }
 
 .history-item span {
   display: block;
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.74rem;
 }
 
 .history-item strong {
   display: block;
-  font-size: 1rem;
+  font-size: 0.94rem;
+  line-height: 1.15;
 }
 
 .history-item em {
   display: block;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-style: normal;
-  margin-top: 5px;
+  line-height: 1.25;
+  margin-top: 3px;
 }
 
 .history-note {
-  margin: 9px 0 0;
-  padding-top: 8px;
+  margin: 7px 0 0;
+  padding-top: 7px;
   border-top: 1px solid var(--line);
   color: var(--ink);
-  font-size: 0.8rem;
-  line-height: 1.45;
+  font-size: 0.74rem;
+  line-height: 1.38;
   white-space: pre-wrap;
+}
+
+.history-card-tools {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .history-actions button {
@@ -462,12 +470,12 @@ tbody tr:last-child td {
 .icon-btn {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
+  width: 23px;
+  height: 23px;
+  min-width: 23px;
   padding: 0;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 7px;
   background: white;
   color: var(--muted);
 }
@@ -478,13 +486,32 @@ tbody tr:last-child td {
 }
 
 .icon-btn svg {
-  width: 15px;
-  height: 15px;
+  width: 13px;
+  height: 13px;
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.note-toggle {
+  color: #f2b705;
+  border-color: rgba(242, 183, 5, 0.35);
+  background: #fffaf0;
+}
+
+.note-toggle:hover,
+.note-toggle[aria-expanded="true"] {
+  color: #d99b00;
+  border-color: rgba(217, 155, 0, 0.55);
+  background: #fff4cc;
+}
+
+.note-toggle svg {
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 1.5;
 }
 
 .history-item.is-editing {

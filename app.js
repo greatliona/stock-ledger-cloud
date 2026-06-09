@@ -250,6 +250,16 @@ els.historyList.addEventListener("click", (event) => {
   const record = state.history.find((item) => item.date === date);
   if (!record) return;
 
+  if (action === "toggle-note") {
+    const card = button.closest("[data-history-card]");
+    const note = card?.querySelector("[data-history-note]");
+    if (!note) return;
+    const isOpen = note.hidden;
+    note.hidden = !isOpen;
+    button.setAttribute("aria-expanded", String(isOpen));
+    return;
+  }
+
   if (action === "unlock") {
     editingHistoryDate = date;
     renderHistory();
@@ -483,18 +493,26 @@ function renderHistory() {
         </div>
       `;
     } else {
+      const noteId = `history-note-${escapeHTML(item.date)}`;
       node.innerHTML = `
         <div class="history-card-head">
           <span>${escapeHTML(item.date)}</span>
-          <button class="icon-btn" type="button" data-history-action="unlock" data-history-date="${escapeHTML(item.date)}" aria-label="解鎖 ${escapeHTML(item.date)} 歷史紀錄" title="解鎖">
-            ${keyIcon()}
-          </button>
+          <div class="history-card-tools">
+            ${item.note ? `
+              <button class="icon-btn note-toggle" type="button" data-history-action="toggle-note" data-history-date="${escapeHTML(item.date)}" aria-label="查看 ${escapeHTML(item.date)} 重要事件" aria-expanded="false" aria-controls="${noteId}" title="重要事件">
+                ${starIcon()}
+              </button>
+            ` : ""}
+            <button class="icon-btn" type="button" data-history-action="unlock" data-history-date="${escapeHTML(item.date)}" aria-label="解鎖 ${escapeHTML(item.date)} 歷史紀錄" title="解鎖">
+              ${keyIcon()}
+            </button>
+          </div>
         </div>
         <strong>${money(item.total)}</strong>
         <em>股票 ${money(item.stockTotal || 0)}</em>
         <em>基金 ${money(item.fundTotal || 0)}</em>
         <em>損益 ${signedMoney(item.pnl || 0)}</em>
-        ${item.note ? `<p class="history-note">${escapeHTML(item.note)}</p>` : ""}
+        ${item.note ? `<p class="history-note" id="${noteId}" data-history-note hidden>${escapeHTML(item.note)}</p>` : ""}
       `;
     }
 
@@ -1192,6 +1210,14 @@ function keyIcon() {
       <path d="M8 12h12"></path>
       <path d="M16 12v3"></path>
       <path d="M20 12v4"></path>
+    </svg>
+  `;
+}
+
+function starIcon() {
+  return `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 2.8l2.7 5.6 6.2.9-4.5 4.4 1.1 6.2-5.5-2.9-5.5 2.9 1.1-6.2-4.5-4.4 6.2-.9L12 2.8z"></path>
     </svg>
   `;
 }
