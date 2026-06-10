@@ -641,7 +641,9 @@ function drawPieChart() {
   const rect = canvas.getBoundingClientRect();
   const width = rect.width || 320;
   const compactPie = width < 720;
-  const height = compactPie ? 620 : Math.max(620, Math.min(760, width * 0.62));
+  const chartHeight = compactPie ? 620 : Math.max(620, Math.min(760, width * 0.62));
+  const summaryHeight = compactPie ? 58 : 52;
+  const height = chartHeight + summaryHeight;
   canvas.style.height = `${height}px`;
   canvas.width = Math.max(320, Math.floor(width * ratio));
   canvas.height = Math.floor(height * ratio);
@@ -676,9 +678,9 @@ function drawPieChart() {
   }
 
   const labelRoom = compactPie ? 72 : 180;
-  const radius = compactPie ? Math.min((width - labelRoom * 2) / 2, 92) : Math.min((width - labelRoom * 2) / 2, height * 0.34, 210);
+  const radius = compactPie ? Math.min((width - labelRoom * 2) / 2, 92) : Math.min((width - labelRoom * 2) / 2, chartHeight * 0.34, 210);
   const centerX = width / 2;
-  const centerY = height / 2;
+  const centerY = chartHeight / 2;
   let start = -Math.PI / 2;
 
   for (const slice of slices) {
@@ -723,8 +725,8 @@ function drawPieChart() {
     }
   }
 
-  drawOutsidePieLabels(context, outsideLabels, centerX, radius, height, compactPie);
-  drawPieGroupSummary(context, buildPieGroupSummary(slices, groupNames, total), width, height, compactPie);
+  drawOutsidePieLabels(context, outsideLabels, centerX, radius, chartHeight, compactPie);
+  drawPieGroupSummary(context, buildPieGroupSummary(slices, groupNames, total), width, chartHeight, summaryHeight, compactPie);
 }
 
 function getHoldingGroupName(holding) {
@@ -919,16 +921,13 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height, compactP
   }
 }
 
-function drawPieGroupSummary(context, rows, width, height, compactPie) {
+function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, compactPie) {
   if (!rows.length) return;
 
-  const panelWidth = compactPie ? Math.min(width - 36, 260) : 280;
-  const rowHeight = compactPie ? 16 : 18;
-  const panelPadding = compactPie ? 10 : 12;
-  const titleHeight = 18;
-  const panelHeight = panelPadding * 2 + titleHeight + rows.length * rowHeight;
-  const x = compactPie ? 18 : width - panelWidth - 28;
-  const y = height - panelHeight - (compactPie ? 18 : 26);
+  const x = 18;
+  const y = chartHeight + 8;
+  const panelWidth = width - 36;
+  const panelHeight = summaryHeight - 16;
 
   context.fillStyle = "rgba(255, 255, 255, 0.88)";
   context.strokeStyle = "rgba(220, 226, 220, 0.95)";
@@ -937,24 +936,34 @@ function drawPieGroupSummary(context, rows, width, height, compactPie) {
   context.strokeRect(x, y, panelWidth, panelHeight);
 
   context.fillStyle = "#6c756f";
-  context.font = compactPie ? "700 10px sans-serif" : "700 11px sans-serif";
+  context.font = compactPie ? "700 9.5px sans-serif" : "700 10.5px sans-serif";
   context.textAlign = "left";
   context.textBaseline = "middle";
-  context.fillText("中文股名小計", x + panelPadding, y + panelPadding + 6);
+  let cursorX = x + 12;
+  const centerY = y + panelHeight / 2;
+  const title = "中文股名小計";
+  context.fillText(title, cursorX, centerY);
+  cursorX += context.measureText(title).width + 18;
 
-  context.font = compactPie ? "700 9.5px sans-serif" : "700 10px sans-serif";
-  rows.forEach((row, index) => {
-    const rowY = y + panelPadding + titleHeight + index * rowHeight + rowHeight / 2;
+  context.font = compactPie ? "700 8.5px sans-serif" : "700 10px sans-serif";
+  for (const row of rows) {
     const label = `${row.group}: ${money(row.value)} ${formatNumber(row.percent)}%`;
+    const itemWidth = 14 + context.measureText(label).width + 18;
+    if (cursorX + itemWidth > x + panelWidth - 10) {
+      context.fillStyle = "#8a928d";
+      context.fillText("...", cursorX, centerY);
+      break;
+    }
 
     context.fillStyle = row.color;
-    context.fillRect(x + panelPadding, rowY - 5, 9, 9);
+    context.fillRect(cursorX, centerY - 5, 9, 9);
     context.strokeStyle = "rgba(23, 33, 28, 0.25)";
-    context.strokeRect(x + panelPadding, rowY - 5, 9, 9);
+    context.strokeRect(cursorX, centerY - 5, 9, 9);
 
     context.fillStyle = "#17211c";
-    context.fillText(trimCanvasText(context, label, panelWidth - panelPadding * 2 - 15), x + panelPadding + 15, rowY);
-  });
+    context.fillText(label, cursorX + 14, centerY);
+    cursorX += itemWidth;
+  }
 }
 
 function drawPieLabelLines(context, lines, x, y, lineHeight) {
