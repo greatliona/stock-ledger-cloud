@@ -709,10 +709,10 @@ function drawPieChart() {
       const x = centerX + Math.cos(mid) * labelRadius;
       const y = centerY + Math.sin(mid) * labelRadius;
       context.fillStyle = "#17211c";
-      context.font = compactPie ? "700 8.5px sans-serif" : "700 14px sans-serif";
+      context.font = compactPie ? "700 8.5px sans-serif" : "700 13px sans-serif";
       context.textAlign = "center";
       context.textBaseline = "middle";
-      drawPieLabelLines(context, lines, x, y, compactPie ? 10 : 16);
+      drawPieLabelLines(context, lines, x, y, compactPie ? 10 : 15);
     } else {
       outsideLabels.push({
         lines,
@@ -914,10 +914,10 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height, compactP
       context.stroke();
 
       context.fillStyle = "#17211c";
-      context.font = compactPie ? "700 8.5px sans-serif" : "700 14px sans-serif";
+      context.font = compactPie ? "700 8.5px sans-serif" : "700 13px sans-serif";
       context.textAlign = side === "right" ? "left" : "right";
       context.textBaseline = "middle";
-      drawPieLabelLines(context, label.lines, textX, label.y, compactPie ? 10 : 16);
+      drawPieLabelLines(context, label.lines, textX, label.y, compactPie ? 10 : 15);
     }
   }
 }
@@ -937,7 +937,7 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
   context.strokeRect(x, y, panelWidth, panelHeight);
 
   context.fillStyle = "#6c756f";
-  context.font = compactPie ? "700 17.5px sans-serif" : "700 18.5px sans-serif";
+  context.font = compactPie ? "700 15.5px sans-serif" : "700 16.5px sans-serif";
   context.textAlign = "left";
   context.textBaseline = "middle";
   let cursorX = x + 12;
@@ -946,7 +946,7 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
   context.fillText(title, cursorX, centerY);
   cursorX += context.measureText(title).width + 18;
 
-  context.font = compactPie ? "700 16.5px sans-serif" : "700 18px sans-serif";
+  context.font = compactPie ? "700 14.5px sans-serif" : "700 16px sans-serif";
   for (const row of rows) {
     const label = `${row.group}: ${money(row.value)} ${formatNumber(row.percent)}%`;
     const itemWidth = 14 + context.measureText(label).width + 18;
