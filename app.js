@@ -706,8 +706,8 @@ function drawPieChart() {
     return;
   }
 
-  const labelRoom = compactPie ? 72 : 180;
-  const radius = compactPie ? Math.min((width - labelRoom * 2) / 2, 92) : Math.min((width - labelRoom * 2) / 2, chartHeight * 0.34, 210);
+  const labelRoom = compactPie ? 88 : 180;
+  const radius = compactPie ? Math.min((width - labelRoom * 2) / 2, 76) : Math.min((width - labelRoom * 2) / 2, chartHeight * 0.34, 210);
   const centerX = width / 2;
   const centerY = chartHeight / 2;
   let start = -Math.PI / 2;
@@ -755,7 +755,11 @@ function drawPieChart() {
     }
   }
 
-  drawOutsidePieLabels(context, outsideLabels, centerX, radius, chartHeight, compactPie, width);
+  if (compactPie) {
+    drawMobileOutsidePieLabels(context, outsideLabels, centerX, centerY, radius, chartHeight, width);
+  } else {
+    drawOutsidePieLabels(context, outsideLabels, centerX, radius, chartHeight);
+  }
   drawPieGroupSummary(context, buildPieGroupSummary(slices, groupNames, total), width, chartHeight, summaryHeight, compactPie);
 }
 
@@ -905,10 +909,64 @@ function drawWrappedLabel(context, text, x, y, maxWidth, lineHeight) {
   lines.forEach((line, index) => context.fillText(line, x, y - offset + index * lineHeight));
 }
 
-function drawOutsidePieLabels(context, labels, centerX, radius, height, compactPie = false, width = 0) {
-  const minGap = compactPie ? 42 : 54;
-  const top = compactPie ? 38 : 48;
-  const bottom = height - (compactPie ? 38 : 48);
+function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, height, width) {
+  const minGap = 46;
+  const top = Math.max(54, centerY - radius - 96);
+  const bottom = Math.min(height - 44, centerY + radius + 142);
+  const lineHeight = 10;
+  const markerSize = 7;
+
+  for (const side of ["left", "right"]) {
+    const sideLabels = labels
+      .filter((label) => label.side === side)
+      .sort((a, b) => a.targetY - b.targetY);
+    let previousY = top - minGap;
+
+    for (const label of sideLabels) {
+      label.y = Math.min(bottom, Math.max(label.targetY, previousY + minGap));
+      previousY = label.y;
+    }
+
+    for (let index = sideLabels.length - 2; index >= 0; index -= 1) {
+      const next = sideLabels[index + 1];
+      const current = sideLabels[index];
+      current.y = Math.min(current.y, next.y - minGap);
+      current.y = Math.max(top, current.y);
+    }
+
+    for (const label of sideLabels) {
+      const direction = side === "right" ? 1 : -1;
+      const textX = side === "right" ? width - 74 : 74;
+      const markerX = textX - direction * 9;
+      const markerY = label.y - lineHeight;
+      const elbowX = centerX + direction * (radius + 10);
+
+      context.strokeStyle = "rgba(23, 33, 28, 0.55)";
+      context.lineWidth = 0.9;
+      context.beginPath();
+      context.moveTo(label.anchorX, label.anchorY);
+      context.lineTo(elbowX, markerY);
+      context.lineTo(markerX, markerY);
+      context.stroke();
+
+      context.fillStyle = label.color;
+      context.fillRect(markerX - markerSize / 2, markerY - markerSize / 2, markerSize, markerSize);
+      context.strokeStyle = "rgba(23, 33, 28, 0.25)";
+      context.strokeRect(markerX - markerSize / 2, markerY - markerSize / 2, markerSize, markerSize);
+
+      context.fillStyle = "#17211c";
+      context.font = "700 8.5px sans-serif";
+      context.textAlign = side === "right" ? "left" : "right";
+      context.textBaseline = "middle";
+      drawPieLabelLines(context, label.lines, textX, label.y, lineHeight);
+    }
+  }
+}
+
+function drawOutsidePieLabels(context, labels, centerX, radius, height) {
+  const minGap = 54;
+  const top = 48;
+  const bottom = height - 48;
 
   for (const side of ["left", "right"]) {
     const sideLabels = labels
@@ -932,13 +990,11 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height, compactP
       const direction = side === "right" ? 1 : -1;
       const lineStartX = label.anchorX;
       const lineStartY = label.anchorY;
-      const elbowX = centerX + direction * (radius + (compactPie ? 14 : 30));
-      const textX = compactPie
-        ? (side === "right" ? width - 92 : 92)
-        : centerX + direction * (radius + 66);
-      const markerSize = compactPie ? 7 : 8;
-      const markerX = textX - direction * (compactPie ? 10 : 12);
-      const markerY = compactPie ? label.y - 10 : label.y;
+      const elbowX = centerX + direction * (radius + 30);
+      const textX = centerX + direction * (radius + 66);
+      const markerSize = 8;
+      const markerX = textX - direction * 12;
+      const markerY = label.y;
 
       context.strokeStyle = "rgba(23, 33, 28, 0.55)";
       context.lineWidth = 0.9;
@@ -954,10 +1010,10 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height, compactP
       context.strokeRect(markerX - markerSize / 2, markerY - markerSize / 2, markerSize, markerSize);
 
       context.fillStyle = "#17211c";
-      context.font = compactPie ? "700 8.5px sans-serif" : "700 11.5px sans-serif";
+      context.font = "700 11.5px sans-serif";
       context.textAlign = side === "right" ? "left" : "right";
       context.textBaseline = "middle";
-      drawPieLabelLines(context, label.lines, textX, label.y, compactPie ? 10 : 14);
+      drawPieLabelLines(context, label.lines, textX, label.y, 14);
     }
   }
 }
