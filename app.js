@@ -922,13 +922,20 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height, compactP
       const lineStartY = label.anchorY;
       const elbowX = centerX + direction * (radius + (compactPie ? 14 : 30));
       const textX = centerX + direction * (radius + (compactPie ? 22 : 46));
+      const lineEndX = textX - direction * 4;
 
       context.strokeStyle = "rgba(23, 33, 28, 0.55)";
       context.lineWidth = 0.9;
       context.beginPath();
       context.moveTo(lineStartX, lineStartY);
       context.lineTo(elbowX, label.y);
-      context.lineTo(textX - direction * 4, label.y);
+      context.lineTo(lineEndX, label.y);
+      context.stroke();
+
+      context.fillStyle = "#ffffff";
+      context.beginPath();
+      context.arc(lineEndX, label.y, 2.1, 0, Math.PI * 2);
+      context.fill();
       context.stroke();
 
       context.fillStyle = "#17211c";
