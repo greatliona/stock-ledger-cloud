@@ -401,6 +401,36 @@ tbody tr:last-child td {
   background: linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
 }
 
+.history-details {
+  margin-top: 12px;
+}
+
+.history-details summary {
+  cursor: pointer;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fbfcfb;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.history-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.history-details summary::after {
+  content: "展開";
+  float: right;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.history-details[open] summary::after {
+  content: "收合";
+}
+
 .history-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

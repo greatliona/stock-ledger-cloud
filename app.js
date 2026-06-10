@@ -744,7 +744,7 @@ function drawPieChart() {
     }
   }
 
-  drawOutsidePieLabels(context, outsideLabels, centerX, radius, chartHeight, compactPie);
+  drawOutsidePieLabels(context, outsideLabels, centerX, radius, chartHeight, compactPie, width);
   drawPieGroupSummary(context, buildPieGroupSummary(slices, groupNames, total), width, chartHeight, summaryHeight, compactPie);
 }
 
@@ -894,7 +894,7 @@ function drawWrappedLabel(context, text, x, y, maxWidth, lineHeight) {
   lines.forEach((line, index) => context.fillText(line, x, y - offset + index * lineHeight));
 }
 
-function drawOutsidePieLabels(context, labels, centerX, radius, height, compactPie = false) {
+function drawOutsidePieLabels(context, labels, centerX, radius, height, compactPie = false, width = 0) {
   const minGap = compactPie ? 38 : 54;
   const top = compactPie ? 38 : 48;
   const bottom = height - (compactPie ? 38 : 48);
@@ -922,7 +922,9 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height, compactP
       const lineStartX = label.anchorX;
       const lineStartY = label.anchorY;
       const elbowX = centerX + direction * (radius + (compactPie ? 14 : 30));
-      const textX = centerX + direction * (radius + (compactPie ? 34 : 66));
+      const textX = compactPie
+        ? (side === "right" ? width - 86 : 86)
+        : centerX + direction * (radius + 66);
       const lineEndX = textX - direction * (compactPie ? 9 : 12);
 
       context.strokeStyle = "rgba(23, 33, 28, 0.55)";
