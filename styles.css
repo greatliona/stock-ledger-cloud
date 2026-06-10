@@ -172,10 +172,12 @@ h2 {
 
 .profit-card em {
   display: block;
-  font-size: 1rem;
+  font-size: clamp(1.12rem, 1.55vw, 1.48rem);
+  line-height: 1.12;
   font-style: normal;
   font-weight: 800;
-  margin-top: 9px;
+  margin-bottom: 9px;
+  white-space: nowrap;
 }
 
 .workspace {
