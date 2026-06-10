@@ -910,8 +910,9 @@ function drawWrappedLabel(context, text, x, y, maxWidth, lineHeight) {
 }
 
 function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, height, width) {
-  const top = Math.max(54, centerY - radius - 128);
-  const bottom = Math.min(height - 34, centerY + radius + 190);
+  const minGap = 48;
+  const top = Math.max(54, centerY - radius - 98);
+  const bottom = Math.min(height - 44, centerY + radius + 124);
   const lineHeight = 10;
   const markerSize = 7;
 
@@ -919,17 +920,33 @@ function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, h
     const sideLabels = labels
       .filter((label) => label.side === side)
       .sort((a, b) => a.targetY - b.targetY);
-    const spread = sideLabels.length > 1 ? (bottom - top) / (sideLabels.length - 1) : 0;
+    let previousY = top - minGap;
 
-    for (let index = 0; index < sideLabels.length; index += 1) {
-      const label = sideLabels[index];
-      const slotY = sideLabels.length > 1 ? top + spread * index : label.targetY;
-      label.y = Math.min(bottom, Math.max(top, slotY));
+    for (const label of sideLabels) {
+      const targetY = Math.min(bottom, Math.max(top, label.targetY));
+      label.y = Math.max(targetY, previousY + minGap);
+      previousY = label.y;
+    }
+
+    const last = sideLabels[sideLabels.length - 1];
+    if (last && last.y > bottom) {
+      const overflow = last.y - bottom;
+      for (const label of sideLabels) {
+        label.y -= overflow;
+      }
+    }
+
+    for (let index = 1; index < sideLabels.length; index += 1) {
+      const previous = sideLabels[index - 1];
+      const current = sideLabels[index];
+      if (current.y - previous.y < minGap) {
+        current.y = previous.y + minGap;
+      }
     }
 
     for (const label of sideLabels) {
       const direction = side === "right" ? 1 : -1;
-      const textX = side === "right" ? width - 64 : 78;
+      const textX = side === "right" ? width - 58 : 72;
       const markerX = textX - direction * 9;
       const markerY = label.y - lineHeight;
       const elbowX = centerX + direction * (radius + 10);
