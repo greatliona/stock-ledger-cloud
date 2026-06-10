@@ -408,12 +408,11 @@ tbody tr:last-child td {
 .history-details summary {
   cursor: pointer;
   list-style: none;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: #fbfcfb;
-  color: var(--ink);
+  color: var(--blue);
+  font-size: 0.75rem;
   font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .history-details summary::-webkit-details-marker {
@@ -425,6 +424,7 @@ tbody tr:last-child td {
   float: right;
   color: var(--muted);
   font-size: 0.78rem;
+  text-transform: none;
 }
 
 .history-details[open] summary::after {

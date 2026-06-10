@@ -554,9 +554,12 @@ function drawAssetChart() {
 
   const width = rect.width;
   const height = 340;
+  const compactChart = width < 720;
   context.clearRect(0, 0, width, height);
 
-  const padding = { top: 54, right: 30, bottom: 50, left: 76 };
+  const padding = compactChart
+    ? { top: 54, right: 18, bottom: 50, left: 54 }
+    : { top: 54, right: 30, bottom: 50, left: 76 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const history = state.history;
@@ -627,16 +630,24 @@ function drawAssetChart() {
   }
 
   context.fillStyle = "#6c756f";
-  context.font = "12px sans-serif";
+  context.font = compactChart ? "10px sans-serif" : "12px sans-serif";
   context.textAlign = "center";
   context.textBaseline = "top";
   points.forEach((point, index) => {
+    if (!shouldDrawChartDateLabel(index, points.length, compactChart)) return;
     const previousDate = points[index - 1]?.item.date || "";
     const label = formatChartDateLabel(point.item.date, index, points[0].item.date, previousDate);
     context.fillText(label, point.x, padding.top + chartHeight + 22);
   });
 
   drawAssetLegend(context, padding.left, 24);
+}
+
+function shouldDrawChartDateLabel(index, total, compactChart) {
+  if (!compactChart || total <= 4) return true;
+  if (index === 0 || index === total - 1) return true;
+  const step = Math.ceil((total - 2) / 2);
+  return index % step === 0;
 }
 
 function formatChartDateLabel(date, index, firstDate, previousDate) {
@@ -935,11 +946,13 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height, compactP
       context.lineTo(lineEndX, label.y);
       context.stroke();
 
-      const markerSize = compactPie ? 6 : 8;
-      context.fillStyle = label.color;
-      context.fillRect(lineEndX - markerSize / 2, label.y - markerSize / 2, markerSize, markerSize);
-      context.strokeStyle = "rgba(23, 33, 28, 0.25)";
-      context.strokeRect(lineEndX - markerSize / 2, label.y - markerSize / 2, markerSize, markerSize);
+      if (!compactPie) {
+        const markerSize = 8;
+        context.fillStyle = label.color;
+        context.fillRect(lineEndX - markerSize / 2, label.y - markerSize / 2, markerSize, markerSize);
+        context.strokeStyle = "rgba(23, 33, 28, 0.25)";
+        context.strokeRect(lineEndX - markerSize / 2, label.y - markerSize / 2, markerSize, markerSize);
+      }
 
       context.fillStyle = "#17211c";
       context.font = compactPie ? "700 8.5px sans-serif" : "700 11.5px sans-serif";
