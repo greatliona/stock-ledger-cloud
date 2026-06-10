@@ -937,19 +937,19 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
   context.strokeRect(x, y, panelWidth, panelHeight);
 
   context.fillStyle = "#6c756f";
-  context.font = compactPie ? "700 14.5px sans-serif" : "700 15.5px sans-serif";
+  context.font = compactPie ? "700 12px sans-serif" : "700 13px sans-serif";
   context.textAlign = "left";
   context.textBaseline = "middle";
   let cursorX = x + 12;
   const centerY = y + panelHeight / 2;
   const title = "中文股名小計";
   context.fillText(title, cursorX, centerY);
-  cursorX += context.measureText(title).width + 18;
+  cursorX += context.measureText(title).width + 12;
 
-  context.font = compactPie ? "700 13.5px sans-serif" : "700 15px sans-serif";
+  context.font = compactPie ? "700 11px sans-serif" : "700 12px sans-serif";
   for (const row of rows) {
     const label = `${row.group}: ${money(row.value)} ${formatNumber(row.percent)}%`;
-    const itemWidth = 14 + context.measureText(label).width + 18;
+    const itemWidth = 12 + context.measureText(label).width + 10;
     if (cursorX + itemWidth > x + panelWidth - 10) {
       context.fillStyle = "#8a928d";
       context.fillText("...", cursorX, centerY);
@@ -957,12 +957,12 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
     }
 
     context.fillStyle = row.color;
-    context.fillRect(cursorX, centerY - 5, 9, 9);
+    context.fillRect(cursorX, centerY - 4, 8, 8);
     context.strokeStyle = "rgba(23, 33, 28, 0.25)";
-    context.strokeRect(cursorX, centerY - 5, 9, 9);
+    context.strokeRect(cursorX, centerY - 4, 8, 8);
 
     context.fillStyle = "#17211c";
-    context.fillText(label, cursorX + 14, centerY);
+    context.fillText(label, cursorX + 12, centerY);
     cursorX += itemWidth;
   }
 }
