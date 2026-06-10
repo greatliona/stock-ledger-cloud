@@ -770,7 +770,7 @@ function buildPieGroupSummary(slices, groupNames, total) {
       percent: total ? (summary.get(group) / total) * 100 : 0,
       color: getPieGroupBaseColor(group, groupNames),
     }))
-    .sort((a, b) => a.value - b.value || chineseNameSorter.compare(a.group, b.group));
+    .sort((a, b) => b.value - a.value || chineseNameSorter.compare(a.group, b.group));
 }
 
 function getPieGroupBaseColor(group, groupNames) {
