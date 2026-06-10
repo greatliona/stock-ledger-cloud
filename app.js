@@ -910,9 +910,8 @@ function drawWrappedLabel(context, text, x, y, maxWidth, lineHeight) {
 }
 
 function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, height, width) {
-  const minGap = 46;
-  const top = Math.max(54, centerY - radius - 96);
-  const bottom = Math.min(height - 44, centerY + radius + 142);
+  const top = Math.max(54, centerY - radius - 128);
+  const bottom = Math.min(height - 34, centerY + radius + 190);
   const lineHeight = 10;
   const markerSize = 7;
 
@@ -920,23 +919,17 @@ function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, h
     const sideLabels = labels
       .filter((label) => label.side === side)
       .sort((a, b) => a.targetY - b.targetY);
-    let previousY = top - minGap;
+    const spread = sideLabels.length > 1 ? (bottom - top) / (sideLabels.length - 1) : 0;
 
-    for (const label of sideLabels) {
-      label.y = Math.min(bottom, Math.max(label.targetY, previousY + minGap));
-      previousY = label.y;
-    }
-
-    for (let index = sideLabels.length - 2; index >= 0; index -= 1) {
-      const next = sideLabels[index + 1];
-      const current = sideLabels[index];
-      current.y = Math.min(current.y, next.y - minGap);
-      current.y = Math.max(top, current.y);
+    for (let index = 0; index < sideLabels.length; index += 1) {
+      const label = sideLabels[index];
+      const slotY = sideLabels.length > 1 ? top + spread * index : label.targetY;
+      label.y = Math.min(bottom, Math.max(top, slotY));
     }
 
     for (const label of sideLabels) {
       const direction = side === "right" ? 1 : -1;
-      const textX = side === "right" ? width - 74 : 74;
+      const textX = side === "right" ? width - 64 : 78;
       const markerX = textX - direction * 9;
       const markerY = label.y - lineHeight;
       const elbowX = centerX + direction * (radius + 10);
