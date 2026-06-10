@@ -724,6 +724,7 @@ function drawPieChart() {
   }
 
   drawOutsidePieLabels(context, outsideLabels, centerX, radius, height, compactPie);
+  drawPieGroupSummary(context, buildPieGroupSummary(slices, groupNames, total), width, height, compactPie);
 }
 
 function getHoldingGroupName(holding) {
@@ -751,6 +752,28 @@ function assignPieGroupOrder(groupNames) {
     const rankB = preferredB >= 0 ? preferredB : preferred.length + groupNames.indexOf(b);
     return rankA - rankB;
   });
+}
+
+function buildPieGroupSummary(slices, groupNames, total) {
+  const summary = new Map();
+  for (const slice of slices) {
+    const current = summary.get(slice.group) || 0;
+    summary.set(slice.group, current + slice.value);
+  }
+  return groupNames
+    .filter((group) => summary.has(group))
+    .map((group) => ({
+      group,
+      value: summary.get(group),
+      percent: total ? (summary.get(group) / total) * 100 : 0,
+      color: getPieGroupBaseColor(group, groupNames),
+    }));
+}
+
+function getPieGroupBaseColor(group, groupNames) {
+  const groupIndex = Math.max(0, groupNames.indexOf(group));
+  const family = pieColorFamilies[groupIndex % pieColorFamilies.length];
+  return family[Math.min(2, family.length - 1)];
 }
 
 function compareStockCodes(a = "", b = "") {
@@ -894,6 +917,44 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height, compactP
       drawPieLabelLines(context, label.lines, textX, label.y, compactPie ? 10 : 12);
     }
   }
+}
+
+function drawPieGroupSummary(context, rows, width, height, compactPie) {
+  if (!rows.length) return;
+
+  const panelWidth = compactPie ? Math.min(width - 36, 260) : 280;
+  const rowHeight = compactPie ? 16 : 18;
+  const panelPadding = compactPie ? 10 : 12;
+  const titleHeight = 18;
+  const panelHeight = panelPadding * 2 + titleHeight + rows.length * rowHeight;
+  const x = compactPie ? 18 : width - panelWidth - 28;
+  const y = height - panelHeight - (compactPie ? 18 : 26);
+
+  context.fillStyle = "rgba(255, 255, 255, 0.88)";
+  context.strokeStyle = "rgba(220, 226, 220, 0.95)";
+  context.lineWidth = 1;
+  context.fillRect(x, y, panelWidth, panelHeight);
+  context.strokeRect(x, y, panelWidth, panelHeight);
+
+  context.fillStyle = "#6c756f";
+  context.font = compactPie ? "700 10px sans-serif" : "700 11px sans-serif";
+  context.textAlign = "left";
+  context.textBaseline = "middle";
+  context.fillText("中文股名小計", x + panelPadding, y + panelPadding + 6);
+
+  context.font = compactPie ? "700 9.5px sans-serif" : "700 10px sans-serif";
+  rows.forEach((row, index) => {
+    const rowY = y + panelPadding + titleHeight + index * rowHeight + rowHeight / 2;
+    const label = `${row.group}: ${money(row.value)} ${formatNumber(row.percent)}%`;
+
+    context.fillStyle = row.color;
+    context.fillRect(x + panelPadding, rowY - 5, 9, 9);
+    context.strokeStyle = "rgba(23, 33, 28, 0.25)";
+    context.strokeRect(x + panelPadding, rowY - 5, 9, 9);
+
+    context.fillStyle = "#17211c";
+    context.fillText(trimCanvasText(context, label, panelWidth - panelPadding * 2 - 15), x + panelPadding + 15, rowY);
+  });
 }
 
 function drawPieLabelLines(context, lines, x, y, lineHeight) {
