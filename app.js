@@ -642,7 +642,7 @@ function drawPieChart() {
   const width = rect.width || 320;
   const compactPie = width < 720;
   const chartHeight = compactPie ? 620 : Math.max(620, Math.min(760, width * 0.62));
-  const summaryHeight = compactPie ? 58 : 52;
+  const summaryHeight = compactPie ? 66 : 64;
   const height = chartHeight + summaryHeight;
   canvas.style.height = `${height}px`;
   canvas.width = Math.max(320, Math.floor(width * ratio));
@@ -709,10 +709,10 @@ function drawPieChart() {
       const x = centerX + Math.cos(mid) * labelRadius;
       const y = centerY + Math.sin(mid) * labelRadius;
       context.fillStyle = "#17211c";
-      context.font = compactPie ? "700 8.5px sans-serif" : "700 10px sans-serif";
+      context.font = compactPie ? "700 8.5px sans-serif" : "700 14px sans-serif";
       context.textAlign = "center";
       context.textBaseline = "middle";
-      drawPieLabelLines(context, lines, x, y, compactPie ? 10 : 12);
+      drawPieLabelLines(context, lines, x, y, compactPie ? 10 : 16);
     } else {
       outsideLabels.push({
         lines,
@@ -769,7 +769,8 @@ function buildPieGroupSummary(slices, groupNames, total) {
       value: summary.get(group),
       percent: total ? (summary.get(group) / total) * 100 : 0,
       color: getPieGroupBaseColor(group, groupNames),
-    }));
+    }))
+    .sort((a, b) => a.value - b.value || chineseNameSorter.compare(a.group, b.group));
 }
 
 function getPieGroupBaseColor(group, groupNames) {
@@ -913,10 +914,10 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height, compactP
       context.stroke();
 
       context.fillStyle = "#17211c";
-      context.font = compactPie ? "700 8.5px sans-serif" : "700 10px sans-serif";
+      context.font = compactPie ? "700 8.5px sans-serif" : "700 14px sans-serif";
       context.textAlign = side === "right" ? "left" : "right";
       context.textBaseline = "middle";
-      drawPieLabelLines(context, label.lines, textX, label.y, compactPie ? 10 : 12);
+      drawPieLabelLines(context, label.lines, textX, label.y, compactPie ? 10 : 16);
     }
   }
 }
@@ -936,7 +937,7 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
   context.strokeRect(x, y, panelWidth, panelHeight);
 
   context.fillStyle = "#6c756f";
-  context.font = compactPie ? "700 9.5px sans-serif" : "700 10.5px sans-serif";
+  context.font = compactPie ? "700 17.5px sans-serif" : "700 18.5px sans-serif";
   context.textAlign = "left";
   context.textBaseline = "middle";
   let cursorX = x + 12;
@@ -945,7 +946,7 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
   context.fillText(title, cursorX, centerY);
   cursorX += context.measureText(title).width + 18;
 
-  context.font = compactPie ? "700 8.5px sans-serif" : "700 10px sans-serif";
+  context.font = compactPie ? "700 16.5px sans-serif" : "700 18px sans-serif";
   for (const row of rows) {
     const label = `${row.group}: ${money(row.value)} ${formatNumber(row.percent)}%`;
     const itemWidth = 14 + context.measureText(label).width + 18;
