@@ -709,10 +709,10 @@ function drawPieChart() {
       const x = centerX + Math.cos(mid) * labelRadius;
       const y = centerY + Math.sin(mid) * labelRadius;
       context.fillStyle = "#17211c";
-      context.font = compactPie ? "700 8.5px sans-serif" : "700 13px sans-serif";
+      context.font = compactPie ? "700 8.5px sans-serif" : "700 11.5px sans-serif";
       context.textAlign = "center";
       context.textBaseline = "middle";
-      drawPieLabelLines(context, lines, x, y, compactPie ? 10 : 15);
+      drawPieLabelLines(context, lines, x, y, compactPie ? 10 : 14);
     } else {
       outsideLabels.push({
         lines,
@@ -876,7 +876,7 @@ function drawWrappedLabel(context, text, x, y, maxWidth, lineHeight) {
 }
 
 function drawOutsidePieLabels(context, labels, centerX, radius, height, compactPie = false) {
-  const minGap = compactPie ? 38 : 46;
+  const minGap = compactPie ? 38 : 54;
   const top = compactPie ? 38 : 48;
   const bottom = height - (compactPie ? 38 : 48);
 
@@ -914,10 +914,10 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height, compactP
       context.stroke();
 
       context.fillStyle = "#17211c";
-      context.font = compactPie ? "700 8.5px sans-serif" : "700 13px sans-serif";
+      context.font = compactPie ? "700 8.5px sans-serif" : "700 11.5px sans-serif";
       context.textAlign = side === "right" ? "left" : "right";
       context.textBaseline = "middle";
-      drawPieLabelLines(context, label.lines, textX, label.y, compactPie ? 10 : 15);
+      drawPieLabelLines(context, label.lines, textX, label.y, compactPie ? 10 : 14);
     }
   }
 }
@@ -948,7 +948,7 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
 
   context.font = compactPie ? "700 11px sans-serif" : "700 12px sans-serif";
   for (const row of rows) {
-    const label = `${row.group}: ${money(row.value)} ${formatNumber(row.percent)}%`;
+    const label = `${row.group}: ${formatNumber(row.percent)}% ${money(row.value)}`;
     const itemWidth = 12 + context.measureText(label).width + 10;
     if (cursorX + itemWidth > x + panelWidth - 10) {
       context.fillStyle = "#8a928d";
