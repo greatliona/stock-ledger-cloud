@@ -734,6 +734,7 @@ function drawPieChart() {
     } else {
       outsideLabels.push({
         lines,
+        color: slice.color,
         side: Math.cos(mid) >= 0 ? "right" : "left",
         anchorX: centerX + Math.cos(mid) * radius,
         anchorY: centerY + Math.sin(mid) * radius,
@@ -932,10 +933,11 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height, compactP
       context.lineTo(lineEndX, label.y);
       context.stroke();
 
-      context.fillStyle = "rgba(23, 33, 28, 0.55)";
-      context.beginPath();
-      context.arc(lineEndX, label.y, compactPie ? 2.7 : 3.2, 0, Math.PI * 2);
-      context.fill();
+      const markerSize = compactPie ? 6 : 8;
+      context.fillStyle = label.color;
+      context.fillRect(lineEndX - markerSize / 2, label.y - markerSize / 2, markerSize, markerSize);
+      context.strokeStyle = "rgba(23, 33, 28, 0.25)";
+      context.strokeRect(lineEndX - markerSize / 2, label.y - markerSize / 2, markerSize, markerSize);
 
       context.fillStyle = "#17211c";
       context.font = compactPie ? "700 8.5px sans-serif" : "700 11.5px sans-serif";
