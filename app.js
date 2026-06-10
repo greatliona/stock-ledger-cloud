@@ -641,8 +641,8 @@ function drawPieChart() {
   const rect = canvas.getBoundingClientRect();
   const width = rect.width || 320;
   const compactPie = width < 720;
-  const chartHeight = compactPie ? 620 : Math.max(620, Math.min(760, width * 0.62));
-  const summaryHeight = compactPie ? 66 : 64;
+  const chartHeight = compactPie ? 560 : Math.max(620, Math.min(760, width * 0.62));
+  const summaryHeight = compactPie ? 174 : 64;
   const height = chartHeight + summaryHeight;
   canvas.style.height = `${height}px`;
   canvas.width = Math.max(320, Math.floor(width * ratio));
@@ -936,6 +936,11 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
   context.fillRect(x, y, panelWidth, panelHeight);
   context.strokeRect(x, y, panelWidth, panelHeight);
 
+  if (compactPie) {
+    drawMobilePieGroupSummary(context, rows, x, y, panelWidth);
+    return;
+  }
+
   context.fillStyle = "#6c756f";
   context.font = compactPie ? "700 12px sans-serif" : "700 13px sans-serif";
   context.textAlign = "left";
@@ -964,6 +969,32 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
     context.fillStyle = "#17211c";
     context.fillText(label, cursorX + 12, centerY);
     cursorX += itemWidth;
+  }
+}
+
+function drawMobilePieGroupSummary(context, rows, x, y, width) {
+  const padding = 11;
+  let rowY = y + 18;
+
+  context.fillStyle = "#6c756f";
+  context.font = "700 11.5px sans-serif";
+  context.textAlign = "left";
+  context.textBaseline = "middle";
+  context.fillText("中文股名小計", x + padding, rowY);
+
+  context.font = "700 10.5px sans-serif";
+  rowY += 20;
+
+  for (const row of rows) {
+    const label = `${row.group}: ${formatNumber(row.percent)}% ${money(row.value)}`;
+    context.fillStyle = row.color;
+    context.fillRect(x + padding, rowY - 4, 8, 8);
+    context.strokeStyle = "rgba(23, 33, 28, 0.25)";
+    context.strokeRect(x + padding, rowY - 4, 8, 8);
+
+    context.fillStyle = "#17211c";
+    context.fillText(trimCanvasText(context, label, width - padding * 2 - 14), x + padding + 13, rowY);
+    rowY += 17;
   }
 }
 
