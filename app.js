@@ -932,7 +932,7 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height, compactP
       context.lineTo(lineEndX, label.y);
       context.stroke();
 
-      context.fillStyle = "#17211c";
+      context.fillStyle = "rgba(23, 33, 28, 0.55)";
       context.beginPath();
       context.arc(lineEndX, label.y, compactPie ? 2.7 : 3.2, 0, Math.PI * 2);
       context.fill();
