@@ -207,14 +207,32 @@ els.settleBtn.addEventListener("click", () => {
   saveAndRender(`已記錄 ${date} 的資產總額。`);
 });
 
-els.exportBtn.addEventListener("click", () => {
+els.exportBtn.addEventListener("click", async () => {
+  const fileName = `stock-ledger-${todayISO()}.json`;
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+
+  if (navigator.canShare && navigator.share) {
+    const file = new File([blob], fileName, { type: "application/json" });
+    if (navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: "股票記帳本資料備份" });
+        setStatus("資料已匯出。");
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+      }
+    }
+  }
+
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `stock-ledger-${todayISO()}.json`;
+  link.download = fileName;
+  link.target = "_blank";
+  document.body.append(link);
   link.click();
-  URL.revokeObjectURL(url);
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   setStatus("資料已匯出。");
 });
 
