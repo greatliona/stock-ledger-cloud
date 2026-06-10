@@ -906,7 +906,7 @@ function drawWrappedLabel(context, text, x, y, maxWidth, lineHeight) {
 }
 
 function drawOutsidePieLabels(context, labels, centerX, radius, height, compactPie = false, width = 0) {
-  const minGap = compactPie ? 38 : 54;
+  const minGap = compactPie ? 42 : 54;
   const top = compactPie ? 38 : 48;
   const bottom = height - (compactPie ? 38 : 48);
 
@@ -934,25 +934,24 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height, compactP
       const lineStartY = label.anchorY;
       const elbowX = centerX + direction * (radius + (compactPie ? 14 : 30));
       const textX = compactPie
-        ? (side === "right" ? width - 86 : 86)
+        ? (side === "right" ? width - 92 : 92)
         : centerX + direction * (radius + 66);
-      const lineEndX = textX - direction * (compactPie ? 9 : 12);
+      const markerSize = compactPie ? 7 : 8;
+      const markerX = textX - direction * (compactPie ? 10 : 12);
+      const markerY = compactPie ? label.y - 10 : label.y;
 
       context.strokeStyle = "rgba(23, 33, 28, 0.55)";
       context.lineWidth = 0.9;
       context.beginPath();
       context.moveTo(lineStartX, lineStartY);
-      context.lineTo(elbowX, label.y);
-      context.lineTo(lineEndX, label.y);
+      context.lineTo(elbowX, markerY);
+      context.lineTo(markerX, markerY);
       context.stroke();
 
-      if (!compactPie) {
-        const markerSize = 8;
-        context.fillStyle = label.color;
-        context.fillRect(lineEndX - markerSize / 2, label.y - markerSize / 2, markerSize, markerSize);
-        context.strokeStyle = "rgba(23, 33, 28, 0.25)";
-        context.strokeRect(lineEndX - markerSize / 2, label.y - markerSize / 2, markerSize, markerSize);
-      }
+      context.fillStyle = label.color;
+      context.fillRect(markerX - markerSize / 2, markerY - markerSize / 2, markerSize, markerSize);
+      context.strokeStyle = "rgba(23, 33, 28, 0.25)";
+      context.strokeRect(markerX - markerSize / 2, markerY - markerSize / 2, markerSize, markerSize);
 
       context.fillStyle = "#17211c";
       context.font = compactPie ? "700 8.5px sans-serif" : "700 11.5px sans-serif";
