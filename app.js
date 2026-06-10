@@ -937,7 +937,7 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
   context.strokeRect(x, y, panelWidth, panelHeight);
 
   context.fillStyle = "#6c756f";
-  context.font = compactPie ? "700 15.5px sans-serif" : "700 16.5px sans-serif";
+  context.font = compactPie ? "700 14.5px sans-serif" : "700 15.5px sans-serif";
   context.textAlign = "left";
   context.textBaseline = "middle";
   let cursorX = x + 12;
@@ -946,7 +946,7 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
   context.fillText(title, cursorX, centerY);
   cursorX += context.measureText(title).width + 18;
 
-  context.font = compactPie ? "700 14.5px sans-serif" : "700 16px sans-serif";
+  context.font = compactPie ? "700 13.5px sans-serif" : "700 15px sans-serif";
   for (const row of rows) {
     const label = `${row.group}: ${money(row.value)} ${formatNumber(row.percent)}%`;
     const itemWidth = 14 + context.measureText(label).width + 18;
