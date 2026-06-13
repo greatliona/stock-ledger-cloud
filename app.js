@@ -492,13 +492,13 @@ function renderFunds() {
         <strong>${escapeHTML(fund.name)}</strong>
         <span class="stock-name">${escapeHTML(fund.lastUpdated || "基金")}</span>
       </td>
-      <td class="price-cell">
+      <td class="fund-input-cell">
         <input data-fund-cost-id="${fund.id}" type="number" min="0" step="0.01" value="${fund.cost ?? 0}" aria-label="${escapeHTML(fund.name)} 基金成本" />
       </td>
-      <td class="price-cell">
+      <td class="fund-input-cell">
         <input data-fund-value-id="${fund.id}" type="number" min="0" step="0.01" value="${fund.currentValue ?? 0}" aria-label="${escapeHTML(fund.name)} 目前總額" />
       </td>
-      <td class="${pnl >= 0 ? "gain" : "loss"}">
+      <td class="fund-pnl-cell ${pnl >= 0 ? "gain" : "loss"}">
         ${signedMoney(pnl)}
         <span class="stock-name">${formatNumber(pnlPct)}%</span>
       </td>
