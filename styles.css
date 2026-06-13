@@ -295,6 +295,16 @@ td:first-child {
   min-width: 0;
 }
 
+.holdings-panel th,
+.holdings-panel td {
+  text-align: center;
+}
+
+.holdings-panel th:first-child,
+.holdings-panel td:first-child {
+  text-align: left;
+}
+
 th {
   color: var(--muted);
   font-size: 0.76rem;
@@ -346,7 +356,7 @@ tbody tr:last-child td {
 .price-cell input {
   min-height: 32px;
   padding: 6px 7px;
-  text-align: right;
+  text-align: center;
 }
 
 .holdings-panel th:nth-child(5),
@@ -364,8 +374,10 @@ tbody tr:last-child td {
 
 .holdings-panel th:last-child,
 .holdings-panel td:last-child {
-  width: 7%;
-  min-width: 0;
+  width: 76px;
+  min-width: 76px;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 .compact-table table {
@@ -400,8 +412,9 @@ tbody tr:last-child td {
 }
 
 .mini-btn {
-  min-width: 28px;
-  height: 28px;
+  min-width: 26px;
+  width: 26px;
+  height: 26px;
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -418,8 +431,9 @@ tbody tr:last-child td {
 .row-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 4px;
+  width: 60px;
 }
 
 .edit-holding-row td {
