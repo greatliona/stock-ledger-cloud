@@ -263,12 +263,12 @@ textarea:focus {
 
 table {
   width: 100%;
-  min-width: 820px;
+  min-width: 760px;
   border-collapse: collapse;
 }
 
 .holdings-panel table {
-  min-width: 920px;
+  min-width: 830px;
 }
 
 .compact-table table {
@@ -277,7 +277,7 @@ table {
 
 th,
 td {
-  padding: 13px 12px;
+  padding: 13px 9px;
   text-align: right;
   border-bottom: 1px solid var(--line);
   vertical-align: middle;
@@ -290,7 +290,8 @@ td:first-child {
 
 .holdings-panel th:first-child,
 .holdings-panel td:first-child {
-  min-width: 150px;
+  width: 168px;
+  min-width: 168px;
 }
 
 th {
@@ -318,18 +319,46 @@ tbody tr:last-child td {
 
 .holdings-panel td:first-child strong {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   line-height: 1.15;
   white-space: nowrap;
 }
 
+.shares-cell {
+  width: 76px;
+  min-width: 76px;
+}
+
+.cost-cell {
+  width: 62px;
+  min-width: 62px;
+}
+
 .price-cell {
-  width: 116px;
+  width: 88px;
+  min-width: 88px;
 }
 
 .price-cell input {
   min-height: 36px;
+  padding: 7px 8px;
   text-align: right;
+}
+
+.amount-cell {
+  width: 94px;
+  min-width: 94px;
+}
+
+.pnl-cell {
+  width: 108px;
+  min-width: 108px;
+}
+
+.holdings-panel th:last-child,
+.holdings-panel td:last-child {
+  width: 76px;
+  min-width: 76px;
 }
 
 .mini-btn {

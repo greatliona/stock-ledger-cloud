@@ -420,14 +420,14 @@ function renderHoldings() {
         <strong>${escapeHTML(holding.name || holding.symbol)}</strong>
         <span class="stock-name">${escapeHTML(holding.symbol)}</span>
       </td>
-      <td>${formatNumber(holding.shares, 3)}</td>
-      <td>${unitMoney(holding.avgCost)}</td>
+      <td class="shares-cell">${formatNumber(holding.shares, 3)}</td>
+      <td class="cost-cell">${unitMoney(holding.avgCost)}</td>
       <td class="price-cell">
         <input data-price-id="${holding.id}" type="number" min="0" step="0.01" value="${holding.currentPrice ?? ""}" aria-label="${escapeHTML(holding.symbol)} 現價" />
       </td>
-      <td>${money(costValue)}</td>
-      <td>${money(marketValue)}</td>
-      <td class="${pnl >= 0 ? "gain" : "loss"}">
+      <td class="amount-cell">${money(costValue)}</td>
+      <td class="amount-cell">${money(marketValue)}</td>
+      <td class="pnl-cell ${pnl >= 0 ? "gain" : "loss"}">
         ${signedMoney(pnl)}
         <span class="stock-name">${formatNumber(pnlPct)}%</span>
       </td>
