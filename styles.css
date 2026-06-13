@@ -408,7 +408,10 @@ tbody tr:last-child td {
 
 .fund-panel th:last-child,
 .fund-panel td:last-child {
-  width: 8%;
+  width: 72px;
+  min-width: 72px;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 .mini-btn {
@@ -436,18 +439,25 @@ tbody tr:last-child td {
   width: 60px;
 }
 
-.edit-holding-row td {
+.edit-holding-row td,
+.edit-fund-row td {
   background: #fbfcfb;
 }
 
-.edit-holding-form {
+.edit-holding-form,
+.edit-fund-form {
   display: grid;
   grid-template-columns: repeat(4, minmax(120px, 1fr)) auto auto;
   gap: 10px;
   align-items: end;
 }
 
-.edit-holding-form input {
+.edit-fund-form {
+  grid-template-columns: minmax(180px, 1.2fr) minmax(120px, 0.8fr) minmax(120px, 0.8fr) auto auto;
+}
+
+.edit-holding-form input,
+.edit-fund-form input {
   min-height: 34px;
 }
 
@@ -777,7 +787,8 @@ tbody tr:last-child td {
   .summary-grid,
   .holding-form,
   .fund-form,
-  .edit-holding-form {
+  .edit-holding-form,
+  .edit-fund-form {
     grid-template-columns: 1fr;
   }
 

@@ -8,6 +8,7 @@ let cloudClient = null;
 let cloudSaveTimer = null;
 let editingHistoryDate = "";
 let editingHoldingId = "";
+let editingFundId = "";
 
 const pieColorFamilies = [
   ["#dbeafe", "#bfdbfe", "#93c5fd", "#60a5fa"],
@@ -172,11 +173,45 @@ els.fundsBody.addEventListener("change", (event) => {
 });
 
 els.fundsBody.addEventListener("click", (event) => {
+  const editBtn = event.target.closest("[data-edit-fund-id]");
+  if (editBtn) {
+    editingFundId = editBtn.dataset.editFundId;
+    renderFunds();
+    return;
+  }
+
+  const cancelBtn = event.target.closest("[data-edit-fund-cancel-id]");
+  if (cancelBtn) {
+    editingFundId = "";
+    renderFunds();
+    return;
+  }
+
+  const saveBtn = event.target.closest("[data-edit-fund-save-id]");
+  if (saveBtn) {
+    const fund = findFund(saveBtn.dataset.editFundSaveId);
+    const editRow = saveBtn.closest("[data-edit-fund-row]");
+    if (!fund || !editRow) return;
+    const name = editRow.querySelector("[data-edit-fund-field='name']").value.trim();
+    if (!name) {
+      setStatus("基金名稱不能空白。");
+      return;
+    }
+    fund.name = name;
+    fund.cost = toNumber(editRow.querySelector("[data-edit-fund-field='cost']").value);
+    fund.currentValue = toNumber(editRow.querySelector("[data-edit-fund-field='currentValue']").value);
+    fund.lastUpdated = "手動";
+    editingFundId = "";
+    saveAndRender("已更新基金資料。");
+    return;
+  }
+
   const deleteBtn = event.target.closest("[data-delete-fund-id]");
   if (!deleteBtn) return;
   const index = state.funds.findIndex((item) => item.id === deleteBtn.dataset.deleteFundId);
   if (index >= 0) {
     state.funds.splice(index, 1);
+    if (editingFundId === deleteBtn.dataset.deleteFundId) editingFundId = "";
     saveAndRender("已刪除基金。");
   }
 });
@@ -402,11 +437,7 @@ function renderHoldings() {
     return;
   }
 
-  const sortedHoldings = [...state.holdings].sort((a, b) => {
-    const aGroup = getHoldingGroupName(a);
-    const bGroup = getHoldingGroupName(b);
-    return chineseNameSorter.compare(aGroup, bGroup) || compareStockCodes(a.symbol, b.symbol);
-  });
+  const sortedHoldings = [...state.holdings].sort(compareHoldingsByDisplayName);
 
   for (const holding of sortedHoldings) {
     const price = holding.currentPrice ?? 0;
@@ -478,7 +509,7 @@ function renderFunds() {
 
   if (!state.funds.length) {
     const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="3" class="empty-cell">尚未新增基金</td>';
+    row.innerHTML = '<td colspan="5" class="empty-cell">尚未新增基金</td>';
     els.fundsBody.append(row);
     return;
   }
@@ -502,9 +533,41 @@ function renderFunds() {
         ${signedMoney(pnl)}
         <span class="stock-name">${formatNumber(pnlPct)}%</span>
       </td>
-      <td><button class="mini-btn" data-delete-fund-id="${fund.id}" type="button" aria-label="刪除 ${escapeHTML(fund.name)}">x</button></td>
+      <td>
+        <div class="row-actions">
+          <button class="mini-btn" data-edit-fund-id="${escapeHTML(fund.id)}" type="button" aria-label="修改 ${escapeHTML(fund.name)}">${editIcon()}</button>
+          <button class="mini-btn" data-delete-fund-id="${escapeHTML(fund.id)}" type="button" aria-label="刪除 ${escapeHTML(fund.name)}">x</button>
+        </div>
+      </td>
     `;
     els.fundsBody.append(row);
+
+    if (editingFundId === fund.id) {
+      const editRow = document.createElement("tr");
+      editRow.className = "edit-fund-row";
+      editRow.dataset.editFundRow = fund.id;
+      editRow.innerHTML = `
+        <td colspan="5">
+          <div class="edit-fund-form">
+            <label>
+              基金名稱
+              <input data-edit-fund-field="name" autocomplete="off" value="${escapeHTML(fund.name || "")}" />
+            </label>
+            <label>
+              基金成本
+              <input data-edit-fund-field="cost" type="number" min="0" step="1" value="${fund.cost ?? 0}" />
+            </label>
+            <label>
+              目前總額
+              <input data-edit-fund-field="currentValue" type="number" min="0" step="1" value="${fund.currentValue ?? 0}" />
+            </label>
+            <button class="primary-btn" data-edit-fund-save-id="${escapeHTML(fund.id)}" type="button">儲存</button>
+            <button class="secondary-btn" data-edit-fund-cancel-id="${escapeHTML(fund.id)}" type="button">取消</button>
+          </div>
+        </td>
+      `;
+      els.fundsBody.append(editRow);
+    }
   }
 }
 
@@ -758,7 +821,13 @@ function drawPieChart() {
       value: holding.shares * (holding.currentPrice ?? holding.avgCost),
     }))
     .filter((slice) => slice.value > 0)
-    .sort((a, b) => chineseNameSorter.compare(a.group, b.group) || compareStockCodes(a.symbol, b.symbol) || b.value - a.value);
+    .sort((a, b) => {
+      const groupCompare = chineseNameSorter.compare(a.group, b.group);
+      if (groupCompare) return groupCompare;
+      return compareStockCodes(getNameTailCode(a.label, a.symbol), getNameTailCode(b.label, b.symbol))
+        || compareStockCodes(a.symbol, b.symbol)
+        || b.value - a.value;
+    });
   const groupNames = assignPieGroupOrder([...new Set(slices.map((slice) => slice.group))]);
   const groupCounts = {};
   const coloredSlices = slices
@@ -840,6 +909,24 @@ function getHoldingGroupName(holding) {
   const matched = compactName.match(/^([\u4e00-\u9fff]+?)(?:[A-Z]*\d[A-Z0-9]*.*)$/i);
   if (matched?.[1]) return matched[1];
   return rawName || "未命名";
+}
+
+function compareHoldingsByDisplayName(a, b) {
+  const groupCompare = chineseNameSorter.compare(getHoldingGroupName(a), getHoldingGroupName(b));
+  if (groupCompare) return groupCompare;
+  return compareStockCodes(getHoldingTailCode(a), getHoldingTailCode(b))
+    || compareStockCodes(a.symbol, b.symbol);
+}
+
+function getHoldingTailCode(holding) {
+  return getNameTailCode(holding.name || holding.symbol, holding.symbol);
+}
+
+function getNameTailCode(name, fallback = "") {
+  const compactName = stripBrokerNames(String(name || "").replace(/\s+/g, "").toUpperCase());
+  const matched = compactName.match(/([0-9A-Z]{4})$/);
+  if (matched?.[1]) return matched[1];
+  return String(fallback || "").toUpperCase().slice(-4);
 }
 
 function stripBrokerNames(name) {
