@@ -7,6 +7,7 @@ const state = loadState();
 let cloudClient = null;
 let cloudSaveTimer = null;
 let editingHistoryDate = "";
+let editingHoldingId = "";
 
 const pieColorFamilies = [
   ["#dbeafe", "#bfdbfe", "#93c5fd", "#60a5fa"],
@@ -34,7 +35,6 @@ const els = {
   fundForm: document.querySelector("#fundForm"),
   symbol: document.querySelector("#symbolInput"),
   name: document.querySelector("#nameInput"),
-  detailName: document.querySelector("#detailNameInput"),
   shares: document.querySelector("#sharesInput"),
   cost: document.querySelector("#costInput"),
   price: document.querySelector("#priceInput"),
@@ -78,7 +78,6 @@ els.form.addEventListener("submit", (event) => {
     id: crypto.randomUUID(),
     symbol: normalizeSymbol(els.symbol.value),
     name: els.name.value.trim(),
-    detailName: els.detailName.value.trim(),
     shares: toNumber(els.shares.value),
     avgCost: toNumber(els.cost.value),
     currentPrice: toOptionalNumber(els.price.value),
@@ -107,15 +106,6 @@ els.fundForm.addEventListener("submit", (event) => {
 });
 
 els.holdingsBody.addEventListener("change", (event) => {
-  const detailInput = event.target.closest("[data-detail-id]");
-  if (detailInput) {
-    const holding = findHolding(detailInput.dataset.detailId);
-    if (!holding) return;
-    holding.detailName = detailInput.value.trim();
-    saveAndRender();
-    return;
-  }
-
   const input = event.target.closest("[data-price-id]");
   if (!input) return;
   const holding = findHolding(input.dataset.priceId);
@@ -126,11 +116,45 @@ els.holdingsBody.addEventListener("change", (event) => {
 });
 
 els.holdingsBody.addEventListener("click", (event) => {
+  const editBtn = event.target.closest("[data-edit-id]");
+  if (editBtn) {
+    editingHoldingId = editBtn.dataset.editId;
+    renderHoldings();
+    return;
+  }
+
+  const cancelBtn = event.target.closest("[data-edit-cancel-id]");
+  if (cancelBtn) {
+    editingHoldingId = "";
+    renderHoldings();
+    return;
+  }
+
+  const saveBtn = event.target.closest("[data-edit-save-id]");
+  if (saveBtn) {
+    const holding = findHolding(saveBtn.dataset.editSaveId);
+    const editRow = saveBtn.closest("[data-edit-row]");
+    if (!holding || !editRow) return;
+    const symbol = normalizeSymbol(editRow.querySelector("[data-edit-field='symbol']").value);
+    if (!symbol) {
+      setStatus("股號不能空白。");
+      return;
+    }
+    holding.name = editRow.querySelector("[data-edit-field='name']").value.trim();
+    holding.symbol = symbol;
+    holding.shares = toNumber(editRow.querySelector("[data-edit-field='shares']").value);
+    holding.avgCost = toNumber(editRow.querySelector("[data-edit-field='avgCost']").value);
+    editingHoldingId = "";
+    saveAndRender("已更新股票資料。");
+    return;
+  }
+
   const deleteBtn = event.target.closest("[data-delete-id]");
   if (!deleteBtn) return;
   const index = state.holdings.findIndex((item) => item.id === deleteBtn.dataset.deleteId);
   if (index >= 0) {
     state.holdings.splice(index, 1);
+    if (editingHoldingId === deleteBtn.dataset.deleteId) editingHoldingId = "";
     saveAndRender("已刪除股票。");
   }
 });
@@ -395,7 +419,6 @@ function renderHoldings() {
       <td>
         <strong>${escapeHTML(holding.name || holding.symbol)}</strong>
         <span class="stock-name">${escapeHTML(holding.symbol)}</span>
-        <input class="detail-name-input" data-detail-id="${escapeHTML(holding.id)}" type="text" value="${escapeHTML(holding.detailName || "")}" placeholder="細名" aria-label="${escapeHTML(holding.symbol)} 細名" />
       </td>
       <td>${formatNumber(holding.shares, 3)}</td>
       <td>${unitMoney(holding.avgCost)}</td>
@@ -408,9 +431,45 @@ function renderHoldings() {
         ${signedMoney(pnl)}
         <span class="stock-name">${formatNumber(pnlPct)}%</span>
       </td>
-      <td><button class="mini-btn" data-delete-id="${holding.id}" type="button" aria-label="刪除 ${escapeHTML(holding.symbol)}">x</button></td>
+      <td>
+        <div class="row-actions">
+          <button class="mini-btn" data-edit-id="${escapeHTML(holding.id)}" type="button" aria-label="修改 ${escapeHTML(holding.symbol)}">${editIcon()}</button>
+          <button class="mini-btn" data-delete-id="${escapeHTML(holding.id)}" type="button" aria-label="刪除 ${escapeHTML(holding.symbol)}">x</button>
+        </div>
+      </td>
     `;
     els.holdingsBody.append(row);
+
+    if (editingHoldingId === holding.id) {
+      const editRow = document.createElement("tr");
+      editRow.className = "edit-holding-row";
+      editRow.dataset.editRow = holding.id;
+      editRow.innerHTML = `
+        <td colspan="8">
+          <div class="edit-holding-form">
+            <label>
+              中文名
+              <input data-edit-field="name" autocomplete="off" value="${escapeHTML(holding.name || "")}" />
+            </label>
+            <label>
+              股號
+              <input data-edit-field="symbol" autocomplete="off" value="${escapeHTML(holding.symbol || "")}" />
+            </label>
+            <label>
+              張數
+              <input data-edit-field="shares" type="number" min="0" step="0.001" value="${holding.shares}" />
+            </label>
+            <label>
+              買入價格
+              <input data-edit-field="avgCost" type="number" min="0" step="0.01" value="${holding.avgCost}" />
+            </label>
+            <button class="primary-btn" data-edit-save-id="${escapeHTML(holding.id)}" type="button">儲存</button>
+            <button class="secondary-btn" data-edit-cancel-id="${escapeHTML(holding.id)}" type="button">取消</button>
+          </div>
+        </td>
+      `;
+      els.holdingsBody.append(editRow);
+    }
   }
 }
 
@@ -777,10 +836,14 @@ function drawPieChart() {
 
 function getHoldingGroupName(holding) {
   const rawName = String(holding.name || holding.symbol || "").trim();
-  const compactName = rawName.replace(/\s+/g, "");
+  const compactName = stripBrokerPrefix(rawName.replace(/\s+/g, ""));
   const matched = compactName.match(/^([\u4e00-\u9fff]+?)(?:[A-Z]*\d[A-Z0-9]*.*)$/i);
   if (matched?.[1]) return matched[1];
   return rawName || "未命名";
+}
+
+function stripBrokerPrefix(name) {
+  return name.replace(/^(?:元大|凱基|群益|富邦|國泰|永豐|統一|兆豐|台新|元富|中信|中國信託|華南永昌|第一金|玉山|日盛|康和|宏遠)/, "");
 }
 
 function getGroupedPieColor(group, groupNames, groupCounts) {
@@ -1350,7 +1413,6 @@ function migrateState(value) {
     id: holding.id || crypto.randomUUID(),
     symbol: normalizeSymbol(holding.symbol || ""),
     name: String(holding.name || ""),
-    detailName: String(holding.detailName || ""),
     shares: toNumber(holding.shares),
     avgCost: toNumber(holding.avgCost),
     currentPrice: toOptionalNumber(holding.currentPrice),
@@ -1439,6 +1501,15 @@ function starIcon() {
   return `
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M12 2.8l2.7 5.6 6.2.9-4.5 4.4 1.1 6.2-5.5-2.9-5.5 2.9 1.1-6.2-4.5-4.4 6.2-.9L12 2.8z"></path>
+    </svg>
+  `;
+}
+
+function editIcon() {
+  return `
+    <svg viewBox="0 0 24 24" aria-hidden="true" width="15" height="15">
+      <path d="M4 20h4.5L19 9.5 14.5 5 4 15.5V20Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M13 6.5 17.5 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
     </svg>
   `;
 }

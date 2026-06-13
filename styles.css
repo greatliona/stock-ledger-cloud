@@ -211,7 +211,7 @@ h2 {
 }
 
 .holding-form {
-  grid-template-columns: 1fr 1fr 1fr 0.72fr 0.78fr 0.78fr auto;
+  grid-template-columns: 1.1fr 1.1fr 0.8fr 0.85fr 0.85fr auto;
 }
 
 .fund-form {
@@ -307,13 +307,6 @@ tbody tr:last-child td {
   margin-top: 3px;
 }
 
-.detail-name-input {
-  margin-top: 7px;
-  min-height: 30px;
-  padding: 5px 8px;
-  font-size: 0.78rem;
-}
-
 .price-cell {
   width: 116px;
 }
@@ -331,6 +324,32 @@ tbody tr:last-child td {
   background: white;
   color: var(--muted);
   font-weight: 900;
+}
+
+.mini-btn svg {
+  display: block;
+  margin: auto;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-holding-row td {
+  background: #fbfcfb;
+}
+
+.edit-holding-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr)) auto auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.edit-holding-form input {
+  min-height: 34px;
 }
 
 .gain {
@@ -658,7 +677,8 @@ tbody tr:last-child td {
 
   .summary-grid,
   .holding-form,
-  .fund-form {
+  .fund-form,
+  .edit-holding-form {
     grid-template-columns: 1fr;
   }
 
