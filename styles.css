@@ -269,6 +269,7 @@ table {
 
 .holdings-panel table {
   min-width: 780px;
+  table-layout: fixed;
 }
 
 .compact-table table {
@@ -290,8 +291,8 @@ td:first-child {
 
 .holdings-panel th:first-child,
 .holdings-panel td:first-child {
-  width: 154px;
-  min-width: 154px;
+  width: 17%;
+  min-width: 0;
 }
 
 th {
@@ -324,19 +325,22 @@ tbody tr:last-child td {
   white-space: nowrap;
 }
 
+.holdings-panel th:nth-child(2),
 .shares-cell {
-  width: 64px;
-  min-width: 64px;
+  width: 9%;
+  min-width: 0;
 }
 
+.holdings-panel th:nth-child(3),
 .cost-cell {
-  width: 54px;
-  min-width: 54px;
+  width: 7%;
+  min-width: 0;
 }
 
+.holdings-panel th:nth-child(4),
 .price-cell {
-  width: 76px;
-  min-width: 76px;
+  width: 11%;
+  min-width: 0;
 }
 
 .price-cell input {
@@ -345,20 +349,23 @@ tbody tr:last-child td {
   text-align: right;
 }
 
+.holdings-panel th:nth-child(5),
+.holdings-panel th:nth-child(6),
 .amount-cell {
-  width: 82px;
-  min-width: 82px;
+  width: 12%;
+  min-width: 0;
 }
 
+.holdings-panel th:nth-child(7),
 .pnl-cell {
-  width: 96px;
-  min-width: 96px;
+  width: 20%;
+  min-width: 0;
 }
 
 .holdings-panel th:last-child,
 .holdings-panel td:last-child {
-  width: 64px;
-  min-width: 64px;
+  width: 12%;
+  min-width: 0;
 }
 
 .mini-btn {
