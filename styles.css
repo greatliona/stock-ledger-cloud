@@ -211,7 +211,7 @@ h2 {
 }
 
 .holding-form {
-  grid-template-columns: 1.1fr 1.1fr 0.8fr 0.85fr 0.85fr auto;
+  grid-template-columns: 1fr 1fr 1fr 0.72fr 0.78fr 0.78fr auto;
 }
 
 .fund-form {
@@ -305,6 +305,13 @@ tbody tr:last-child td {
   color: var(--muted);
   font-size: 0.78rem;
   margin-top: 3px;
+}
+
+.detail-name-input {
+  margin-top: 7px;
+  min-height: 30px;
+  padding: 5px 8px;
+  font-size: 0.78rem;
 }
 
 .price-cell {

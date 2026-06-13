@@ -34,6 +34,7 @@ const els = {
   fundForm: document.querySelector("#fundForm"),
   symbol: document.querySelector("#symbolInput"),
   name: document.querySelector("#nameInput"),
+  detailName: document.querySelector("#detailNameInput"),
   shares: document.querySelector("#sharesInput"),
   cost: document.querySelector("#costInput"),
   price: document.querySelector("#priceInput"),
@@ -77,6 +78,7 @@ els.form.addEventListener("submit", (event) => {
     id: crypto.randomUUID(),
     symbol: normalizeSymbol(els.symbol.value),
     name: els.name.value.trim(),
+    detailName: els.detailName.value.trim(),
     shares: toNumber(els.shares.value),
     avgCost: toNumber(els.cost.value),
     currentPrice: toOptionalNumber(els.price.value),
@@ -105,6 +107,15 @@ els.fundForm.addEventListener("submit", (event) => {
 });
 
 els.holdingsBody.addEventListener("change", (event) => {
+  const detailInput = event.target.closest("[data-detail-id]");
+  if (detailInput) {
+    const holding = findHolding(detailInput.dataset.detailId);
+    if (!holding) return;
+    holding.detailName = detailInput.value.trim();
+    saveAndRender();
+    return;
+  }
+
   const input = event.target.closest("[data-price-id]");
   if (!input) return;
   const holding = findHolding(input.dataset.priceId);
@@ -384,6 +395,7 @@ function renderHoldings() {
       <td>
         <strong>${escapeHTML(holding.name || holding.symbol)}</strong>
         <span class="stock-name">${escapeHTML(holding.symbol)}</span>
+        <input class="detail-name-input" data-detail-id="${escapeHTML(holding.id)}" type="text" value="${escapeHTML(holding.detailName || "")}" placeholder="細名" aria-label="${escapeHTML(holding.symbol)} 細名" />
       </td>
       <td>${formatNumber(holding.shares, 3)}</td>
       <td>${unitMoney(holding.avgCost)}</td>
@@ -1338,6 +1350,7 @@ function migrateState(value) {
     id: holding.id || crypto.randomUUID(),
     symbol: normalizeSymbol(holding.symbol || ""),
     name: String(holding.name || ""),
+    detailName: String(holding.detailName || ""),
     shares: toNumber(holding.shares),
     avgCost: toNumber(holding.avgCost),
     currentPrice: toOptionalNumber(holding.currentPrice),
