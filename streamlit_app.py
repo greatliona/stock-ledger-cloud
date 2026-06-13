@@ -1,5 +1,6 @@
 import json
 import hmac
+import re
 from pathlib import Path
 
 import streamlit as st
@@ -25,18 +26,22 @@ def build_page() -> str:
         "rowId": supabase.get("row_id", "main"),
     }
 
-    html = html.replace(
-        '<link rel="stylesheet" href="styles.css?v=20260602-6" />',
-        f"<style>{css}</style>",
+    html = re.sub(
+        r'<link\s+rel="stylesheet"\s+href="styles\.css[^"]*"\s*/>',
+        lambda _: f"<style>{css}</style>",
+        html,
+        count=1,
     )
-    html = html.replace(
-        '<script src="app.js?v=20260602-6"></script>',
-        (
+    html = re.sub(
+        r'<script\s+src="app\.js[^"]*"></script>',
+        lambda _: (
             "<script>"
             f"window.STOCK_LEDGER_SUPABASE = {json.dumps(config, ensure_ascii=False)};"
             "</script>"
             f"<script>{js}</script>"
         ),
+        html,
+        count=1,
     )
     return html
 
