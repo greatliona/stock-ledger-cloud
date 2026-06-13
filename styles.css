@@ -263,8 +263,12 @@ textarea:focus {
 
 table {
   width: 100%;
-  min-width: 760px;
+  min-width: 820px;
   border-collapse: collapse;
+}
+
+.holdings-panel table {
+  min-width: 920px;
 }
 
 .compact-table table {
@@ -282,6 +286,11 @@ td {
 th:first-child,
 td:first-child {
   text-align: left;
+}
+
+.holdings-panel th:first-child,
+.holdings-panel td:first-child {
+  min-width: 150px;
 }
 
 th {
@@ -305,6 +314,13 @@ tbody tr:last-child td {
   color: var(--muted);
   font-size: 0.78rem;
   margin-top: 3px;
+}
+
+.holdings-panel td:first-child strong {
+  display: block;
+  font-size: 0.9rem;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .price-cell {

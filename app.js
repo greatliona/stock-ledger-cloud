@@ -836,14 +836,14 @@ function drawPieChart() {
 
 function getHoldingGroupName(holding) {
   const rawName = String(holding.name || holding.symbol || "").trim();
-  const compactName = stripBrokerPrefix(rawName.replace(/\s+/g, ""));
+  const compactName = stripBrokerNames(rawName.replace(/\s+/g, ""));
   const matched = compactName.match(/^([\u4e00-\u9fff]+?)(?:[A-Z]*\d[A-Z0-9]*.*)$/i);
   if (matched?.[1]) return matched[1];
   return rawName || "未命名";
 }
 
-function stripBrokerPrefix(name) {
-  return name.replace(/^(?:元大|凱基|群益|富邦|國泰|永豐|統一|兆豐|台新|元富|中信|中國信託|華南永昌|第一金|玉山|日盛|康和|宏遠)/, "");
+function stripBrokerNames(name) {
+  return name.replace(/(?:中國信託|華南永昌|第一金|元大|凱基|群益|富邦|國泰|永豐|統一|兆豐|台新|元富|中信|玉山|日盛|康和|宏遠)/g, "");
 }
 
 function getGroupedPieColor(group, groupNames, groupCounts) {
