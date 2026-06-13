@@ -360,6 +360,7 @@ tbody tr:last-child td {
 .pnl-cell {
   width: 20%;
   min-width: 0;
+  text-align: left;
 }
 
 .holdings-panel th:last-child,
