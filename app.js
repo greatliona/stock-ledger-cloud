@@ -827,11 +827,12 @@ function drawPieChart() {
         || b.value - a.value;
     });
   const groupNames = assignPieGroupOrder([...new Set(slices.map((slice) => slice.group))]);
+  const groupColorFamilies = assignPieColorFamilies(slices);
   const groupCounts = {};
   const coloredSlices = slices
-    .map((slice, index) => ({
+    .map((slice) => ({
       ...slice,
-      color: getGroupedPieColor(slice.group, groupNames, groupCounts),
+      color: getGroupedPieColor(slice.group, groupColorFamilies, groupCounts),
     }));
   slices.splice(0, slices.length, ...coloredSlices);
   const total = slices.reduce((sum, slice) => sum + slice.value, 0);
@@ -898,7 +899,7 @@ function drawPieChart() {
   } else {
     drawOutsidePieLabels(context, outsideLabels, centerX, radius, chartHeight);
   }
-  drawPieGroupSummary(context, buildPieGroupSummary(slices, groupNames, total), width, chartHeight, summaryHeight, compactPie);
+  drawPieGroupSummary(context, buildPieGroupSummary(slices, groupNames, groupColorFamilies, total), width, chartHeight, summaryHeight, compactPie);
 }
 
 function getHoldingGroupName(holding) {
@@ -931,8 +932,43 @@ function stripBrokerNames(name) {
   return name.replace(/(?:中國信託|華南永昌|第一金|元大|凱基|群益|富邦|國泰|永豐|統一|兆豐|台新|元富|中信|玉山|日盛|康和|宏遠)/g, "");
 }
 
-function getGroupedPieColor(group, groupNames, groupCounts) {
-  const groupIndex = Math.max(0, groupNames.indexOf(group));
+function assignPieColorFamilies(slices) {
+  const visualGroups = [];
+  for (const slice of slices) {
+    if (visualGroups[visualGroups.length - 1] !== slice.group) visualGroups.push(slice.group);
+  }
+
+  const assignments = new Map();
+  const usage = Array(pieColorFamilies.length).fill(0);
+
+  visualGroups.forEach((group, index) => {
+    const previousFamily = index > 0 ? assignments.get(visualGroups[index - 1]) : undefined;
+    const firstFamily = assignments.get(visualGroups[0]);
+    const forbidden = new Set();
+    if (previousFamily !== undefined) forbidden.add(previousFamily);
+    if (index === visualGroups.length - 1 && visualGroups.length > 1 && firstFamily !== undefined) {
+      forbidden.add(firstFamily);
+    }
+
+    let selected = 0;
+    let selectedUsage = Infinity;
+    for (let familyIndex = 0; familyIndex < pieColorFamilies.length; familyIndex += 1) {
+      if (forbidden.has(familyIndex)) continue;
+      if (usage[familyIndex] < selectedUsage) {
+        selected = familyIndex;
+        selectedUsage = usage[familyIndex];
+      }
+    }
+
+    assignments.set(group, selected);
+    usage[selected] += 1;
+  });
+
+  return assignments;
+}
+
+function getGroupedPieColor(group, groupColorFamilies, groupCounts) {
+  const groupIndex = groupColorFamilies.get(group) ?? 0;
   const family = pieColorFamilies[groupIndex % pieColorFamilies.length];
   const shadeIndex = groupCounts[group] || 0;
   groupCounts[group] = shadeIndex + 1;
@@ -950,7 +986,7 @@ function assignPieGroupOrder(groupNames) {
   });
 }
 
-function buildPieGroupSummary(slices, groupNames, total) {
+function buildPieGroupSummary(slices, groupNames, groupColorFamilies, total) {
   const summary = new Map();
   for (const slice of slices) {
     const current = summary.get(slice.group) || 0;
@@ -962,13 +998,13 @@ function buildPieGroupSummary(slices, groupNames, total) {
       group,
       value: summary.get(group),
       percent: total ? (summary.get(group) / total) * 100 : 0,
-      color: getPieGroupBaseColor(group, groupNames),
+      color: getPieGroupBaseColor(group, groupColorFamilies),
     }))
     .sort((a, b) => b.value - a.value || chineseNameSorter.compare(a.group, b.group));
 }
 
-function getPieGroupBaseColor(group, groupNames) {
-  const groupIndex = Math.max(0, groupNames.indexOf(group));
+function getPieGroupBaseColor(group, groupColorFamilies) {
+  const groupIndex = groupColorFamilies.get(group) ?? 0;
   const family = pieColorFamilies[groupIndex % pieColorFamilies.length];
   return family[Math.min(2, family.length - 1)];
 }

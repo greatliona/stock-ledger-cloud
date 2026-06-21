@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stock Ledger!</title>
-    <link rel="stylesheet" href="styles.css?v=20260621-1" />
+    <link rel="stylesheet" href="styles.css?v=20260621-2" />
   </head>
   <body>
     <main class="app-shell">
@@ -179,16 +179,16 @@
         </div>
         <div class="asset-chart-carousel" aria-label="資產市值圖表">
           <article class="asset-chart-slide">
+            <h3>合併市值</h3>
+            <canvas id="assetChart" data-asset-chart="combined" height="260"></canvas>
+          </article>
+          <article class="asset-chart-slide">
             <h3>股票市值</h3>
             <canvas id="stockValueChart" data-asset-chart="stock" height="260"></canvas>
           </article>
           <article class="asset-chart-slide">
             <h3>基金市值</h3>
             <canvas id="fundValueChart" data-asset-chart="fund" height="260"></canvas>
-          </article>
-          <article class="asset-chart-slide">
-            <h3>合併市值</h3>
-            <canvas id="assetChart" data-asset-chart="combined" height="260"></canvas>
           </article>
         </div>
         <details class="history-details">
@@ -226,6 +226,6 @@
       </tr>
     </template>
 
-    <script src="app.js?v=20260621-1"></script>
+    <script src="app.js?v=20260621-2"></script>
   </body>
 </html>
