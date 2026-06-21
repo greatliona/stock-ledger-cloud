@@ -14,6 +14,7 @@ const pieColorFamilies = [
   ["#dbeafe", "#bfdbfe", "#93c5fd", "#60a5fa"],
   ["#ffedd5", "#fed7aa", "#fdba74", "#fb923c"],
   ["#dcfce7", "#bbf7d0", "#86efac", "#4ade80"],
+  ["#fee2e2", "#fecaca", "#fca5a5", "#f87171"],
   ["#f3e8ff", "#e9d5ff", "#d8b4fe", "#c4b5fd"],
 ];
 
@@ -64,7 +65,7 @@ const els = {
   totalPnl: document.querySelector("#totalPnl"),
   totalPnlPct: document.querySelector("#totalPnlPct"),
   statusText: document.querySelector("#statusText"),
-  chart: document.querySelector("#assetChart"),
+  assetCharts: Array.from(document.querySelectorAll("[data-asset-chart]")),
   pieChart: document.querySelector("#stockPieChart"),
   historyList: document.querySelector("#historyList"),
   emptyTemplate: document.querySelector("#emptyTemplate"),
@@ -673,12 +674,17 @@ function renderHistory() {
 }
 
 function drawCharts() {
-  drawAssetChart();
+  drawAssetCharts();
   drawPieChart();
 }
 
-function drawAssetChart() {
-  const canvas = els.chart;
+function drawAssetCharts() {
+  for (const canvas of els.assetCharts) {
+    drawAssetChart(canvas, canvas.dataset.assetChart || "combined");
+  }
+}
+
+function drawAssetChart(canvas, mode = "combined") {
   const context = canvas.getContext("2d");
   const ratio = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
@@ -706,7 +712,7 @@ function drawAssetChart() {
     return;
   }
 
-  const values = history.map((item) => Math.max(toNumber(item.total), toNumber(item.stockTotal) + toNumber(item.fundTotal)));
+  const values = history.map((item) => getAssetChartValue(item, mode));
   const min = 0;
   const max = Math.ceil(Math.max(...values) / 500000) * 500000 || 500000;
   const range = max - min || Math.max(max, 1);
@@ -715,52 +721,31 @@ function drawAssetChart() {
     const x = padding.left + (history.length === 1 ? chartWidth / 2 : (index / (history.length - 1)) * chartWidth);
     const stockTotal = toNumber(item.stockTotal);
     const fundTotal = toNumber(item.fundTotal);
+    const value = getAssetChartValue(item, mode);
+    const valueY = padding.top + chartHeight - ((value - min) / range) * chartHeight;
     const stockY = padding.top + chartHeight - ((stockTotal - min) / range) * chartHeight;
     const totalY = padding.top + chartHeight - ((stockTotal + fundTotal - min) / range) * chartHeight;
-    return { x, stockY, totalY, item, stockTotal, fundTotal };
+    return { x, valueY, stockY, totalY, item, stockTotal, fundTotal, value };
   });
 
-  if (points.length === 1) {
-    drawSingleStackedColumn(context, points[0], padding, chartWidth, chartHeight);
+  if (mode === "combined") {
+    if (points.length === 1) {
+      drawSingleStackedColumn(context, points[0], padding, chartWidth, chartHeight);
+    } else {
+      fillStackedArea(context, points, padding.top + chartHeight, "stockY", assetChartColors.stockFill);
+      fillStackedBand(context, points, "totalY", "stockY", assetChartColors.fundFill);
+    }
   } else {
-    fillStackedArea(context, points, padding.top + chartHeight, "stockY", assetChartColors.stockFill);
-    fillStackedBand(context, points, "totalY", "stockY", assetChartColors.fundFill);
+    fillStackedArea(context, points, padding.top + chartHeight, "valueY", getSingleAssetChartColor(mode, "fill"));
   }
 
   drawGrid(context, padding, chartWidth, chartHeight, max);
 
-  context.strokeStyle = assetChartColors.stockLine;
-  context.lineWidth = 2;
-  context.beginPath();
-  points.forEach((point, index) => {
-    if (index === 0) context.moveTo(point.x, point.stockY);
-    else context.lineTo(point.x, point.stockY);
-  });
-  context.stroke();
-
-  context.strokeStyle = assetChartColors.fundLine;
-  context.lineWidth = 2;
-  context.beginPath();
-  points.forEach((point, index) => {
-    if (index === 0) context.moveTo(point.x, point.totalY);
-    else context.lineTo(point.x, point.totalY);
-  });
-  context.stroke();
-
-  for (const point of points) {
-    context.fillStyle = "#ffffff";
-    context.strokeStyle = assetChartColors.stockLine;
-    context.lineWidth = 2;
-    context.beginPath();
-    context.arc(point.x, point.stockY, 4, 0, Math.PI * 2);
-    context.fill();
-    context.stroke();
-
-    context.strokeStyle = assetChartColors.fundLine;
-    context.beginPath();
-    context.arc(point.x, point.totalY, 4.5, 0, Math.PI * 2);
-    context.fill();
-    context.stroke();
+  if (mode === "combined") {
+    drawAssetLine(context, points, "stockY", assetChartColors.stockLine, 4);
+    drawAssetLine(context, points, "totalY", assetChartColors.fundLine, 4.5);
+  } else {
+    drawAssetLine(context, points, "valueY", getSingleAssetChartColor(mode, "line"), 4.5);
   }
 
   context.fillStyle = "#6c756f";
@@ -774,7 +759,20 @@ function drawAssetChart() {
     context.fillText(label, point.x, padding.top + chartHeight + 22);
   });
 
-  drawAssetLegend(context, padding.left, 24);
+  drawAssetLegend(context, padding.left, 24, mode);
+}
+
+function getAssetChartValue(item, mode) {
+  const stockTotal = toNumber(item.stockTotal);
+  const fundTotal = toNumber(item.fundTotal);
+  if (mode === "stock") return stockTotal;
+  if (mode === "fund") return fundTotal;
+  return Math.max(toNumber(item.total), stockTotal + fundTotal);
+}
+
+function getSingleAssetChartColor(mode, type) {
+  if (mode === "fund") return type === "line" ? assetChartColors.fundLine : assetChartColors.fundFill;
+  return type === "line" ? assetChartColors.stockLine : assetChartColors.stockFill;
 }
 
 function shouldDrawChartDateLabel(index, total, compactChart) {
@@ -1036,11 +1034,36 @@ function drawSingleStackedColumn(context, point, padding, chartWidth, chartHeigh
   context.strokeRect(x, point.totalY, columnWidth, point.stockY - point.totalY);
 }
 
-function drawAssetLegend(context, x, y) {
-  const items = [
-    { label: "股票", color: assetChartColors.stockFill },
-    { label: "基金", color: assetChartColors.fundFill },
-  ];
+function drawAssetLine(context, points, key, color, pointRadius) {
+  context.strokeStyle = color;
+  context.lineWidth = 2;
+  context.beginPath();
+  points.forEach((point, index) => {
+    if (index === 0) context.moveTo(point.x, point[key]);
+    else context.lineTo(point.x, point[key]);
+  });
+  context.stroke();
+
+  for (const point of points) {
+    context.fillStyle = "#ffffff";
+    context.strokeStyle = color;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.arc(point.x, point[key], pointRadius, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
+  }
+}
+
+function drawAssetLegend(context, x, y, mode = "combined") {
+  const items = mode === "stock"
+    ? [{ label: "股票", color: assetChartColors.stockFill }]
+    : mode === "fund"
+      ? [{ label: "基金", color: assetChartColors.fundFill }]
+      : [
+          { label: "股票", color: assetChartColors.stockFill },
+          { label: "基金", color: assetChartColors.fundFill },
+        ];
   context.font = "12px sans-serif";
   context.textAlign = "left";
   context.textBaseline = "middle";
