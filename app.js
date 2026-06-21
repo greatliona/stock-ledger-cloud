@@ -714,7 +714,8 @@ function drawAssetChart(canvas, mode = "combined") {
 
   const values = history.map((item) => getAssetChartValue(item, mode));
   const min = 0;
-  const max = Math.ceil(Math.max(...values) / 500000) * 500000 || 500000;
+  const gridStep = getAssetChartGridStep(mode);
+  const max = getAssetChartMax(values, mode, gridStep);
   const range = max - min || Math.max(max, 1);
 
   const points = history.map((item, index) => {
@@ -739,7 +740,7 @@ function drawAssetChart(canvas, mode = "combined") {
     fillStackedArea(context, points, padding.top + chartHeight, "valueY", getSingleAssetChartColor(mode, "fill"));
   }
 
-  drawGrid(context, padding, chartWidth, chartHeight, max);
+  drawGrid(context, padding, chartWidth, chartHeight, max, gridStep);
 
   if (mode === "combined") {
     drawAssetLine(context, points, "stockY", assetChartColors.stockLine, 4);
@@ -768,6 +769,18 @@ function getAssetChartValue(item, mode) {
   if (mode === "stock") return stockTotal;
   if (mode === "fund") return fundTotal;
   return Math.max(toNumber(item.total), stockTotal + fundTotal);
+}
+
+function getAssetChartGridStep(mode) {
+  return mode === "fund" ? 100000 : 500000;
+}
+
+function getAssetChartMax(values, mode, gridStep) {
+  const highest = Math.max(...values);
+  if (mode === "fund") {
+    return Math.max(gridStep, Math.floor(highest / gridStep) * gridStep + 200000);
+  }
+  return Math.ceil(highest / gridStep) * gridStep || gridStep;
 }
 
 function getSingleAssetChartColor(mode, type) {
@@ -1366,9 +1379,8 @@ function trimCanvasText(context, text, maxWidth) {
   return `${clipped}...`;
 }
 
-function drawGrid(context, padding, chartWidth, chartHeight, max) {
+function drawGrid(context, padding, chartWidth, chartHeight, max, step = 500000) {
   context.lineWidth = 1;
-  const step = 500000;
   for (let value = 0; value <= max; value += step) {
     const y = padding.top + chartHeight - (value / max) * chartHeight;
     context.strokeStyle = value === 0 ? "#17211c" : "rgba(108, 117, 111, 0.28)";
