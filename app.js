@@ -1187,8 +1187,10 @@ function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, h
 
     for (const label of sideLabels) {
       const direction = side === "right" ? 1 : -1;
-      const textX = side === "right" ? width - 14 : 14;
-      const markerX = side === "right" ? width - 72 : 72;
+      const textX = side === "right"
+        ? Math.min(width - 84, centerX + radius + 58)
+        : Math.max(84, centerX - radius - 58);
+      const markerX = textX - direction * 10;
       const markerY = label.y - lineHeight;
       const elbowX = centerX + direction * (radius + 10);
 
@@ -1207,11 +1209,18 @@ function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, h
 
       context.fillStyle = "#17211c";
       context.font = "700 8.5px sans-serif";
-      context.textAlign = side === "right" ? "right" : "left";
+      context.textAlign = side === "right" ? "left" : "right";
       context.textBaseline = "middle";
-      drawPieLabelLines(context, label.lines, textX, label.y, lineHeight);
+      drawBoundedPieLabelLines(context, label.lines, textX, label.y, lineHeight, 78);
     }
   }
+}
+
+function drawBoundedPieLabelLines(context, lines, x, y, lineHeight, maxWidth) {
+  const offset = ((lines.length - 1) * lineHeight) / 2;
+  lines.forEach((line, index) => {
+    context.fillText(trimCanvasText(context, line, maxWidth), x, y - offset + index * lineHeight);
+  });
 }
 
 function drawOutsidePieLabels(context, labels, centerX, radius, height) {
