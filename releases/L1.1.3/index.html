@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stock Ledger!</title>
+    <link rel="stylesheet" href="styles.css?v=20260625-3" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Portfolio Ledger</p>
+          <h1>Stock Ledger!</h1>
+        </div>
+      </header>
+
+      <section class="summary-grid" aria-label="投資組合摘要">
+        <article class="summary-card top-summary-card">
+          <span>資產總和</span>
+          <strong id="totalValue">$0</strong>
+        </article>
+        <article class="summary-card top-summary-card">
+          <span>總投入成本</span>
+          <strong id="totalCost">$0</strong>
+        </article>
+        <article class="summary-card profit-card top-summary-card">
+          <span>總獲利</span>
+          <em id="totalPnlPct">0.00%</em>
+          <strong id="totalPnl">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>股票總和</span>
+          <strong id="stockTotal">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>股票總成本</span>
+          <strong id="stockCost">$0</strong>
+        </article>
+        <article class="summary-card profit-card">
+          <span>股票總獲利</span>
+          <em id="stockPnlPct">0.00%</em>
+          <strong id="stockPnl">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>基金總和</span>
+          <strong id="fundTotal">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>基金總成本</span>
+          <strong id="fundCost">$0</strong>
+        </article>
+        <article class="summary-card profit-card">
+          <span>基金總獲利</span>
+          <em id="fundPnlPct">0.00%</em>
+          <strong id="fundPnl">$0</strong>
+        </article>
+      </section>
+
+      <section class="workspace">
+        <div class="panel holdings-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Holdings</p>
+              <h2>現有股票</h2>
+            </div>
+          </div>
+
+          <form id="holdingForm" class="holding-form">
+            <label>
+              股票代號
+              <input id="symbolInput" autocomplete="off" placeholder="例：2330.TW / AAPL" required />
+            </label>
+            <label>
+              股票名稱
+              <input id="nameInput" autocomplete="off" placeholder="例：台積電" />
+            </label>
+            <label>
+              股數
+              <input id="sharesInput" type="number" min="0" step="0.001" placeholder="1000" required />
+            </label>
+            <label>
+              平均成本
+              <input id="costInput" type="number" min="0" step="0.01" placeholder="580" required />
+            </label>
+            <label>
+              現價
+              <input id="priceInput" type="number" min="0" step="0.01" placeholder="可空白" />
+            </label>
+            <button type="submit" class="primary-btn">新增股票</button>
+          </form>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>股票</th>
+                  <th>股數</th>
+                  <th>成本</th>
+                  <th>現價</th>
+                  <th>投入金額</th>
+                  <th>市值</th>
+                  <th>損益</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="holdingsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel fund-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Funds</p>
+              <h2>基金</h2>
+            </div>
+          </div>
+
+          <form id="fundForm" class="fund-form">
+            <label>
+              基金名稱
+              <input id="fundNameInput" autocomplete="off" placeholder="例：全球科技基金" required />
+            </label>
+            <label>
+              基金成本
+              <input id="fundCostInput" type="number" min="0" step="0.01" placeholder="180000" required />
+            </label>
+            <label>
+              目前總額
+              <input id="fundAmountInput" type="number" min="0" step="0.01" placeholder="200000" required />
+            </label>
+            <button type="submit" class="primary-btn">新增基金</button>
+          </form>
+
+          <div class="table-wrap compact-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>基金</th>
+                  <th>成本</th>
+                  <th>目前總額</th>
+                  <th>損益</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="fundsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <aside class="panel settlement-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Close</p>
+              <h2>每日結帳</h2>
+            </div>
+          </div>
+          <label class="date-field">
+            日期
+            <input id="settlementDate" type="text" inputmode="numeric" autocomplete="off" placeholder="2026/06/03" />
+          </label>
+          <label class="note-field">
+            今日備註
+            <textarea id="settlementNote" rows="3" placeholder="例：市場大跌、買進、賣出、重大新聞"></textarea>
+          </label>
+          <div id="settlementRows" class="settlement-rows"></div>
+          <button id="settleBtn" type="button" class="primary-btn full">記錄今日資產</button>
+          <p id="statusText" class="status-text" aria-live="polite"></p>
+        </aside>
+      </section>
+
+      <section class="panel chart-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Trend</p>
+            <h2>資產總額折線圖</h2>
+          </div>
+        </div>
+        <div class="asset-chart-carousel" aria-label="資產市值圖表">
+          <article class="asset-chart-slide">
+            <h3>合併市值</h3>
+            <canvas id="assetChart" data-asset-chart="combined" height="260"></canvas>
+          </article>
+          <article class="asset-chart-slide">
+            <h3>股票市值</h3>
+            <canvas id="stockValueChart" data-asset-chart="stock" height="260"></canvas>
+          </article>
+          <article class="asset-chart-slide">
+            <h3>基金市值</h3>
+            <canvas id="fundValueChart" data-asset-chart="fund" height="260"></canvas>
+          </article>
+        </div>
+        <details class="history-details">
+          <summary>History!</summary>
+          <div id="historyList" class="history-list"></div>
+        </details>
+      </section>
+
+      <section class="panel chart-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Allocation</p>
+            <h2>股票佔比圓餅圖</h2>
+          </div>
+        </div>
+        <canvas id="stockPieChart" height="320"></canvas>
+      </section>
+
+      <section class="backup-tools" aria-label="資料備份">
+        <div>
+          <p class="eyebrow">Backup</p>
+          <h2>資料備份</h2>
+        </div>
+        <div class="backup-actions">
+          <button id="importBtn" class="secondary-btn" type="button">匯入資料</button>
+          <button id="exportBtn" class="secondary-btn" type="button">匯出資料</button>
+          <input id="importFile" type="file" accept="application/json,.json" hidden />
+        </div>
+      </section>
+    </main>
+
+    <template id="emptyTemplate">
+      <tr>
+        <td colspan="8" class="empty-cell">尚未新增股票</td>
+      </tr>
+    </template>
+
+    <script src="app.js?v=20260625-3"></script>
+  </body>
+</html>
