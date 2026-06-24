@@ -153,6 +153,10 @@ els.holdingsBody.addEventListener("click", (event) => {
 
   const deleteBtn = event.target.closest("[data-delete-id]");
   if (!deleteBtn) return;
+  const holding = findHolding(deleteBtn.dataset.deleteId);
+  if (!holding) return;
+  const label = holding.name || holding.symbol || "這筆股票";
+  if (!confirm(`確定刪除 ${label}？`)) return;
   const index = state.holdings.findIndex((item) => item.id === deleteBtn.dataset.deleteId);
   if (index >= 0) {
     state.holdings.splice(index, 1);
@@ -209,6 +213,9 @@ els.fundsBody.addEventListener("click", (event) => {
 
   const deleteBtn = event.target.closest("[data-delete-fund-id]");
   if (!deleteBtn) return;
+  const fund = findFund(deleteBtn.dataset.deleteFundId);
+  if (!fund) return;
+  if (!confirm(`確定刪除 ${fund.name || "這筆基金"}？`)) return;
   const index = state.funds.findIndex((item) => item.id === deleteBtn.dataset.deleteFundId);
   if (index >= 0) {
     state.funds.splice(index, 1);
@@ -1180,8 +1187,8 @@ function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, h
 
     for (const label of sideLabels) {
       const direction = side === "right" ? 1 : -1;
-      const textX = side === "right" ? width - 58 : 72;
-      const markerX = textX - direction * 9;
+      const textX = side === "right" ? width - 14 : 14;
+      const markerX = side === "right" ? width - 72 : 72;
       const markerY = label.y - lineHeight;
       const elbowX = centerX + direction * (radius + 10);
 
@@ -1200,7 +1207,7 @@ function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, h
 
       context.fillStyle = "#17211c";
       context.font = "700 8.5px sans-serif";
-      context.textAlign = side === "right" ? "left" : "right";
+      context.textAlign = side === "right" ? "right" : "left";
       context.textBaseline = "middle";
       drawPieLabelLines(context, label.lines, textX, label.y, lineHeight);
     }
