@@ -865,8 +865,8 @@ function drawPieChart() {
     return;
   }
 
-  const labelRoom = compactPie ? 80 : 180;
-  const radius = compactPie ? Math.min((width - labelRoom * 2) / 2, 72) : Math.min((width - labelRoom * 2) / 2, chartHeight * 0.34, 210);
+  const labelRoom = compactPie ? 88 : 180;
+  const radius = compactPie ? Math.min((width - labelRoom * 2) / 2, 76) : Math.min((width - labelRoom * 2) / 2, chartHeight * 0.34, 210);
   const centerX = width / 2;
   const centerY = chartHeight / 2;
   let start = -Math.PI / 2;
