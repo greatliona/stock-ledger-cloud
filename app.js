@@ -822,15 +822,6 @@ function drawPieChart() {
   const rect = canvas.getBoundingClientRect();
   const width = rect.width || 320;
   const compactPie = width < 720;
-  const chartHeight = compactPie ? 560 : Math.max(620, Math.min(760, width * 0.62));
-  const summaryHeight = compactPie ? 174 : 64;
-  const height = chartHeight + summaryHeight;
-  canvas.style.height = `${height}px`;
-  canvas.width = Math.max(320, Math.floor(width * ratio));
-  canvas.height = Math.floor(height * ratio);
-  context.scale(ratio, ratio);
-  context.clearRect(0, 0, width, height);
-
   const slices = state.holdings
     .map((holding) => ({
       label: holding.name || holding.symbol,
@@ -856,6 +847,17 @@ function drawPieChart() {
     }));
   slices.splice(0, slices.length, ...coloredSlices);
   const total = slices.reduce((sum, slice) => sum + slice.value, 0);
+  const summaryRows = buildPieGroupSummary(slices, groupNames, groupColorFamilies, total);
+  const chartHeight = compactPie
+    ? getMobilePieChartHeight(width, slices.length)
+    : Math.max(620, Math.min(760, width * 0.62));
+  const summaryHeight = compactPie ? getMobilePieGroupSummaryHeight(summaryRows.length) : 64;
+  const height = chartHeight + summaryHeight;
+  canvas.style.height = `${height}px`;
+  canvas.width = Math.max(320, Math.floor(width * ratio));
+  canvas.height = Math.floor(height * ratio);
+  context.scale(ratio, ratio);
+  context.clearRect(0, 0, width, height);
 
   if (!total) {
     context.fillStyle = "#6c756f";
@@ -865,10 +867,10 @@ function drawPieChart() {
     return;
   }
 
-  const labelRoom = compactPie ? 88 : 180;
-  const radius = compactPie ? Math.min((width - labelRoom * 2) / 2, 76) : Math.min((width - labelRoom * 2) / 2, chartHeight * 0.34, 210);
+  const labelRoom = compactPie ? 0 : 180;
+  const radius = compactPie ? getMobilePieRadius(width) : Math.min((width - labelRoom * 2) / 2, chartHeight * 0.34, 210);
   const centerX = width / 2;
-  const centerY = chartHeight / 2;
+  const centerY = compactPie ? getMobilePieCenterY(radius) : chartHeight / 2;
   let start = -Math.PI / 2;
 
   for (const slice of slices) {
@@ -892,6 +894,16 @@ function drawPieChart() {
     const percent = (slice.value / total) * 100;
     const mid = (slice.start + slice.end) / 2;
     const lines = [slice.label, `${formatNumber(percent)}%`, money(slice.value)];
+    if (compactPie) {
+      if (percent >= 10) {
+        const labelRadius = radius * 0.54;
+        const x = centerX + Math.cos(mid) * labelRadius;
+        const y = centerY + Math.sin(mid) * labelRadius;
+        drawMobilePiePercent(context, `${formatNumber(percent)}%`, x, y);
+      }
+      continue;
+    }
+
     if (percent >= (compactPie ? 16 : 12)) {
       const labelRadius = radius * 0.58;
       const x = centerX + Math.cos(mid) * labelRadius;
@@ -915,11 +927,11 @@ function drawPieChart() {
   }
 
   if (compactPie) {
-    drawMobileOutsidePieLabels(context, outsideLabels, centerX, centerY, radius, chartHeight, width);
+    drawMobilePieSliceLegend(context, slices, total, 18, centerY + radius + 28, width - 36);
   } else {
     drawOutsidePieLabels(context, outsideLabels, centerX, radius, chartHeight);
   }
-  drawPieGroupSummary(context, buildPieGroupSummary(slices, groupNames, groupColorFamilies, total), width, chartHeight, summaryHeight, compactPie);
+  drawPieGroupSummary(context, summaryRows, width, chartHeight, summaryHeight, compactPie);
 }
 
 function getHoldingGroupName(holding) {
@@ -1148,6 +1160,89 @@ function drawWrappedLabel(context, text, x, y, maxWidth, lineHeight) {
   if (current) lines.push(current);
   const offset = ((lines.length - 1) * lineHeight) / 2;
   lines.forEach((line, index) => context.fillText(line, x, y - offset + index * lineHeight));
+}
+
+function getMobilePieRadius(width) {
+  return Math.min(Math.max((width - 76) / 2, 68), 90);
+}
+
+function getMobilePieCenterY(radius) {
+  return radius + 42;
+}
+
+function getMobilePieLegendHeight(sliceCount) {
+  return sliceCount ? 48 + sliceCount * 20 : 0;
+}
+
+function getMobilePieChartHeight(width, sliceCount) {
+  const radius = getMobilePieRadius(width);
+  const legendY = getMobilePieCenterY(radius) + radius + 28;
+  return Math.max(520, legendY + getMobilePieLegendHeight(sliceCount) + 24);
+}
+
+function getMobilePieGroupSummaryHeight(rowCount) {
+  return rowCount ? 66 + rowCount * 17 : 0;
+}
+
+function drawMobilePiePercent(context, text, x, y) {
+  context.save();
+  context.font = "800 10.5px sans-serif";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.lineWidth = 3;
+  context.strokeStyle = "rgba(255, 255, 255, 0.78)";
+  context.strokeText(text, x, y);
+  context.fillStyle = "#17211c";
+  context.fillText(text, x, y);
+  context.restore();
+}
+
+function drawMobilePieSliceLegend(context, slices, total, x, y, width) {
+  if (!slices.length) return;
+
+  const padding = 11;
+  const rowHeight = 20;
+  const panelHeight = getMobilePieLegendHeight(slices.length);
+  const valueWidth = 70;
+
+  context.fillStyle = "rgba(255, 255, 255, 0.92)";
+  context.strokeStyle = "rgba(220, 226, 220, 0.95)";
+  context.lineWidth = 1;
+  context.fillRect(x, y, width, panelHeight);
+  context.strokeRect(x, y, width, panelHeight);
+
+  context.fillStyle = "#6c756f";
+  context.font = "700 11.5px sans-serif";
+  context.textAlign = "left";
+  context.textBaseline = "middle";
+  context.fillText("持股明細", x + padding, y + 18);
+
+  context.font = "700 10.5px sans-serif";
+  for (const [index, slice] of slices.entries()) {
+    const rowY = y + 40 + index * rowHeight;
+    const percent = total ? (slice.value / total) * 100 : 0;
+    const valueText = `${formatNumber(percent)}% ${shortMoney(slice.value)}`;
+
+    context.fillStyle = slice.color;
+    context.fillRect(x + padding, rowY - 4, 8, 8);
+    context.strokeStyle = "rgba(23, 33, 28, 0.25)";
+    context.strokeRect(x + padding, rowY - 4, 8, 8);
+
+    context.fillStyle = "#17211c";
+    context.textAlign = "left";
+    context.fillText(
+      trimCanvasText(context, slice.label, width - padding * 2 - 18 - valueWidth),
+      x + padding + 13,
+      rowY,
+    );
+
+    context.textAlign = "right";
+    context.fillText(
+      trimCanvasText(context, valueText, valueWidth),
+      x + width - padding,
+      rowY,
+    );
+  }
 }
 
 function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, height, width) {
