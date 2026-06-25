@@ -822,14 +822,6 @@ function drawPieChart() {
   const rect = canvas.getBoundingClientRect();
   const width = rect.width || 320;
   const compactPie = width < 720;
-  const chartHeight = compactPie ? 560 : Math.max(620, Math.min(760, width * 0.62));
-  const summaryHeight = compactPie ? 174 : 64;
-  const height = chartHeight + summaryHeight;
-  canvas.style.height = `${height}px`;
-  canvas.width = Math.max(320, Math.floor(width * ratio));
-  canvas.height = Math.floor(height * ratio);
-  context.scale(ratio, ratio);
-  context.clearRect(0, 0, width, height);
 
   const slices = state.holdings
     .map((holding) => ({
@@ -856,6 +848,15 @@ function drawPieChart() {
     }));
   slices.splice(0, slices.length, ...coloredSlices);
   const total = slices.reduce((sum, slice) => sum + slice.value, 0);
+  const summaryRows = buildPieGroupSummary(slices, groupNames, groupColorFamilies, total);
+  const chartHeight = compactPie ? 560 : Math.max(620, Math.min(760, width * 0.62));
+  const summaryHeight = getPieGroupSummaryHeight(summaryRows.length, compactPie);
+  const height = chartHeight + summaryHeight;
+  canvas.style.height = `${height}px`;
+  canvas.width = Math.max(320, Math.floor(width * ratio));
+  canvas.height = Math.floor(height * ratio);
+  context.scale(ratio, ratio);
+  context.clearRect(0, 0, width, height);
 
   if (!total) {
     context.fillStyle = "#6c756f";
@@ -919,7 +920,7 @@ function drawPieChart() {
   } else {
     drawOutsidePieLabels(context, outsideLabels, centerX, radius, chartHeight);
   }
-  drawPieGroupSummary(context, buildPieGroupSummary(slices, groupNames, groupColorFamilies, total), width, chartHeight, summaryHeight, compactPie);
+  drawPieGroupSummary(context, summaryRows, width, chartHeight, summaryHeight, compactPie);
 }
 
 function getHoldingGroupName(holding) {
@@ -1321,6 +1322,7 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
 
 function drawMobilePieGroupSummary(context, rows, x, y, width) {
   const padding = 11;
+  const rowGap = 20;
   let rowY = y + 18;
 
   context.fillStyle = "#6c756f";
@@ -1341,8 +1343,13 @@ function drawMobilePieGroupSummary(context, rows, x, y, width) {
 
     context.fillStyle = "#17211c";
     context.fillText(trimCanvasText(context, label, width - padding * 2 - 14), x + padding + 13, rowY);
-    rowY += 17;
+    rowY += rowGap;
   }
+}
+
+function getPieGroupSummaryHeight(rowCount, compactPie) {
+  if (!compactPie) return 64;
+  return Math.max(174, 48 + rowCount * 20);
 }
 
 function drawPieLabelLines(context, lines, x, y, lineHeight) {
