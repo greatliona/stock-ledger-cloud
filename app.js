@@ -926,6 +926,8 @@ function drawPieChart() {
 function getHoldingGroupName(holding) {
   const rawName = String(holding.name || holding.symbol || "").trim();
   const compactName = stripBrokerNames(rawName.replace(/\s+/g, ""));
+  const starred = compactName.match(/^([\u4e00-\u9fff]+)\*/);
+  if (starred?.[1]) return `${starred[1]}*`;
   const matched = compactName.match(/^([\u4e00-\u9fff]+?)(?:[A-Z]*\d[A-Z0-9]*.*)$/i);
   if (matched?.[1]) return matched[1];
   return rawName || "未命名";

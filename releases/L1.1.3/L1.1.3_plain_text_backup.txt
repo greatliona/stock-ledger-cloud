@@ -1,5 +1,5 @@
 L1.1.3 純文字備份
-產生時間：2026-06-25 10:47 CST
+產生時間：2026-06-25 15:03 CST
 來源資料夾：/Users/vision/Documents/Codex/2026-06-02/v1-0-1-users-vision-documents/stock-ledger-cloud/releases/L1.1.3
 來源檔案：/Users/vision/Desktop/StockApps/my_stock_tool6/L1.1.1.txt
 來源提交：15f8178 Tune fund chart scale
@@ -2203,6 +2203,8 @@ function drawPieChart() {
 function getHoldingGroupName(holding) {
   const rawName = String(holding.name || holding.symbol || "").trim();
   const compactName = stripBrokerNames(rawName.replace(/\s+/g, ""));
+  const starred = compactName.match(/^([\u4e00-\u9fff]+)\*/);
+  if (starred?.[1]) return `${starred[1]}*`;
   const matched = compactName.match(/^([\u4e00-\u9fff]+?)(?:[A-Z]*\d[A-Z0-9]*.*)$/i);
   if (matched?.[1]) return matched[1];
   return rawName || "未命名";
@@ -3068,4 +3070,3 @@ initCloudSync();
 
 
 ============================================================
-
