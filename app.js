@@ -1298,14 +1298,15 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
   context.fillStyle = "#6c756f";
   context.font = "700 13px sans-serif";
   context.fillText(title, cursorX, rowY);
-  cursorX += context.measureText(title).width + 16;
+  const itemStartX = cursorX + context.measureText(title).width + 16;
+  cursorX = itemStartX;
 
   context.font = "700 12px sans-serif";
   for (const row of rows) {
     const label = `${row.group}: ${formatNumber(row.percent)}% ${money(row.value)}`;
     const itemWidth = 12 + context.measureText(label).width + 18;
     if (cursorX + itemWidth > x + panelWidth - 12) {
-      cursorX = x + 12;
+      cursorX = itemStartX;
       rowY += 24;
     }
 
@@ -1351,14 +1352,15 @@ function getPieGroupSummaryHeight(rows, width, compactPie) {
   if (compactPie) return Math.max(174, 48 + rows.length * 20);
 
   let lineCount = 1;
-  let cursorX = 12 + 86 + 16;
+  const itemStartX = 12 + 86 + 16;
+  let cursorX = itemStartX;
   const panelWidth = width - 36;
   const maxX = panelWidth - 12;
   for (const row of rows) {
     const itemWidth = 26 + row.group.length * 14 + `${formatNumber(row.percent)}% ${money(row.value)}`.length * 7;
     if (cursorX + itemWidth > maxX) {
       lineCount += 1;
-      cursorX = 12;
+      cursorX = itemStartX;
     }
     cursorX += itemWidth;
   }
