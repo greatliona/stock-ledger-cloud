@@ -582,15 +582,18 @@ tbody tr:last-child td {
 .history-details summary::after {
   content: "展開";
   float: right;
-  min-width: 52px;
-  min-height: 30px;
-  padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 4px 9px;
   border: 1px solid var(--button-border);
   border-radius: 8px;
   background: var(--button-bg);
   color: var(--ink);
   font-size: 0.78rem;
-  line-height: 1.15;
+  line-height: 1;
   text-align: center;
   text-transform: none;
 }
@@ -641,11 +644,13 @@ tbody tr:last-child td {
 }
 
 .history-daily-pnl {
+  display: block;
+  margin-top: 3px;
   color: var(--muted);
   font-size: 0.56rem;
   font-weight: 800;
   line-height: 1.1;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .history-item em {

@@ -678,8 +678,8 @@ function renderHistory() {
         </div>
         <div class="history-total-line">
           <strong>${money(item.total)}</strong>
-          ${dailyPnlText}
         </div>
+        ${dailyPnlText}
         <em>股票 ${money(item.stockTotal || 0)}</em>
         <em>基金 ${money(item.fundTotal || 0)}</em>
         <em>損益 ${signedMoney(item.pnl || 0)}</em>
