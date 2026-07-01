@@ -11,6 +11,7 @@
   --button-bg: #f9d99a;
   --button-hover: #f3c978;
   --button-border: #e8b45f;
+  --button-text: #3f4742;
   --shadow: 0 18px 45px rgba(23, 33, 28, 0.1);
 }
 
@@ -107,7 +108,7 @@ h2 {
   min-height: 42px;
   padding: 0 16px;
   background: var(--button-bg);
-  color: var(--ink);
+  color: var(--button-text);
   font-weight: 800;
 }
 
@@ -115,7 +116,7 @@ h2 {
 .secondary-btn,
 .text-btn {
   background: var(--button-bg);
-  color: var(--ink);
+  color: var(--button-text);
 }
 
 .primary-btn:hover,
@@ -591,7 +592,7 @@ tbody tr:last-child td {
   border: 1px solid var(--button-border);
   border-radius: 8px;
   background: var(--button-bg);
-  color: var(--ink);
+  color: var(--button-text);
   font-size: 0.78rem;
   line-height: 1;
   text-align: center;
@@ -683,7 +684,7 @@ tbody tr:last-child td {
   border: 1px solid var(--button-border);
   border-radius: 8px;
   background: var(--button-bg);
-  color: var(--ink);
+  color: var(--button-text);
   font-weight: 800;
 }
 
@@ -773,11 +774,11 @@ tbody tr:last-child td {
 .history-actions button:first-child {
   background: var(--button-bg);
   border-color: var(--button-border);
-  color: var(--ink);
+  color: var(--button-text);
 }
 
 .history-actions button:last-child {
-  color: var(--ink);
+  color: var(--button-text);
 }
 
 #stockPieChart {
