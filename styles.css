@@ -420,10 +420,10 @@ tbody tr:last-child td {
   width: 26px;
   height: 26px;
   padding: 0;
-  border: 1px solid var(--button-border);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--button-bg);
-  color: var(--ink);
+  background: white;
+  color: var(--muted);
   font-weight: 900;
 }
 
