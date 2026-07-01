@@ -614,9 +614,9 @@ function renderSettlementRows() {
 
 function renderHistory() {
   els.historyList.innerHTML = "";
-  const historyItems = [...state.history];
+  const historyItems = [...state.history].sort((a, b) => a.date.localeCompare(b.date));
 
-  for (const item of historyItems) {
+  for (const [index, item] of historyItems.entries()) {
     const node = document.createElement("div");
     node.className = "history-item";
     node.dataset.historyCard = item.date;
@@ -656,6 +656,12 @@ function renderHistory() {
       `;
     } else {
       const noteId = `history-note-${escapeHTML(item.date)}`;
+      const previousItem = index > 0 ? historyItems[index - 1] : null;
+      const dailyPnl = previousItem ? item.total - previousItem.total : 0;
+      const dailyPnlPct = previousItem?.total ? (dailyPnl / previousItem.total) * 100 : 0;
+      const dailyPnlText = previousItem
+        ? `<small class="history-daily-pnl">今日損益: ${signedMoney(dailyPnl)} ${dailyPnlPct >= 0 ? "+" : ""}${formatNumber(dailyPnlPct, 2)}%</small>`
+        : "";
       node.innerHTML = `
         <div class="history-card-head">
           <span>${escapeHTML(item.date)}</span>
@@ -670,7 +676,10 @@ function renderHistory() {
             </button>
           </div>
         </div>
-        <strong>${money(item.total)}</strong>
+        <div class="history-total-line">
+          <strong>${money(item.total)}</strong>
+          ${dailyPnlText}
+        </div>
         <em>股票 ${money(item.stockTotal || 0)}</em>
         <em>基金 ${money(item.fundTotal || 0)}</em>
         <em>損益 ${signedMoney(item.pnl || 0)}</em>

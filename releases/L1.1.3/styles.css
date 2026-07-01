@@ -582,8 +582,16 @@ tbody tr:last-child td {
 .history-details summary::after {
   content: "展開";
   float: right;
-  color: var(--muted);
+  min-width: 52px;
+  min-height: 30px;
+  padding: 6px 12px;
+  border: 1px solid var(--button-border);
+  border-radius: 8px;
+  background: var(--button-bg);
+  color: var(--ink);
   font-size: 0.78rem;
+  line-height: 1.15;
+  text-align: center;
   text-transform: none;
 }
 
@@ -623,6 +631,21 @@ tbody tr:last-child td {
   display: block;
   font-size: 0.94rem;
   line-height: 1.15;
+}
+
+.history-total-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.history-daily-pnl {
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .history-item em {
@@ -666,16 +689,16 @@ tbody tr:last-child td {
   height: 23px;
   min-width: 23px;
   padding: 0;
-  border: 1px solid var(--button-border);
+  border: 1px solid var(--line);
   border-radius: 7px;
-  background: var(--button-bg);
-  color: var(--ink);
+  background: white;
+  color: var(--muted);
 }
 
 .icon-btn:hover {
   color: var(--ink);
-  border-color: var(--button-border);
-  background: var(--button-hover);
+  border-color: rgba(21, 32, 26, 0.35);
+  background: white;
 }
 
 .icon-btn svg {
@@ -689,16 +712,16 @@ tbody tr:last-child td {
 }
 
 .note-toggle {
-  color: var(--ink);
-  border-color: var(--button-border);
-  background: var(--button-bg);
+  color: #f2b705;
+  border-color: rgba(242, 183, 5, 0.35);
+  background: white;
 }
 
 .note-toggle:hover,
 .note-toggle[aria-expanded="true"] {
-  color: var(--ink);
-  border-color: var(--button-border);
-  background: var(--button-hover);
+  color: #d99b00;
+  border-color: rgba(217, 155, 0, 0.55);
+  background: white;
 }
 
 .note-toggle svg {
