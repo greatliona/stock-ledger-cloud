@@ -16,6 +16,8 @@ const pieColorFamilies = [
   ["#dcfce7", "#bbf7d0", "#86efac", "#4ade80"],
   ["#fee2e2", "#fecaca", "#fca5a5", "#f87171"],
   ["#f3e8ff", "#e9d5ff", "#d8b4fe", "#c4b5fd"],
+  ["#fff2b8", "#ffd966", "#f2b84b"],
+  ["#ead4c2", "#c99a74", "#9b6a4a"],
 ];
 
 const assetChartColors = {

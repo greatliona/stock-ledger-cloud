@@ -8,6 +8,9 @@
   --red: #c64747;
   --blue: #2563eb;
   --amber: #b7791f;
+  --button-bg: #f6c46b;
+  --button-hover: #efb354;
+  --button-border: #d89a35;
   --shadow: 0 18px 45px rgba(23, 33, 28, 0.1);
 }
 
@@ -99,28 +102,26 @@ h2 {
 .primary-btn,
 .secondary-btn,
 .text-btn {
-  border: 0;
+  border: 1px solid var(--button-border);
   border-radius: 8px;
   min-height: 42px;
   padding: 0 16px;
+  background: var(--button-bg);
+  color: var(--ink);
   font-weight: 800;
 }
 
-.primary-btn {
-  background: var(--ink);
-  color: white;
-}
-
-.secondary-btn {
-  background: white;
-  color: var(--ink);
-  border: 1px solid var(--line);
-}
-
+.primary-btn,
+.secondary-btn,
 .text-btn {
-  background: transparent;
-  color: var(--muted);
-  padding: 0 4px;
+  background: var(--button-bg);
+  color: var(--ink);
+}
+
+.primary-btn:hover,
+.secondary-btn:hover,
+.text-btn:hover {
+  background: var(--button-hover);
 }
 
 .full {
@@ -419,10 +420,10 @@ tbody tr:last-child td {
   width: 26px;
   height: 26px;
   padding: 0;
-  border: 1px solid var(--line);
+  border: 1px solid var(--button-border);
   border-radius: 8px;
-  background: white;
-  color: var(--muted);
+  background: var(--button-bg);
+  color: var(--ink);
   font-weight: 900;
 }
 
@@ -466,7 +467,7 @@ tbody tr:last-child td {
 }
 
 .loss {
-  color: var(--red);
+  color: var(--ink);
 }
 
 .empty-cell {
@@ -651,9 +652,9 @@ tbody tr:last-child td {
 
 .history-actions button {
   min-height: 30px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--button-border);
   border-radius: 8px;
-  background: white;
+  background: var(--button-bg);
   color: var(--ink);
   font-weight: 800;
 }
@@ -665,15 +666,16 @@ tbody tr:last-child td {
   height: 23px;
   min-width: 23px;
   padding: 0;
-  border: 1px solid var(--line);
+  border: 1px solid var(--button-border);
   border-radius: 7px;
-  background: white;
-  color: var(--muted);
+  background: var(--button-bg);
+  color: var(--ink);
 }
 
 .icon-btn:hover {
   color: var(--ink);
-  border-color: rgba(21, 32, 26, 0.35);
+  border-color: var(--button-border);
+  background: var(--button-hover);
 }
 
 .icon-btn svg {
@@ -687,16 +689,16 @@ tbody tr:last-child td {
 }
 
 .note-toggle {
-  color: #f2b705;
-  border-color: rgba(242, 183, 5, 0.35);
-  background: #fffaf0;
+  color: var(--ink);
+  border-color: var(--button-border);
+  background: var(--button-bg);
 }
 
 .note-toggle:hover,
 .note-toggle[aria-expanded="true"] {
-  color: #d99b00;
-  border-color: rgba(217, 155, 0, 0.55);
-  background: #fff4cc;
+  color: var(--ink);
+  border-color: var(--button-border);
+  background: var(--button-hover);
 }
 
 .note-toggle svg {
@@ -741,13 +743,13 @@ tbody tr:last-child td {
 }
 
 .history-actions button:first-child {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: white;
+  background: var(--button-bg);
+  border-color: var(--button-border);
+  color: var(--ink);
 }
 
 .history-actions button:last-child {
-  color: var(--red);
+  color: var(--ink);
 }
 
 #stockPieChart {
