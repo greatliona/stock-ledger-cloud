@@ -468,7 +468,7 @@ tbody tr:last-child td {
 }
 
 .loss {
-  color: var(--ink);
+  color: var(--red);
 }
 
 .empty-cell {

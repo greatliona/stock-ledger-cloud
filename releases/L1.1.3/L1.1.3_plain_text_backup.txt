@@ -1,10 +1,8 @@
 L1.1.3 純文字備份
-產生時間：2026-07-02 00:34 CST
+產生時間：2026-07-02 14:41 CST
 來源資料夾：/Users/vision/Documents/Codex/2026-06-02/v1-0-1-users-vision-documents/stock-ledger-cloud/releases/L1.1.3
-來源檔案：/Users/vision/Desktop/StockApps/my_stock_tool6/L1.1.1.txt
-來源提交：15f8178 Tune fund chart scale
 
-此檔案將 L1.1.3 的主要程式與說明檔合併成純文字，方便留存。
+本版修正：負數損益恢復紅色。
 
 ============================================================
 
@@ -903,7 +901,7 @@ tbody tr:last-child td {
 }
 
 .loss {
-  color: var(--ink);
+  color: var(--red);
 }
 
 .empty-cell {
