@@ -1000,6 +1000,9 @@ tbody tr:last-child td {
 }
 
 .history-details summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   cursor: pointer;
   list-style: none;
   color: var(--blue);
@@ -1015,7 +1018,6 @@ tbody tr:last-child td {
 
 .history-details summary::after {
   content: "展開";
-  float: right;
   display: inline-flex;
   align-items: center;
   justify-content: center;
