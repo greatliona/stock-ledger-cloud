@@ -371,6 +371,10 @@ table {
   grid-column: 1 / -1;
 }
 
+.fund-panel .compact-table td:nth-child(4) {
+  text-align: left;
+}
+
 .fund-panel .compact-table td:nth-child(5) {
   display: flex;
   justify-content: flex-end;
@@ -486,38 +490,14 @@ tbody tr:last-child td {
   padding-right: 4px;
 }
 
-.compact-table table {
-  table-layout: fixed;
-}
-
-.fund-panel th:first-child,
-.fund-panel td:first-child {
-  width: 36%;
-}
-
-.fund-panel th:nth-child(2),
-.fund-panel th:nth-child(3),
-.fund-input-cell {
-  width: 17%;
-}
-
 .fund-input-cell input {
-  min-height: 32px;
-  padding: 6px 7px;
+  min-height: 38px;
+  padding: 7px 9px;
   text-align: right;
 }
 
-.fund-panel th:nth-child(4),
 .fund-pnl-cell {
-  width: 22%;
-}
-
-.fund-panel th:last-child,
-.fund-panel td:last-child {
-  width: 72px;
-  min-width: 72px;
-  padding-left: 4px;
-  padding-right: 4px;
+  font-size: 1rem;
 }
 
 .mini-btn {
