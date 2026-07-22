@@ -1709,44 +1709,21 @@ function drawUsStockPieChart() {
   const rect = canvas.getBoundingClientRect();
   const width = rect.width || 320;
   const compactPie = width < 720;
-  const usdTwdRate = toNumber(state.usdTwdRate);
   const slices = state.usHoldings
     .map((holding) => ({
       label: holding.symbol,
       group: holding.symbol,
-      value: holding.shares * (holding.currentPrice ?? holding.avgCost) * usdTwdRate,
+      value: holding.shares * (holding.currentPrice ?? holding.avgCost) * (state.usdTwdRate || 0),
     }))
-    .filter((slice) => slice.value > 0);
-  const groupTotals = new Map();
-  for (const slice of slices) {
-    groupTotals.set(slice.group, (groupTotals.get(slice.group) || 0) + slice.value);
-  }
-  const stockGroupNames = [...groupTotals.keys()].sort((a, b) =>
-    groupTotals.get(b) - groupTotals.get(a) || chineseNameSorter.compare(a, b)
-  );
-  const groupRanks = new Map(stockGroupNames.map((group, index) => [group, index]));
-  slices.sort((a, b) =>
-    groupRanks.get(a.group) - groupRanks.get(b.group)
-      || b.value - a.value
-      || chineseNameSorter.compare(a.label, b.label)
-  );
-  const usCashTwd = toNumber(state.usCashUsd) * usdTwdRate;
-  if (usCashTwd > 0) {
-    slices.unshift({
-      label: "Cash",
-      symbol: "Cash",
-      group: "Cash",
-      value: usCashTwd,
-      isCash: true,
-    });
-  }
-  const groupNames = usCashTwd > 0 ? ["Cash", ...stockGroupNames] : stockGroupNames;
+    .filter((slice) => slice.value > 0)
+    .sort((a, b) => b.value - a.value || chineseNameSorter.compare(a.label, b.label));
   const groupColorFamilies = assignPieColorFamilies(slices);
   const groupCounts = {};
   for (const slice of slices) slice.color = getGroupedPieColor(slice.group, groupColorFamilies, groupCounts);
   const total = slices.reduce((sum, slice) => sum + slice.value, 0);
+  const groupNames = [...new Set(slices.map((slice) => slice.group))];
   const summaryRows = buildPieGroupSummary(slices, groupNames, groupColorFamilies, total);
-  const chartHeight = compactPie ? 560 : Math.max(620, Math.min(760, width * 0.62));
+  const chartHeight = compactPie ? Math.max(320, width) : Math.max(620, Math.min(760, width * 0.62));
   const summaryHeight = getPieGroupSummaryHeight(summaryRows, width, compactPie);
   const height = chartHeight + summaryHeight;
 
@@ -1763,12 +1740,11 @@ function drawUsStockPieChart() {
     return;
   }
 
-  const labelRoom = compactPie ? 73 : 180;
-  const radius = compactPie ? Math.min((width - labelRoom * 2) / 2, 108) : Math.min((width - labelRoom * 2) / 2, chartHeight * 0.34, 210);
+  const labelRoom = compactPie ? 12 : 180;
+  const radius = compactPie ? Math.min(width / 2 - labelRoom, 180) : Math.min((width - labelRoom * 2) / 2, chartHeight * 0.34, 210);
   const centerX = width / 2;
   const centerY = chartHeight / 2;
-  const cashAngle = slices[0]?.isCash ? (slices[0].value / total) * Math.PI * 2 : 0;
-  let start = cashAngle ? -Math.PI / 2 - cashAngle : -Math.PI / 2;
+  let start = -Math.PI / 2;
   for (const slice of slices) {
     const angle = (slice.value / total) * Math.PI * 2;
     slice.start = start;
@@ -1790,13 +1766,13 @@ function drawUsStockPieChart() {
     const percent = (slice.value / total) * 100;
     const mid = (slice.start + slice.end) / 2;
     const lines = [slice.label, `${formatNumber(percent)}%`, money(slice.value)];
-    if (percent >= (compactPie ? 25 : 12)) {
-      const labelRadius = radius * 0.58;
+    if (compactPie || percent >= 12) {
+      const labelRadius = radius * (compactPie ? 0.62 : 0.58);
       context.fillStyle = "#17211c";
-      context.font = compactPie ? "700 8.5px sans-serif" : "700 11.5px sans-serif";
+      context.font = compactPie ? "700 8px sans-serif" : "700 11.5px sans-serif";
       context.textAlign = "center";
       context.textBaseline = "middle";
-      drawPieLabelLines(context, lines, centerX + Math.cos(mid) * labelRadius, centerY + Math.sin(mid) * labelRadius, compactPie ? 10 : 14);
+      drawPieLabelLines(context, lines, centerX + Math.cos(mid) * labelRadius, centerY + Math.sin(mid) * labelRadius, compactPie ? 9 : 14);
     } else {
       outsideLabels.push({
         lines,
@@ -1805,11 +1781,10 @@ function drawUsStockPieChart() {
         anchorX: centerX + Math.cos(mid) * radius,
         anchorY: centerY + Math.sin(mid) * radius,
         targetY: centerY + Math.sin(mid) * (radius + 30),
-        compact: compactPie,
       });
     }
   }
-  if (compactPie) drawMobileOutsidePieLabels(context, outsideLabels, centerX, centerY, radius, chartHeight, width, 60);
+  if (compactPie) drawMobileOutsidePieLabels(context, outsideLabels, centerX, centerY, radius, chartHeight, width);
   else drawOutsidePieLabels(context, outsideLabels, centerX, radius, chartHeight);
   drawPieGroupSummary(context, summaryRows, width, chartHeight, summaryHeight, compactPie, "美國股市小計");
 }
@@ -2076,7 +2051,7 @@ function drawWrappedLabel(context, text, x, y, maxWidth, lineHeight) {
   lines.forEach((line, index) => context.fillText(line, x, y - offset + index * lineHeight));
 }
 
-function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, height, width, textInset = 74) {
+function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, height, width) {
   const minGap = 48;
   const top = Math.max(54, centerY - radius - 98);
   const bottom = Math.min(height - 44, centerY + radius + 124);
@@ -2113,18 +2088,15 @@ function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, h
 
     for (const label of sideLabels) {
       const direction = side === "right" ? 1 : -1;
-      const textX = side === "right" ? width - textInset : textInset;
+      const textX = side === "right" ? width - 74 : 74;
       const markerX = textX - direction * 9;
       const markerY = label.y - lineHeight;
-      const outerX = centerX + Math.cos(Math.atan2(label.anchorY - centerY, label.anchorX - centerX)) * (radius + 8);
-      const outerY = centerY + Math.sin(Math.atan2(label.anchorY - centerY, label.anchorX - centerX)) * (radius + 8);
-      const elbowX = centerX + direction * (radius + 18);
+      const elbowX = centerX + direction * (radius + 10);
 
       context.strokeStyle = "rgba(23, 33, 28, 0.55)";
       context.lineWidth = 0.9;
       context.beginPath();
       context.moveTo(label.anchorX, label.anchorY);
-      context.lineTo(outerX, outerY);
       context.lineTo(elbowX, markerY);
       context.lineTo(markerX, markerY);
       context.stroke();
