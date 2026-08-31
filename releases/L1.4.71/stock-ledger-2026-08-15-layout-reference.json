@@ -1,0 +1,3426 @@
+{
+  "holdings": [
+    {
+      "id": "69290a9a-a59d-4e84-b12e-049856c71806",
+      "symbol": "060032",
+      "name": "智邦凱基6102",
+      "shares": 39000,
+      "avgCost": 3.19,
+      "currentPrice": 3.09,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "2a3e351e-00d5-4468-8838-a91c68c91b19",
+      "symbol": "070098",
+      "name": "佳必琪元大5C03",
+      "shares": 100000,
+      "avgCost": 0.84,
+      "currentPrice": 0.43,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c",
+      "symbol": "711052",
+      "name": "智通*凱基6101",
+      "shares": 100000,
+      "avgCost": 0.91,
+      "currentPrice": 0.57,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "db76707b-0c7f-4f50-82e7-b5c0d118a93f",
+      "symbol": "711052",
+      "name": "智通*凱基6101",
+      "shares": 200000,
+      "avgCost": 0.92,
+      "currentPrice": 0.57,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "687c1b49-6190-4416-b333-c7c31ad8c4b4",
+      "symbol": "074059",
+      "name": "中砂凱基6102",
+      "shares": 320000,
+      "avgCost": 0.94,
+      "currentPrice": 0.85,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "726a3f50-e70c-4656-98a6-52eaade25258",
+      "symbol": "070817",
+      "name": "智邦凱基6301",
+      "shares": 380000,
+      "avgCost": 0.53,
+      "currentPrice": 0.45,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "b973bd81-cf4b-4c12-a526-a2eaf7be934d",
+      "symbol": "071596",
+      "name": "南亞科凱基6106",
+      "shares": 180000,
+      "avgCost": 1.4,
+      "currentPrice": 1.67,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101",
+      "symbol": "073726",
+      "name": "台積電凱基6113",
+      "shares": 120000,
+      "avgCost": 1.35,
+      "currentPrice": 1.07,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "4bc3db91-eb11-4526-895e-571b316902bc",
+      "symbol": "074633",
+      "name": "威強電凱基6101",
+      "shares": 60000,
+      "avgCost": 1.45,
+      "currentPrice": 1.44,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "6fc8f5fb-24ba-432c-9400-efb21649d822",
+      "symbol": "708152",
+      "name": "群聯凱基6301",
+      "shares": 250000,
+      "avgCost": 0.89,
+      "currentPrice": 0.79,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "e457f716-171f-497d-a1e5-dcdf046b10cb",
+      "symbol": "711244",
+      "name": "智通*凱基6102",
+      "shares": 100000,
+      "avgCost": 1.45,
+      "currentPrice": 0.81,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "e557a3da-15e0-47e3-abc5-a28a2665e719",
+      "symbol": "076923",
+      "name": "貿聯凱基6301",
+      "shares": 80000,
+      "avgCost": 2.04,
+      "currentPrice": 2.2,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "5876ce73-5760-4a53-bafa-f27a7bdf762c",
+      "symbol": "077222",
+      "name": "貿聯凱基6111",
+      "shares": 30000,
+      "avgCost": 2.45,
+      "currentPrice": 2.05,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "2b1d7925-9886-46b2-a51f-60d8cd846aae",
+      "symbol": "073655",
+      "name": "南亞科凱基6201",
+      "shares": 140000,
+      "avgCost": 1.5,
+      "currentPrice": 1.89,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "79d3efcf-652a-4560-9b45-86c3aeafe978",
+      "symbol": "060604",
+      "name": "佳必琪凱基6101",
+      "shares": 40000,
+      "avgCost": 2.22,
+      "currentPrice": 4.44,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "4aa02db3-682f-40f3-9851-a58b61647b7c",
+      "symbol": "071969",
+      "name": "智邦凱基6402",
+      "shares": 80000,
+      "avgCost": 0.69,
+      "currentPrice": 0.7,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "8923b128-182e-49cf-bb39-7ec4decb1b0d",
+      "symbol": "708280",
+      "name": "群聯凱基6402",
+      "shares": 60000,
+      "avgCost": 0.82,
+      "currentPrice": 0.65,
+      "lastUpdated": "手動"
+    }
+  ],
+  "usHoldings": [
+    {
+      "id": "9d028eb2-3d20-43c4-8eb9-b809f847d493",
+      "symbol": "BITU",
+      "shares": 700,
+      "avgCost": 10.07,
+      "currentPrice": 9.14,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6",
+      "symbol": "EPP",
+      "shares": 20,
+      "avgCost": 44.02,
+      "currentPrice": 57.12,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd",
+      "symbol": "IVV",
+      "shares": 4,
+      "avgCost": 527.42,
+      "currentPrice": 781.89,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "bf466492-f40e-43ff-83c7-563a0612417c",
+      "symbol": "SEMI",
+      "shares": 40,
+      "avgCost": 21.13,
+      "currentPrice": 39.41,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "ab2df74b-fcab-45be-9627-483762b0b752",
+      "symbol": "VOO",
+      "shares": 8,
+      "avgCost": 481.56,
+      "currentPrice": 715.3,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246",
+      "symbol": "SOXX",
+      "shares": 12,
+      "avgCost": 352.63,
+      "currentPrice": 548.48,
+      "lastUpdated": "手動"
+    },
+    {
+      "id": "8d38ba02-bec6-424f-8e9b-c6240e20488c",
+      "symbol": "SOXL",
+      "shares": 87,
+      "avgCost": 126.74,
+      "currentPrice": 143.31,
+      "lastUpdated": "手動"
+    }
+  ],
+  "funds": [
+    {
+      "id": "8cc95082-6251-47ba-9185-cc38c61d8094",
+      "name": "復華全球物聯網",
+      "cost": 156000,
+      "currentValue": 504015,
+      "lastUpdated": "手動"
+    }
+  ],
+  "cryptoContracts": [
+    {
+      "id": "b5fbbb79-4709-4610-8567-4b72e764b309",
+      "name": "BTCUSDT",
+      "side": "long",
+      "leverage": 4,
+      "marginUsdt": 7805.14,
+      "quantity": 0.411,
+      "entryPrice": 66490.88,
+      "currentPrice": 63386
+    },
+    {
+      "id": "e1fc7e93-79d3-41a1-84db-eed0e72f4924",
+      "name": "ETHUSDT",
+      "side": "long",
+      "leverage": 4,
+      "marginUsdt": 1127.37,
+      "quantity": 2.3,
+      "entryPrice": 1873.6,
+      "currentPrice": 1885
+    }
+  ],
+  "history": [
+    {
+      "date": "2026-05-25",
+      "total": 3494193,
+      "stockTotal": 2977450,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 516743,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1578360,
+      "usStockCost": 0,
+      "fundCost": 147000,
+      "cryptoCost": 0,
+      "cost": 1725360,
+      "pnl": 1768833,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 2.88,
+        "1a271584-522d-46b6-995f-43456bbd875c": 17.2,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 2.25,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 5.15,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 3.71,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.47,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 9.3,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.12,
+        "8f330fbb-fdd1-48c3-bb81-37c5dee123ae": 6,
+        "efc9e2da-27bd-4a6c-ab8a-1b8aa11f1cdc": 6.45,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 9
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 516743
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-05-26",
+      "total": 3747672,
+      "stockTotal": 3213100,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 534572,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1578360,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1728360,
+      "pnl": 2019312,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 3.23,
+        "1a271584-522d-46b6-995f-43456bbd875c": 19.6,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 2.53,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 5.4,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 4.02,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.75,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 10.4,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.21,
+        "8f330fbb-fdd1-48c3-bb81-37c5dee123ae": 6.4,
+        "efc9e2da-27bd-4a6c-ab8a-1b8aa11f1cdc": 7.5,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 9.2
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 534572
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-05-27",
+      "total": 3747672,
+      "stockTotal": 3213100,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 534572,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1578360,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1728360,
+      "pnl": 2019312,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 3.23,
+        "1a271584-522d-46b6-995f-43456bbd875c": 19.6,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 2.53,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 5.4,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 4.02,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.75,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 10.4,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.21,
+        "8f330fbb-fdd1-48c3-bb81-37c5dee123ae": 6.4,
+        "efc9e2da-27bd-4a6c-ab8a-1b8aa11f1cdc": 7.5,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 9.2
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 534572
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-05-29",
+      "total": 3647275,
+      "stockTotal": 3079900,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 567375,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1578360,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1728360,
+      "pnl": 1918915,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 4.06,
+        "1a271584-522d-46b6-995f-43456bbd875c": 17,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3.22,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.63,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 4.6,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.04,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 9.35,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.97,
+        "8f330fbb-fdd1-48c3-bb81-37c5dee123ae": 5.4,
+        "efc9e2da-27bd-4a6c-ab8a-1b8aa11f1cdc": 6.6,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 8.8
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 567375
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-01",
+      "total": 3930891,
+      "stockTotal": 3363400,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 567491,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1578360,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1728360,
+      "pnl": 2202531,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 4.95,
+        "1a271584-522d-46b6-995f-43456bbd875c": 18.8,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3.99,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.97,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.1,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.34,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 9.5,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.02,
+        "8f330fbb-fdd1-48c3-bb81-37c5dee123ae": 5.6,
+        "efc9e2da-27bd-4a6c-ab8a-1b8aa11f1cdc": 6.6,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 8.7
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 567491
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-02",
+      "total": 3997790,
+      "stockTotal": 3412470,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 585320,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1598760,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1748760,
+      "pnl": 2249030,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 5.9,
+        "1a271584-522d-46b6-995f-43456bbd875c": 16.7,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.89,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.62,
+        "425b1823-b424-4813-a8bd-896440c3983a": 2.39,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.15,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.02,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 9.75,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.96,
+        "8f330fbb-fdd1-48c3-bb81-37c5dee123ae": 5.4,
+        "efc9e2da-27bd-4a6c-ab8a-1b8aa11f1cdc": 6.05,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 8.05
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 585320
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-03",
+      "total": 4221123,
+      "stockTotal": 3622460,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 598663,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1598760,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1748760,
+      "pnl": 2472363,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 5.45,
+        "1a271584-522d-46b6-995f-43456bbd875c": 18.4,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.43,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 5.3,
+        "425b1823-b424-4813-a8bd-896440c3983a": 2.22,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.95,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.61,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 9.7,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.12,
+        "8f330fbb-fdd1-48c3-bb81-37c5dee123ae": 6.15,
+        "efc9e2da-27bd-4a6c-ab8a-1b8aa11f1cdc": 6.85,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 9.05
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 598663
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-04",
+      "total": 4055432,
+      "stockTotal": 3451700,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 603732,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1598760,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1748760,
+      "pnl": 2306672,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 5.25,
+        "1a271584-522d-46b6-995f-43456bbd875c": 19,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.28,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.94,
+        "425b1823-b424-4813-a8bd-896440c3983a": 2,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.45,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.33,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 9.25,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.03,
+        "8f330fbb-fdd1-48c3-bb81-37c5dee123ae": 5.8,
+        "efc9e2da-27bd-4a6c-ab8a-1b8aa11f1cdc": 7.1,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 8.6
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 603732
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-05",
+      "total": 3831630,
+      "stockTotal": 3224170,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 607460,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1598760,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1748760,
+      "pnl": 2082870,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 4.37,
+        "1a271584-522d-46b6-995f-43456bbd875c": 18.7,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3.46,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.85,
+        "425b1823-b424-4813-a8bd-896440c3983a": 1.79,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.75,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.23,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 8.15,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.07,
+        "8f330fbb-fdd1-48c3-bb81-37c5dee123ae": 5.7,
+        "efc9e2da-27bd-4a6c-ab8a-1b8aa11f1cdc": 6.95,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 7.95
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 607460
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-08",
+      "total": 3462176,
+      "stockTotal": 2867650,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 594526,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1598760,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1748760,
+      "pnl": 1713416,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 3.83,
+        "1a271584-522d-46b6-995f-43456bbd875c": 17.1,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.5,
+        "425b1823-b424-4813-a8bd-896440c3983a": 1.35,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.85,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.96,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 5.85,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.99,
+        "8f330fbb-fdd1-48c3-bb81-37c5dee123ae": 5.35,
+        "efc9e2da-27bd-4a6c-ab8a-1b8aa11f1cdc": 6.2,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 6.2
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 594526
+      },
+      "cryptoValues": {},
+      "note": "因為美國就業太好...\nSOX -10% SOXL-30% \n台股-5.88%拉到-3.48% \n大跌1568點"
+    },
+    {
+      "date": "2026-06-09",
+      "total": 3697224,
+      "stockTotal": 3135850,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 561374,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1598760,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1748760,
+      "pnl": 1948464,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 4.43,
+        "1a271584-522d-46b6-995f-43456bbd875c": 16.2,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3.51,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.77,
+        "425b1823-b424-4813-a8bd-896440c3983a": 1.7,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 6.6,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.16,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 8.45,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.04,
+        "8f330fbb-fdd1-48c3-bb81-37c5dee123ae": 5.6,
+        "efc9e2da-27bd-4a6c-ab8a-1b8aa11f1cdc": 5.75,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 6.75
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 561374
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-10",
+      "total": 3215587,
+      "stockTotal": 2666740,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 548847,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1598760,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1748760,
+      "pnl": 1466827,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 3.67,
+        "1a271584-522d-46b6-995f-43456bbd875c": 11.3,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 2.85,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.76,
+        "425b1823-b424-4813-a8bd-896440c3983a": 1.43,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.75,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.33,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 7.05,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.92,
+        "8f330fbb-fdd1-48c3-bb81-37c5dee123ae": 5.05,
+        "efc9e2da-27bd-4a6c-ab8a-1b8aa11f1cdc": 4.69,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 4.7
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 548847
+      },
+      "cryptoValues": {},
+      "note": "CPI說會爆炸先跌\n結果盤後晚上開個符合預期\n權證都沒掛單我估太低"
+    },
+    {
+      "date": "2026-06-11",
+      "total": 3455819,
+      "stockTotal": 2885230,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 570589,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1598760,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1748760,
+      "pnl": 1707059,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 3.9,
+        "1a271584-522d-46b6-995f-43456bbd875c": 13.9,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 2.99,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 5.25,
+        "425b1823-b424-4813-a8bd-896440c3983a": 1.35,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.3,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.38,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 6.15,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.83,
+        "8f330fbb-fdd1-48c3-bb81-37c5dee123ae": 4.63,
+        "efc9e2da-27bd-4a6c-ab8a-1b8aa11f1cdc": 4.58,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 7.4
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 570589
+      },
+      "cryptoValues": {},
+      "note": "CPI準準準 \nSOXX還是大跌-3.67%"
+    },
+    {
+      "date": "2026-06-12",
+      "total": 3495702,
+      "stockTotal": 2928160,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 567542,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1737420,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1887420,
+      "pnl": 1608282,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 4.69,
+        "0786e8d1-71a5-452c-94f7-ed18ae7c66f9": 5.2,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3.73,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.17,
+        "425b1823-b424-4813-a8bd-896440c3983a": 1.55,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.8,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.59,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 8.55,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.88,
+        "b631d2f0-0cee-4f7e-a746-4bba1087421a": 0.81,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 6.24
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 543055
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-15",
+      "total": 3801867,
+      "stockTotal": 3241300,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 560567,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1737420,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1887420,
+      "pnl": 1914447,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 6,
+        "0786e8d1-71a5-452c-94f7-ed18ae7c66f9": 5.15,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.87,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 5,
+        "425b1823-b424-4813-a8bd-896440c3983a": 1.72,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.5,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.35,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 7.35,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.08,
+        "8e94a522-ce1b-426b-8c66-dce143bb2cb7": 0.57,
+        "b631d2f0-0cee-4f7e-a746-4bba1087421a": 0.75,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 7.3
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 580196
+      },
+      "cryptoValues": {},
+      "note": "川普昨天說簽了\n伊朗今天說簽了"
+    },
+    {
+      "date": "2026-06-16",
+      "total": 3966016,
+      "stockTotal": 3385820,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 580196,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1772540,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1922540,
+      "pnl": 2043476,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 6.04,
+        "0786e8d1-71a5-452c-94f7-ed18ae7c66f9": 5.25,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.9,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.95,
+        "425b1823-b424-4813-a8bd-896440c3983a": 1.84,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.49,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.3,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 6.8,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.07,
+        "8e94a522-ce1b-426b-8c66-dce143bb2cb7": 0.56,
+        "b631d2f0-0cee-4f7e-a746-4bba1087421a": 0.75,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 7.11
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 580196
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-17",
+      "total": 4006916,
+      "stockTotal": 3426720,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 580196,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1772540,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1922540,
+      "pnl": 2084376,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 6.4,
+        "0786e8d1-71a5-452c-94f7-ed18ae7c66f9": 4.77,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 5.2,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.77,
+        "425b1823-b424-4813-a8bd-896440c3983a": 1.94,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 6,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.15,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 6.9,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.02,
+        "8e94a522-ce1b-426b-8c66-dce143bb2cb7": 0.57,
+        "b631d2f0-0cee-4f7e-a746-4bba1087421a": 0.83,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 7.35
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 580196
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-18",
+      "total": 4201681,
+      "stockTotal": 3584520,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 617161,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1772540,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1922540,
+      "pnl": 2279141,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 7,
+        "0786e8d1-71a5-452c-94f7-ed18ae7c66f9": 5.15,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 5.75,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.57,
+        "425b1823-b424-4813-a8bd-896440c3983a": 2.09,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 6.7,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.96,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 8.8,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.97,
+        "8e94a522-ce1b-426b-8c66-dce143bb2cb7": 0.57,
+        "b631d2f0-0cee-4f7e-a746-4bba1087421a": 0.94,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 7.81
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 617161
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-22",
+      "total": 4703280,
+      "stockTotal": 4076160,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 627120,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1772540,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1922540,
+      "pnl": 2780740,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 8.28,
+        "0786e8d1-71a5-452c-94f7-ed18ae7c66f9": 5,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 6.95,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 1.01,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 5.24,
+        "425b1823-b424-4813-a8bd-896440c3983a": 2.07,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 7,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.55,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 11.8,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.13,
+        "8e94a522-ce1b-426b-8c66-dce143bb2cb7": 0.59,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 8.3
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 627120
+      },
+      "cryptoValues": {},
+      "note": "上週\nSOX +6.42%\nSOXL+19.43%\nTSM +6.94%\nMU  +8.7%"
+    },
+    {
+      "date": "2026-06-23",
+      "total": 4305009,
+      "stockTotal": 3655100,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 649909,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1772540,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1922540,
+      "pnl": 2382469,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 7,
+        "0786e8d1-71a5-452c-94f7-ed18ae7c66f9": 5.1,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 5.77,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.96,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.69,
+        "425b1823-b424-4813-a8bd-896440c3983a": 1.95,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 6.88,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.04,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 9.85,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.98,
+        "8e94a522-ce1b-426b-8c66-dce143bb2cb7": 0.58,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 8.3
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 649909
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-24",
+      "total": 4154484,
+      "stockTotal": 3488700,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 665784,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1772540,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1922540,
+      "pnl": 2231944,
+      "prices": {
+        "021b53c7-325e-4513-b87c-45950539f00a": 6.5,
+        "0786e8d1-71a5-452c-94f7-ed18ae7c66f9": 4.23,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 5.31,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 1,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.3,
+        "425b1823-b424-4813-a8bd-896440c3983a": 1.57,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 7.25,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.71,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 9.77,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.88,
+        "8e94a522-ce1b-426b-8c66-dce143bb2cb7": 0.42,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 9.64
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 665784
+      },
+      "cryptoValues": {},
+      "note": "韓股熔斷\nSOX  -7.87%\nSOXL -23.06%"
+    },
+    {
+      "date": "2026-06-25",
+      "total": 4313768,
+      "stockTotal": 3697720,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 616048,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1956000,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 2106000,
+      "pnl": 2207768,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 1.39,
+        "021b53c7-325e-4513-b87c-45950539f00a": 7.43,
+        "0786e8d1-71a5-452c-94f7-ed18ae7c66f9": 4.38,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 6.16,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 1.12,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.32,
+        "425b1823-b424-4813-a8bd-896440c3983a": 1.44,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 7.96,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.73,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.9,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.88,
+        "8e94a522-ce1b-426b-8c66-dce143bb2cb7": 0.38,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 8.94
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 616048
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-26",
+      "total": 4002866,
+      "stockTotal": 3391680,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 611186,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1876400,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 2026400,
+      "pnl": 1976466,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 1.23,
+        "021b53c7-325e-4513-b87c-45950539f00a": 6.65,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 5.4,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 1.03,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.34,
+        "425b1823-b424-4813-a8bd-896440c3983a": 1.11,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 7.45,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.76,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.61,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.89,
+        "8e94a522-ce1b-426b-8c66-dce143bb2cb7": 0.28,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 7.9
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 611186
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-29",
+      "total": 3954691,
+      "stockTotal": 3310640,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 644051,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1840880,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1990880,
+      "pnl": 1963811,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.98,
+        "021b53c7-325e-4513-b87c-45950539f00a": 6.79,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 5.53,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.87,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.13,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 6.5,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.56,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.41,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.83,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.98,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 9.2
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 644051
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-06-30",
+      "total": 4175985,
+      "stockTotal": 3576340,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 599645,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1840880,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1990880,
+      "pnl": 2185105,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.98,
+        "021b53c7-325e-4513-b87c-45950539f00a": 6.75,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 5.5,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.91,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.78,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 6.7,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.13,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.79,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.99,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.98,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 10.16
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 599645
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-07-01",
+      "total": 4236965,
+      "stockTotal": 3629060,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 607905,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1840880,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1990880,
+      "pnl": 2246085,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 1.07,
+        "021b53c7-325e-4513-b87c-45950539f00a": 5.85,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.7,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.88,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 5.5,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 6.62,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.76,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.98,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.16,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 1.07,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 10.16
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 607905
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-07-02",
+      "total": 4336575,
+      "stockTotal": 3697680,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 638895,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1840880,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1990880,
+      "pnl": 2345695,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 1.06,
+        "021b53c7-325e-4513-b87c-45950539f00a": 5.5,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.35,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 1.04,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 5.85,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 7.7,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 5.1,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.72,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.26,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 1.06,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 10.3
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 638895
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-07-03",
+      "total": 4339997,
+      "stockTotal": 3710240,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 629757,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1840880,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1990880,
+      "pnl": 2349117,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.98,
+        "021b53c7-325e-4513-b87c-45950539f00a": 5.55,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.44,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 1.11,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 5.8,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 8.15,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 5.05,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.92,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.24,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.98,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 9.85
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 629757
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-07-06",
+      "total": 4263323,
+      "stockTotal": 3674340,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 588983,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1840880,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1990880,
+      "pnl": 2272443,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 1.38,
+        "021b53c7-325e-4513-b87c-45950539f00a": 5.85,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.67,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 1.1,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 5.4,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 8.15,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 4.69,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.81,
+        "77061e60-b570-420f-ae0d-f65081f56966": 1.13,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 1.38,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 9.4
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 588983
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-07-07",
+      "total": 3781223,
+      "stockTotal": 3192240,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 588983,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1840880,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1990880,
+      "pnl": 1790343,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 1.33,
+        "021b53c7-325e-4513-b87c-45950539f00a": 5.39,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.25,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.99,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.57,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 7.49,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.94,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.42,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.91,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 1.33,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 7.59
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 588983
+      },
+      "cryptoValues": {},
+      "note": "韓國三星業績超猛但跌到熔斷\n智邦月年增超猛結果-7.18%"
+    },
+    {
+      "date": "2026-07-08",
+      "total": 3754312,
+      "stockTotal": 3164860,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 589452,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1840880,
+      "usStockCost": 0,
+      "fundCost": 150000,
+      "cryptoCost": 0,
+      "cost": 1990880,
+      "pnl": 1763432,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 1.52,
+        "021b53c7-325e-4513-b87c-45950539f00a": 5.2,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.07,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 1.05,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.37,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 7.9,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.77,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.52,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.86,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 1.52,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 7.5
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 589452
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-07-09",
+      "total": 3943440,
+      "stockTotal": 3390360,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 553080,
+      "cryptoTotal": 0,
+      "cash": 0,
+      "cashRecorded": false,
+      "stockCost": 1840880,
+      "usStockCost": 0,
+      "fundCost": 153000,
+      "cryptoCost": 0,
+      "cost": 1993880,
+      "pnl": 1949560,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 1.52,
+        "021b53c7-325e-4513-b87c-45950539f00a": 6.25,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 5,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.96,
+        "39043d05-ddfd-4608-bc8c-1568e784bc3f": 4.62,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 7.4,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.96,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.46,
+        "77061e60-b570-420f-ae0d-f65081f56966": 0.91,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 1.52,
+        "f1dd2d36-0ac7-427a-91c4-3a90a71dfb82": 7.9
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 553080
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-07-13",
+      "total": 3642491,
+      "stockTotal": 1070000,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 552491,
+      "cryptoTotal": 0,
+      "cash": 2020000,
+      "cashRecorded": true,
+      "stockCost": 1070000,
+      "usStockCost": 0,
+      "fundCost": 153000,
+      "cryptoCost": 0,
+      "cost": 1223000,
+      "pnl": 399491,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.94,
+        "126cc628-3cc2-4742-9d22-3342e7aac103": 2026.64,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.65,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.72,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.85,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.94,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.69,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.21,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.94
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 552491
+      },
+      "cryptoValues": {},
+      "note": "*已經沒啥理由就跌好幾天\n*權證AB換61後\n*現金202W 權證107W\n\n韓狗一直跌 歐巴到底會不會\n智邦紅黃季線邊境掙扎\n牙科利多不漲藍綠之下翻不上\n必琪營收創高殺近跌停穿黃紅"
+    },
+    {
+      "date": "2026-07-14",
+      "total": 3596582,
+      "stockTotal": 1870000,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 576582,
+      "cryptoTotal": 0,
+      "cash": 1150000,
+      "cashRecorded": true,
+      "stockCost": 1800000,
+      "usStockCost": 0,
+      "fundCost": 153000,
+      "cryptoCost": 0,
+      "cost": 1953000,
+      "pnl": 493582,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.9,
+        "126cc628-3cc2-4742-9d22-3342e7aac103": 1150.078,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 5.3,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.67,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.35,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.55,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.44,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.81,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.21,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.06,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.51,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.4,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 1.05,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.9
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 576582
+      },
+      "cryptoValues": {},
+      "note": "*現金115W 權證187W\n\n韓狗+0.76%、Hynix+2.82%\n台股-1700拉到-650\n牙科+5.91%"
+    },
+    {
+      "date": "2026-07-15",
+      "total": 3859955,
+      "stockTotal": 2380000,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 548133,
+      "cryptoTotal": 0,
+      "cash": 931822,
+      "cashRecorded": true,
+      "stockCost": 1976380,
+      "usStockCost": 0,
+      "fundCost": 153000,
+      "cryptoCost": 0,
+      "cost": 2129380,
+      "pnl": 798753,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 1.2,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 6.15,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.75,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.39,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 6.1,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.46,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 1.13,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.47,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.03,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.9,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.54,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.6,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 1.2,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 1.2
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 548133
+      },
+      "cryptoValues": {},
+      "note": ""
+    },
+    {
+      "date": "2026-07-16",
+      "total": 3639689,
+      "stockTotal": 2588300,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 549782,
+      "cryptoTotal": 183555,
+      "cash": 318052,
+      "cashRecorded": true,
+      "stockCost": 2357500,
+      "usStockCost": 0,
+      "fundCost": 153000,
+      "cryptoCost": 0,
+      "cost": 2510500,
+      "pnl": 811137,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 1.25,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 5.05,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.68,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.44,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.68,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.32,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 1.04,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.34,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 1.04,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.77,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.52,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 1.08,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.34,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 1.09,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 1.25,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 1.72
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 549782
+      },
+      "cryptoValues": {},
+      "note": "*抽了23萬: \n10萬冷氣 , 12萬BTC, 1萬零用"
+    },
+    {
+      "date": "2026-07-17",
+      "total": 3069830.995,
+      "stockTotal": 2017500,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 550724,
+      "cryptoTotal": 183554.99500000002,
+      "cash": 318052,
+      "cashRecorded": true,
+      "stockCost": 2357500,
+      "usStockCost": 0,
+      "fundCost": 153000,
+      "cryptoCost": 222276.27500000002,
+      "cost": 2732776.275,
+      "pnl": 19002.720000000205,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.96,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3.98,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.56,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.14,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 4.87,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.12,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.72,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.63,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.75,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.57,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.41,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.85,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.08,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.79,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.96,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 1.33
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 550724
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 183554.99500000002
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-07-18",
+      "total": 2983568.627368,
+      "stockTotal": 1962800,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 513676,
+      "cryptoTotal": 207040.627368,
+      "cash": 300052,
+      "cashRecorded": true,
+      "stockCost": 2357500,
+      "usStockCost": 0,
+      "fundCost": 153000,
+      "cryptoCost": 239306.4,
+      "cost": 2749806.4,
+      "pnl": -66289.77263200004,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.92,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3.97,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.54,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.05,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 4.71,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.06,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.72,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.54,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.75,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.56,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.4,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.82,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.07,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.79,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.92,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 1.3
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 513676
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 193855.9392,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 13184.688167999999
+      },
+      "note": "*台股大跌 -6.47%\n*已經不明跌好幾天\n*學起來 看不懂就降槓桿\n\n買一點BTC, ETH"
+    },
+    {
+      "date": "2026-07-19",
+      "total": 2992645.905308,
+      "stockTotal": 1962800,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 513676,
+      "cryptoTotal": 236117.905308,
+      "cash": 280052,
+      "cashRecorded": true,
+      "stockCost": 2357500,
+      "usStockCost": 0,
+      "fundCost": 153000,
+      "cryptoCost": 259038,
+      "cost": 2769538,
+      "pnl": -56944.09469200019,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.92,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3.97,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.54,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.05,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 4.71,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.06,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.72,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.54,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.75,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.56,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.4,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.82,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.07,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.79,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.92,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 1.3
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 513676
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 219224.87999999998,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 16893.025308
+      },
+      "note": "a bit more BTC & ETH"
+    },
+    {
+      "date": "2026-07-20",
+      "total": 2897161.148768,
+      "stockTotal": 1870100,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 513676,
+      "cryptoTotal": 263333.14876799996,
+      "cash": 250052,
+      "cashRecorded": true,
+      "stockCost": 2357500,
+      "usStockCost": 0,
+      "fundCost": 153000,
+      "cryptoCost": 289517.00399999996,
+      "cost": 2800017.0039999997,
+      "pnl": -152907.85523199989,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.89,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3.62,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.51,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.08,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 4.54,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.01,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.68,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.53,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.63,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.52,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.4,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.74,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 0.99,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.76,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.89,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 1.24
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 513676
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 227144.68156799994,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 36188.46719999999
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-07-21",
+      "total": 3147131.868368,
+      "stockTotal": 2186700,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 485580,
+      "cryptoTotal": 289851.86836799997,
+      "cash": 185000,
+      "cashRecorded": true,
+      "stockCost": 2422500,
+      "usStockCost": 0,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 2864913.324,
+      "pnl": 97218.54436799977,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.93,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.15,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.55,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.26,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 4.81,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.35,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.79,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.99,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.71,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.62,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.46,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.83,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.12,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.8,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.93,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 1.29
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 485580
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 248973.11236799994,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 40878.756
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-07-22",
+      "total": 3343486.183968,
+      "stockTotal": 2391700,
+      "usStockTotal": 0,
+      "usStockMarketValue": 0,
+      "usCashUsd": 0,
+      "usCashTwd": 0,
+      "fundTotal": 478983,
+      "cryptoTotal": 287803.18396799994,
+      "cash": 185000,
+      "cashRecorded": true,
+      "stockCost": 2422500,
+      "usStockCost": 0,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 2864913.324,
+      "pnl": 293572.8599680001,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.92,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 5.15,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.59,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.23,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.15,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.55,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.92,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.17,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.72,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.67,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.49,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 1.03,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.35,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.87,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.92,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 1.28
+      },
+      "usPrices": {},
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 478983
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 246030.18796799995,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 41772.996
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-07-23",
+      "total": 4200748.290768,
+      "stockTotal": 2308900,
+      "usStockTotal": 912833.064,
+      "usStockMarketValue": 1234241.064,
+      "usCashUsd": -9920,
+      "usCashTwd": -321408,
+      "fundTotal": 510672,
+      "cryptoTotal": 283343.22676799993,
+      "cash": 185000,
+      "cashRecorded": true,
+      "stockCost": 2422500,
+      "usStockCost": 1077855.984,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3942769.308,
+      "pnl": 394386.9827680001,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.86,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.66,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.58,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.24,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 5.1,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.6,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.89,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.3,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.68,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.67,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.52,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.87,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.23,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.78,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.86,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 1.17
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 751.87,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 557.86,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 55.62,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 162.87,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.97,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 687.81,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 38.05,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 510672
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 243060.63076799994,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 40282.596000000005
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-07-24",
+      "total": 3919540.9539679997,
+      "stockTotal": 2078300,
+      "usStockTotal": 881129.0160000001,
+      "usStockMarketValue": 1202537.016,
+      "usCashUsd": -9920,
+      "usCashTwd": -321408,
+      "fundTotal": 518329,
+      "cryptoTotal": 256782.93796799995,
+      "cash": 185000,
+      "cashRecorded": true,
+      "stockCost": 2422500,
+      "usStockCost": 1077855.984,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3942769.308,
+      "pnl": 113179.64596799947,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.74,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.03,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.54,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.12,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 4.88,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.67,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.75,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.91,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.56,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.59,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.45,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.86,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.08,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.7,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.74,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 1.02
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 743.57,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 548.2,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 54.95,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 153.57,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.87,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 680.12,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 37.48,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 518329
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 221195.10196799994,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 35587.836
+      },
+      "note": "要不要砍同欣電、矽統、群聯？"
+    },
+    {
+      "date": "2026-07-27",
+      "total": 3961214.0187679995,
+      "stockTotal": 2107300,
+      "usStockTotal": 869137.7759999998,
+      "usStockMarketValue": 1190545.7759999998,
+      "usCashUsd": -9920,
+      "usCashTwd": -321408,
+      "fundTotal": 517799,
+      "cryptoTotal": 281977.24276799994,
+      "cash": 185000,
+      "cashRecorded": true,
+      "stockCost": 2422500,
+      "usStockCost": 1077855.984,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3942769.308,
+      "pnl": 154852.7107679993,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.69,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.9,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.55,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.11,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 4.93,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.53,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.82,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.95,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.5,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.57,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.45,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.79,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.28,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.66,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.69,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.95
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 748.97,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 543,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 55.41,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 148.82,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.84,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 685.42,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 36.76,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 517799
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 238266.72676799993,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 43710.516
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-07-28",
+      "total": 3318771.6847679997,
+      "stockTotal": 1639300,
+      "usStockTotal": 760305.852,
+      "usStockMarketValue": 1048240.1159999999,
+      "usCashUsd": -8886.86,
+      "usCashTwd": -287934.264,
+      "fundTotal": 483342,
+      "cryptoTotal": 250823.83276799993,
+      "cash": 185000,
+      "cashRecorded": true,
+      "stockCost": 2422500,
+      "usStockCost": 993486.0599999999,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3858399.384,
+      "pnl": -436693.4352320004,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.48,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3.82,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.42,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 0.98,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 3.96,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.39,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.59,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.29,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.35,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.4,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.35,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.65,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.02,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.46,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.48,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.68
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 740.06,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 500.5,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 55.75,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 116.57,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.27,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 676.87,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 36.25,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 483342
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 213298.47676799993,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 37525.356
+      },
+      "note": "7/29 FOMC會議 \n是在跌這個嗎不知道\n2026歐巴熔斷8th"
+    },
+    {
+      "date": "2026-07-29",
+      "total": 2987730.950768,
+      "stockTotal": 1333300,
+      "usStockTotal": 741924.0359999998,
+      "usStockMarketValue": 1026546.6959999999,
+      "usCashUsd": -8784.65,
+      "usCashTwd": -284622.66,
+      "fundTotal": 471797,
+      "cryptoTotal": 255709.91476799993,
+      "cash": 185000,
+      "cashRecorded": true,
+      "stockCost": 2422500,
+      "usStockCost": 976155.624,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3841068.948,
+      "pnl": -753715.3372319997,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.34,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 2.9,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.35,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 0.83,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 3.46,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.32,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.45,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 1.91,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.23,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.34,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.29,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.52,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 0.81,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.34,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.34,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.49
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 744.56,
+          "fxRate": 32.4
+        },
+        "301fdf6e-6edc-4d81-9bf4-d4e75a05a580": {
+          "price": 129.47,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 483.67,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 56.44,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 104.28,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.31,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 680.9,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 35.64,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 471797
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 216694.15876799994,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 39015.756
+      },
+      "note": "2026韓國熔斷9th..."
+    },
+    {
+      "date": "2026-07-30",
+      "total": 2819671.446768,
+      "stockTotal": 1192300,
+      "usStockTotal": 756436.3199999998,
+      "usStockMarketValue": 1048892.9759999998,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 427386,
+      "cryptoTotal": 258549.12676799993,
+      "cash": 185000,
+      "cashRecorded": true,
+      "stockCost": 2422500,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3836741.604,
+      "pnl": -909613.5012320001,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.3,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 2.3,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.3,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 0.83,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 2.97,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.08,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.4,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 1.99,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.23,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.32,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.31,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.47,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 0.67,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.32,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.3,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.43
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 744.56,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 483.67,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 56.44,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 104.28,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.31,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 680.9,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 35.64,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 427386
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 219756.93076799993,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 38792.196
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-07-31",
+      "total": 3340139.002368,
+      "stockTotal": 1795200,
+      "usStockTotal": 840753.108,
+      "usStockMarketValue": 1133209.764,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 396522,
+      "cryptoTotal": 262663.8943679999,
+      "cash": 45000,
+      "cashRecorded": true,
+      "stockCost": 2563200,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3977441.604,
+      "pnl": -389845.945632,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.32,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3.02,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.39,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.24,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 3.88,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.15,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.59,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.57,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.29,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 1,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.39,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.56,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 0.83,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.44,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.32,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.46,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.04
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 748.92,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 521.57,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 57.22,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 126.15,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.51,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 685.23,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 36.57,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 396522
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 223871.69836799992,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 38792.196
+      },
+      "note": "SOXX  +8.5%\nSOXL  +24.71%\n台積電 +9.98% 持股5/11漲停 建倉貿聯"
+    },
+    {
+      "date": "2026-08-01",
+      "total": 3142226.191568,
+      "stockTotal": 1650200,
+      "usStockTotal": 783141.048,
+      "usStockMarketValue": 1075597.704,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 420435,
+      "cryptoTotal": 243450.14356799994,
+      "cash": 45000,
+      "cashRecorded": true,
+      "stockCost": 2563200,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3977441.604,
+      "pnl": -587758.7564320001,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.32,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3.02,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.39,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.24,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 3.88,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.15,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.59,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.57,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.29,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.42,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.39,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.56,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 0.83,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.44,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.32,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.46,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.04
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 747.5,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 501,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 56.5,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 112.66,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.01,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 684.58,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 37.01,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 420435
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 207266.14756799993,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 36183.99600000001
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-08-03",
+      "total": 3451202.2231679996,
+      "stockTotal": 1937100,
+      "usStockTotal": 809171.5319999999,
+      "usStockMarketValue": 1101628.1879999998,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 420435,
+      "cryptoTotal": 239495.69116799996,
+      "cash": 45000,
+      "cashRecorded": true,
+      "stockCost": 2563200,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3977441.604,
+      "pnl": -278782.72483199975,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.39,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 3.85,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.46,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.14,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 4.43,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.48,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.7,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.3,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.34,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.52,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.5,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.62,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.02,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.47,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.39,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.55,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.01
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 754.8,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 511.5,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 56.5,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 119.57,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.01,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 690.46,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 37.01,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 420435
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 204056.89516799996,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 35438.796
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-08-04",
+      "total": 3653143.9215679998,
+      "stockTotal": 2097900,
+      "usStockTotal": 809728.8119999999,
+      "usStockMarketValue": 1102185.4679999999,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 447176,
+      "cryptoTotal": 253339.10956799993,
+      "cash": 45000,
+      "cashRecorded": true,
+      "stockCost": 2563200,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3977441.604,
+      "pnl": -76841.0264320001,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.46,
+        "29cbe091-3abf-494a-acba-7b67507eaab5": 4.83,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.49,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.01,
+        "48af06c9-be2c-4d72-b62e-31bdedb4e5d4": 4.63,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.41,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.71,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.24,
+        "696a7ae9-62ff-4c31-b95e-f4a9e9354471": 0.42,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.57,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.49,
+        "8dd71ef4-35c5-4ad3-97d0-8c8803d6a743": 0.72,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.25,
+        "c4d0cbf8-279b-4282-bed5-50d99bee6615": 0.51,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.46,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.65,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.54
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 763.06,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 508.69,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 56.56,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 116.45,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.32,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 697.85,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 37.31,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 447176
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 217453.19356799993,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 35885.916000000005
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-08-05",
+      "total": 3843385.8431679998,
+      "stockTotal": 2207950,
+      "usStockTotal": 905280.3,
+      "usStockMarketValue": 1197736.956,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 464317,
+      "cryptoTotal": 260838.54316799995,
+      "cash": 5000,
+      "cashRecorded": true,
+      "stockCost": 2476310,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3890551.604,
+      "pnl": 240290.89516800037,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.47,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.48,
+        "2b1d7925-9886-46b2-a51f-60d8cd846aae": 1.31,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.17,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.75,
+        "5876ce73-5760-4a53-bafa-f27a7bdf762c": 2.45,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.72,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.45,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.58,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.52,
+        "79d3efcf-652a-4560-9b45-86c3aeafe978": 4.8,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.3,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.47,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.66,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.63
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 778.04,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 543.64,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 57.62,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 141.21,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.5,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 711.76,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 38.74,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 464317
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 224430.98716799996,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 36407.556
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-08-06",
+      "total": 3980642.279968,
+      "stockTotal": 2360360,
+      "usStockTotal": 866954.3400000001,
+      "usStockMarketValue": 1159410.996,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 484284,
+      "cryptoTotal": 264043.93996799993,
+      "cash": 5000,
+      "cashRecorded": true,
+      "stockCost": 2476310,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3890551.604,
+      "pnl": 377547.3319680006,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.49,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.52,
+        "2b1d7925-9886-46b2-a51f-60d8cd846aae": 1.55,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.09,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.9,
+        "5876ce73-5760-4a53-bafa-f27a7bdf762c": 2.61,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.76,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.54,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.76,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.53,
+        "79d3efcf-652a-4560-9b45-86c3aeafe978": 4.95,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.38,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.49,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.69,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.69
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 775.04,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 527.7,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 57.45,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 130.43,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.47,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 708.69,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 38.92,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 484284
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 225922.42396799993,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 38121.516
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-08-07",
+      "total": 3791882.307168,
+      "stockTotal": 2138480,
+      "usStockTotal": 893282.5800000001,
+      "usStockMarketValue": 1185739.236,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 486581,
+      "cryptoTotal": 268538.72716799995,
+      "cash": 5000,
+      "cashRecorded": true,
+      "stockCost": 2476310,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3890551.604,
+      "pnl": 188787.35916800005,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.44,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.39,
+        "2b1d7925-9886-46b2-a51f-60d8cd846aae": 1.52,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.1,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 2.01,
+        "5876ce73-5760-4a53-bafa-f27a7bdf762c": 2.17,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.63,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.82,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.75,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.42,
+        "79d3efcf-652a-4560-9b45-86c3aeafe978": 3.94,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.36,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.44,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.62,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.21
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 773.12,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 539.3,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 57.41,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 137.91,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.55,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 707.53,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 38.53,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 486581
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 229224.89116799994,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 39313.836
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-08-08",
+      "total": 3804861.257968,
+      "stockTotal": 2138480,
+      "usStockTotal": 908765.892,
+      "usStockMarketValue": 1201222.548,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 479925,
+      "cryptoTotal": 272690.36596799997,
+      "cash": 5000,
+      "cashRecorded": true,
+      "stockCost": 2476310,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3890551.604,
+      "pnl": 201766.30996800028,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.44,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.39,
+        "2b1d7925-9886-46b2-a51f-60d8cd846aae": 1.52,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.1,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 2.01,
+        "5876ce73-5760-4a53-bafa-f27a7bdf762c": 2.17,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.63,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.82,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.75,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.42,
+        "79d3efcf-652a-4560-9b45-86c3aeafe978": 3.94,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.36,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.44,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.62,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.21
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 776.52,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 545,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 58.01,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 141.23,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.63,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 710.91,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 38.83,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 479925
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 232780.36996799996,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 39909.99600000001
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-08-10",
+      "total": 4071428.0535679995,
+      "stockTotal": 2398260,
+      "usStockTotal": 913595.436,
+      "usStockMarketValue": 1206052.092,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 479925,
+      "cryptoTotal": 274647.6175679999,
+      "cash": 5000,
+      "cashRecorded": true,
+      "stockCost": 2476310,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 153000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3890551.604,
+      "pnl": 468333.1055680006,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.49,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.46,
+        "2b1d7925-9886-46b2-a51f-60d8cd846aae": 1.85,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.09,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 2.66,
+        "5876ce73-5760-4a53-bafa-f27a7bdf762c": 2.09,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.72,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.64,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.76,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.39,
+        "79d3efcf-652a-4560-9b45-86c3aeafe978": 4.58,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.64,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.49,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.7,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.21
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 776,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 545.92,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 58.01,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 142.45,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.68,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 710.78,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 38.83,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 479925
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 234365.02156799994,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 40282.596000000005
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-08-11",
+      "total": 3937185.993568,
+      "stockTotal": 2310170,
+      "usStockTotal": 879700.176,
+      "usStockMarketValue": 1172156.832,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 484338,
+      "cryptoTotal": 257977.81756799994,
+      "cash": 5000,
+      "cashRecorded": true,
+      "stockCost": 2476310,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 156000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3893551.604,
+      "pnl": 331091.04556800006,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.53,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.42,
+        "2b1d7925-9886-46b2-a51f-60d8cd846aae": 1.74,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.1,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 2.25,
+        "5876ce73-5760-4a53-bafa-f27a7bdf762c": 2.11,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.71,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.53,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.81,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.38,
+        "79d3efcf-652a-4560-9b45-86c3aeafe978": 4.25,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.55,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.53,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.76,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.23
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 777.64,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 535.6,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 57.58,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 134.6,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.33,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 711.59,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 38.86,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 484338
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 221048.62156799994,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 36929.196
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-08-12",
+      "total": 4024973.311168,
+      "stockTotal": 2397200,
+      "usStockTotal": 884159.712,
+      "usStockMarketValue": 1176616.368,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 484338,
+      "cryptoTotal": 254275.59916799996,
+      "cash": 5000,
+      "cashRecorded": true,
+      "stockCost": 2476310,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 156000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3893551.604,
+      "pnl": 418878.3631679998,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.58,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.44,
+        "2b1d7925-9886-46b2-a51f-60d8cd846aae": 1.69,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.12,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 2.08,
+        "5876ce73-5760-4a53-bafa-f27a7bdf762c": 1.96,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.88,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.8,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.94,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.41,
+        "79d3efcf-652a-4560-9b45-86c3aeafe978": 4.41,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.5,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.58,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.82,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.1
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 774.83,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 539.51,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 57.58,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 136.76,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.26,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 708.82,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 38.49,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 484338
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 216973.80316799995,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 37301.796
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-08-13",
+      "total": 4070823.503168,
+      "stockTotal": 2403220,
+      "usStockTotal": 917955.504,
+      "usStockMarketValue": 1210412.16,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 488072,
+      "cryptoTotal": 256575.99916799995,
+      "cash": 5000,
+      "cashRecorded": true,
+      "stockCost": 2493710,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 156000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3910951.604,
+      "pnl": 447328.5551680005,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.53,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.46,
+        "2b1d7925-9886-46b2-a51f-60d8cd846aae": 1.92,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.15,
+        "4aa02db3-682f-40f3-9851-a58b61647b7c": 0.67,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.66,
+        "5876ce73-5760-4a53-bafa-f27a7bdf762c": 2.08,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.77,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 2.98,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.98,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.44,
+        "79d3efcf-652a-4560-9b45-86c3aeafe978": 4.69,
+        "8923b128-182e-49cf-bb39-7ec4decb1b0d": 0.83,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.69,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.53,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.75,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.22
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 776.63,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 552,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 57.4,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 146.32,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.29,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 711.08,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 38.96,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 488072
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 218305.44316799994,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 38270.556
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-08-14",
+      "total": 4007379.6479680003,
+      "stockTotal": 2342570,
+      "usStockTotal": 906877.6199999999,
+      "usStockMarketValue": 1199334.2759999998,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 504015,
+      "cryptoTotal": 248917.02796799998,
+      "cash": 5000,
+      "cashRecorded": true,
+      "stockCost": 2494010,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 156000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3911251.604,
+      "pnl": 383584.6999679995,
+      "prices": {
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.58,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.43,
+        "2b1d7925-9886-46b2-a51f-60d8cd846aae": 1.82,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.13,
+        "4aa02db3-682f-40f3-9851-a58b61647b7c": 0.7,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.47,
+        "5876ce73-5760-4a53-bafa-f27a7bdf762c": 2.11,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.84,
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.13,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.78,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.46,
+        "79d3efcf-652a-4560-9b45-86c3aeafe978": 4.46,
+        "8923b128-182e-49cf-bb39-7ec4decb1b0d": 0.63,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.61,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.58,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.81,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.25
+      },
+      "usPrices": {
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 781.89,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 548.48,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 57.12,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 143.31,
+          "fxRate": 32.4
+        },
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.14,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 715.3,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 39.41,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 504015
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 211540.71196799996,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 37376.316000000006
+      },
+      "note": ""
+    },
+    {
+      "date": "2026-08-15",
+      "total": 4010919.6479680003,
+      "stockTotal": 2346110,
+      "usStockTotal": 906877.6199999999,
+      "usStockMarketValue": 1199334.2759999998,
+      "usCashUsd": -9026.44,
+      "usCashTwd": -292456.656,
+      "fundTotal": 504015,
+      "cryptoTotal": 248917.02796799998,
+      "cash": 5000,
+      "cashRecorded": true,
+      "stockCost": 2494010,
+      "usStockCost": 971828.2799999999,
+      "fundCost": 156000,
+      "cryptoCost": 289413.32399999996,
+      "cost": 3911251.604,
+      "pnl": 387124.6999679995,
+      "prices": {
+        "69290a9a-a59d-4e84-b12e-049856c71806": 3.09,
+        "2a3e351e-00d5-4468-8838-a91c68c91b19": 0.43,
+        "00da9fff-80ab-44f3-bc9a-cb8d5bc5689c": 0.57,
+        "db76707b-0c7f-4f50-82e7-b5c0d118a93f": 0.57,
+        "687c1b49-6190-4416-b333-c7c31ad8c4b4": 0.85,
+        "726a3f50-e70c-4656-98a6-52eaade25258": 0.45,
+        "b973bd81-cf4b-4c12-a526-a2eaf7be934d": 1.67,
+        "3157cfa4-a0ad-4e4f-8722-7cb06a0dd101": 1.07,
+        "4bc3db91-eb11-4526-895e-571b316902bc": 1.44,
+        "6fc8f5fb-24ba-432c-9400-efb21649d822": 0.79,
+        "e457f716-171f-497d-a1e5-dcdf046b10cb": 0.81,
+        "e557a3da-15e0-47e3-abc5-a28a2665e719": 2.2,
+        "5876ce73-5760-4a53-bafa-f27a7bdf762c": 2.05,
+        "2b1d7925-9886-46b2-a51f-60d8cd846aae": 1.89,
+        "79d3efcf-652a-4560-9b45-86c3aeafe978": 4.44,
+        "4aa02db3-682f-40f3-9851-a58b61647b7c": 0.7,
+        "8923b128-182e-49cf-bb39-7ec4decb1b0d": 0.65
+      },
+      "usPrices": {
+        "9d028eb2-3d20-43c4-8eb9-b809f847d493": {
+          "price": 9.14,
+          "fxRate": 32.4
+        },
+        "5d546d11-5e2b-4226-ae40-3b9adbb7a9e6": {
+          "price": 57.12,
+          "fxRate": 32.4
+        },
+        "0c2074e8-d5a2-44b0-a863-8238f6b7a7cd": {
+          "price": 781.89,
+          "fxRate": 32.4
+        },
+        "bf466492-f40e-43ff-83c7-563a0612417c": {
+          "price": 39.41,
+          "fxRate": 32.4
+        },
+        "ab2df74b-fcab-45be-9627-483762b0b752": {
+          "price": 715.3,
+          "fxRate": 32.4
+        },
+        "40aa0e0c-8b36-4ca4-afdf-9d5d9cec7246": {
+          "price": 548.48,
+          "fxRate": 32.4
+        },
+        "8d38ba02-bec6-424f-8e9b-c6240e20488c": {
+          "price": 143.31,
+          "fxRate": 32.4
+        }
+      },
+      "fundValues": {
+        "8cc95082-6251-47ba-9185-cc38c61d8094": 504015
+      },
+      "cryptoValues": {
+        "b5fbbb79-4709-4610-8567-4b72e764b309": 211540.71196799996,
+        "e1fc7e93-79d3-41a1-84db-eed0e72f4924": 37376.316000000006
+      },
+      "note": ""
+    }
+  ],
+  "currentFundTotal": 504015,
+  "cash": 5000,
+  "usdTwdRate": 32.4,
+  "usCashUsd": -9026.44
+}
