@@ -173,6 +173,7 @@ els.form.addEventListener("submit", (event) => {
   const holding = {
     id: crypto.randomUUID(),
     symbol: normalizeSymbol(els.symbol.value),
+    side: document.querySelector("#holdingSideInput").value,
     name: els.name.value.trim(),
     shares: toNumber(els.shares.value),
     avgCost: toNumber(els.cost.value),
@@ -192,6 +193,7 @@ els.usForm.addEventListener("submit", (event) => {
   state.usHoldings.push({
     id: crypto.randomUUID(),
     symbol: normalizeSymbol(els.usSymbol.value),
+    side: document.querySelector("#usHoldingSideInput").value,
     shares: toNumber(els.usShares.value),
     avgCost: toNumber(els.usCost.value),
     currentPrice: toOptionalNumber(els.usPrice.value),
@@ -477,7 +479,7 @@ els.settleBtn.addEventListener("click", () => {
     const price = holding.currentPrice ?? holding.avgCost;
     prices[holding.id] = price;
     holding.currentPrice = price;
-    stockTotal += holding.shares * price;
+    stockTotal += stockBookValue(holding);
     stockCost += holding.shares * holding.avgCost;
   }
 
@@ -486,7 +488,7 @@ els.settleBtn.addEventListener("click", () => {
     const fxRate = state.usdTwdRate || 0;
     usPrices[holding.id] = { price, fxRate };
     holding.currentPrice = price;
-    usStockMarketValue += holding.shares * price * fxRate;
+    usStockMarketValue += stockBookValue(holding) * fxRate;
     usStockCost += holding.shares * holding.avgCost * fxRate;
   }
 
@@ -865,7 +867,7 @@ function renderHoldings() {
 
   for (const holding of sortedHoldings) {
     const price = holding.currentPrice ?? 0;
-    const marketValue = holding.shares * price;
+    const marketValue = stockBookValue(holding);
     const costValue = holding.shares * holding.avgCost;
     const pnl = marketValue - costValue;
     const pnlPct = costValue ? (pnl / costValue) * 100 : 0;
@@ -873,7 +875,7 @@ function renderHoldings() {
     row.innerHTML = `
       <td>
         <strong>${escapeHTML(holding.name || holding.symbol)}</strong>
-        <span class="stock-name">${escapeHTML(holding.symbol)}</span>
+        <span class="stock-name">${escapeHTML(stockDisplaySymbol(holding))}</span>
       </td>
       <td class="shares-cell">${formatNumber(holding.shares, 3)}</td>
       <td class="cost-cell">${unitMoney(holding.avgCost)}</td>
@@ -945,12 +947,12 @@ function renderUsHoldings() {
     const price = holding.currentPrice ?? 0;
     const fxRate = state.usdTwdRate || 0;
     const costValue = holding.shares * holding.avgCost * fxRate;
-    const marketValue = holding.shares * price * fxRate;
+    const marketValue = stockBookValue(holding) * fxRate;
     const pnl = marketValue - costValue;
     const pnlPct = costValue ? (pnl / costValue) * 100 : 0;
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td><strong>${escapeHTML(holding.symbol)}</strong></td>
+      <td><strong>${escapeHTML(stockDisplaySymbol(holding))}</strong></td>
       <td class="shares-cell">${formatNumber(holding.shares, 3)}</td>
       <td class="cost-cell">${usdMoney(holding.avgCost)}</td>
       <td class="price-cell"><input data-us-price-id="${escapeHTML(holding.id)}" type="number" min="0" step="0.01" value="${holding.currentPrice ?? ""}" aria-label="${escapeHTML(holding.symbol)} 現價" /></td>
@@ -1275,9 +1277,9 @@ function showTradeDialog(dialog) {
 }
 
 function openTradeDecision(market, holding) {
-  pendingHoldingSale = { market, holdingId: holding.id };
+  pendingHoldingSale = { market, holdingId: holding.id, side: holding.side };
   const isUs = market === "us";
-  els.tradeDecisionStock.textContent = getTradeDisplayLabel({ market, name: holding.name, symbol: holding.symbol });
+  els.tradeDecisionStock.textContent = getTradeDisplayLabel({ market, ...holding });
   els.tradeBuyDate.value = holding.purchaseDate || LEGACY_PURCHASE_DATE;
   els.tradeSellDate.value = todayISO();
   els.tradeShares.value = String(holding.shares || "");
@@ -1302,6 +1304,7 @@ function closeTradeDecision() {
 
 function getTradeDecisionValues() {
   return {
+    side: pendingHoldingSale?.side || "long",
     buyDate: parseDateInput(els.tradeBuyDate.value),
     sellDate: parseDateInput(els.tradeSellDate.value),
     shares: toNumber(els.tradeShares.value),
@@ -1314,7 +1317,7 @@ function getTradeDecisionValues() {
 function updateTradeDecisionPreview() {
   const market = pendingHoldingSale?.market || "tw";
   const values = getTradeDecisionValues();
-  const calculations = calculateTradeValues(market, values.shares, values.avgCost, values.sellPrice, values.fxRate);
+  const calculations = calculateTradeValues(market, values.shares, values.avgCost, values.sellPrice, values.fxRate, values.side);
   els.tradePreviewCost.textContent = money(calculations.costTwd);
   els.tradePreviewProceeds.textContent = money(calculations.proceedsTwd);
   els.tradePreviewPnl.textContent = signedMoney(calculations.pnlTwd);
@@ -1374,28 +1377,29 @@ function validateTradeValues(market, values) {
   return "";
 }
 
-function calculateTradeValues(market, shares, avgCost, sellPrice, fxRate) {
+function calculateTradeValues(market, shares, avgCost, sellPrice, fxRate, side = "long") {
   const safeShares = Math.max(0, toNumber(shares));
   const safeAverageCost = Math.max(0, toNumber(avgCost));
   const safeSellPrice = Math.max(0, toNumber(sellPrice));
   const safeFxRate = market === "us" ? Math.max(0, toNumber(fxRate)) : 1;
   const costNative = safeShares * safeAverageCost;
   const proceedsNative = safeShares * safeSellPrice;
-  const pnlNative = proceedsNative - costNative;
+  const pnlNative = (proceedsNative - costNative) * (side === "short" ? -1 : 1);
   const costTwd = costNative * safeFxRate;
   const proceedsTwd = proceedsNative * safeFxRate;
-  const pnlTwd = proceedsTwd - costTwd;
+  const pnlTwd = pnlNative * safeFxRate;
   const pnlPct = costNative ? (pnlNative / costNative) * 100 : 0;
   return { costNative, proceedsNative, pnlNative, costTwd, proceedsTwd, pnlTwd, pnlPct };
 }
 
 function createTradeRecord(values) {
   const market = values.market === "us" ? "us" : "tw";
-  const calculations = calculateTradeValues(market, values.shares, values.avgCost, values.sellPrice, values.fxRate);
+  const calculations = calculateTradeValues(market, values.shares, values.avgCost, values.sellPrice, values.fxRate, values.side);
   return {
     id: values.id || crypto.randomUUID(),
     market,
     symbol: normalizeSymbol(String(values.symbol || "")),
+    side: values.side === "short" ? "short" : "long",
     name: String(values.name || "").trim(),
     buyDate: parseDateInput(values.buyDate) || LEGACY_PURCHASE_DATE,
     sellDate: parseDateInput(values.sellDate) || todayISO(),
@@ -1517,6 +1521,7 @@ function readTradeEditForm(form, trade) {
   const market = form.querySelector("[data-trade-field='market']").value === "us" ? "us" : "tw";
   const values = {
     id: trade.id,
+    side: trade.side,
     market,
     symbol: normalizeSymbol(form.querySelector("[data-trade-field='symbol']").value),
     name: form.querySelector("[data-trade-field='name']").value.trim(),
@@ -1550,9 +1555,9 @@ function findTradeRecord(id) {
 }
 
 function getTradeDisplayLabel(trade) {
-  const symbol = normalizeSymbol(String(trade.symbol || ""));
+  const symbol = stockDisplaySymbol(trade);
   const name = String(trade.name || "").trim();
-  if (trade.market === "us") return `美股 / ${name || symbol}`;
+  if (trade.market === "us") return `美股 / ${name ? name + " / " : ""}${symbol}`;
   return `台股 / ${[name, symbol].filter(Boolean).join(" / ")}`;
 }
 
@@ -1630,7 +1635,7 @@ function exportTradeHistoryExcel() {
     const rows = trades.map((trade) => [
       trade.sellDate,
       trade.market === "us" ? "美股" : "台股",
-      trade.symbol,
+      stockDisplaySymbol(trade),
       trade.name,
       trade.buyDate,
       trade.shares,
@@ -2234,9 +2239,9 @@ function drawPieChart() {
   const slices = state.holdings
     .map((holding) => ({
       label: holding.name || holding.symbol,
-      symbol: holding.symbol,
+      symbol: stockDisplaySymbol(holding),
       group: getHoldingGroupName(holding),
-      value: holding.shares * (holding.currentPrice ?? holding.avgCost),
+      value: stockBookValue(holding),
     }))
     .filter((slice) => slice.value > 0);
   const groupTotals = new Map();
@@ -2607,9 +2612,9 @@ function drawUsStockPieChart() {
   const compactPie = width < 720;
   const slices = state.usHoldings
     .map((holding) => ({
-      label: holding.symbol,
+      label: stockDisplaySymbol(holding),
       group: holding.symbol,
-      value: holding.shares * (holding.currentPrice ?? holding.avgCost) * (state.usdTwdRate || 0),
+      value: stockBookValue(holding) * (state.usdTwdRate || 0),
     }))
     .filter((slice) => slice.value > 0)
     .sort((a, b) => b.value - a.value || chineseNameSorter.compare(a.label, b.label));
@@ -3436,10 +3441,21 @@ function calculateCryptoPosition(contract) {
   return { marginUsdt, leverage, entryPrice, currentPrice, fxRate, notionalUsdt, quantity, pnlUsdt, equityUsdt, costTwd, currentValueTwd, pnlTwd, pnlPct };
 }
 
+function stockDisplaySymbol(holding) {
+  return `${holding.symbol || ""}${holding.side === "short" ? "(short)" : ""}`;
+}
+
+// Simplified capital basis: initial notional plus directional P/L, not broker margin equity.
+function stockBookValue(holding) {
+  const cost = holding.shares * holding.avgCost;
+  const price = holding.currentPrice ?? holding.avgCost;
+  return cost + holding.shares * (price - holding.avgCost) * (holding.side === "short" ? -1 : 1);
+}
+
 function getPortfolioTotals() {
   const stockCost = state.holdings.reduce((sum, item) => sum + item.shares * item.avgCost, 0);
   const stockTotal = state.holdings.reduce(
-    (sum, item) => sum + item.shares * (item.currentPrice ?? item.avgCost),
+    (sum, item) => sum + stockBookValue(item),
     0,
   );
   const usStockCost = state.usHoldings.reduce(
@@ -3447,7 +3463,7 @@ function getPortfolioTotals() {
     0,
   );
   const usStockMarketValue = state.usHoldings.reduce(
-    (sum, item) => sum + item.shares * (item.currentPrice ?? item.avgCost) * (state.usdTwdRate || 0),
+    (sum, item) => sum + stockBookValue(item) * (state.usdTwdRate || 0),
     0,
   );
   const usCashUsd = toNumber(state.usCashUsd);
@@ -3677,6 +3693,7 @@ function migrateState(value) {
   const holdings = value.holdings.map((holding) => ({
     id: holding.id || crypto.randomUUID(),
     symbol: normalizeSymbol(holding.symbol || ""),
+    side: holding.side === "short" ? "short" : "long",
     name: String(holding.name || ""),
     shares: toNumber(holding.shares),
     avgCost: toNumber(holding.avgCost),
@@ -3689,6 +3706,7 @@ function migrateState(value) {
     ? value.usHoldings.map((holding) => ({
         id: holding.id || crypto.randomUUID(),
         symbol: normalizeSymbol(holding.symbol || ""),
+        side: holding.side === "short" ? "short" : "long",
         shares: toNumber(holding.shares),
         avgCost: toNumber(holding.avgCost),
         currentPrice: toOptionalNumber(holding.currentPrice),
@@ -3821,6 +3839,7 @@ function migrateState(value) {
           id: trade.id || crypto.randomUUID(),
           market,
           symbol: trade.symbol,
+          side: trade.side,
           name: trade.name,
           buyDate: trade.buyDate,
           sellDate: trade.sellDate,
