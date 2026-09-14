@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stock Ledger!</title>
-    <link rel="stylesheet" href="styles.css?v=20260907-04" />
+    <link rel="stylesheet" href="styles.css?v=20260914-02" />
   </head>
   <body>
     <main class="app-shell">
@@ -13,7 +13,7 @@
           <p class="eyebrow">Portfolio Ledger！</p>
           <div class="title-line">
             <h1>Stock Ledger!</h1>
-            <span class="app-version">L1.5.7</span>
+            <span class="app-version">L1.5.8</span>
           </div>
         </div>
       </header>
@@ -113,7 +113,6 @@
           <form id="holdingForm" class="holding-form">
             <label>
               股票代號
-              <select id="holdingSideInput" aria-label="台股方向"><option value="long">做多</option><option value="short">做空</option></select>
               <input id="symbolInput" autocomplete="off" placeholder="例：2330.TW" required />
             </label>
             <label>
@@ -132,7 +131,7 @@
               現價
               <input id="priceInput" type="number" min="0" step="0.01" placeholder="可空白" />
             </label>
-            <button type="submit" class="primary-btn">新增台股</button>
+            <div class="add-controls"><select id="holdingSideInput" aria-label="台股方向" title="交易方向"><option value="long">多</option><option value="short">空</option></select><button type="submit" class="primary-btn add-button" aria-label="新增台股" title="新增台股">+</button></div>
           </form>
 
           <div class="table-wrap">
@@ -168,11 +167,11 @@
           </label>
 
           <form id="usHoldingForm" class="holding-form us-holding-form">
-            <label>股票代號<select id="usHoldingSideInput" aria-label="美股方向"><option value="long">做多</option><option value="short">做空</option></select><input id="usSymbolInput" autocomplete="off" placeholder="例：AAPL" required /></label>
+            <label>股票代號<input id="usSymbolInput" autocomplete="off" placeholder="例：AAPL" required /></label>
             <label>股數<input id="usSharesInput" type="number" min="0" step="0.001" placeholder="10" required /></label>
             <label>平均成本 USD<input id="usCostInput" type="number" min="0" step="0.01" placeholder="180" required /></label>
             <label>現價 USD<input id="usPriceInput" type="number" min="0" step="0.01" placeholder="可空白" /></label>
-            <button type="submit" class="primary-btn">新增美股</button>
+            <div class="add-controls"><select id="usHoldingSideInput" aria-label="美股方向" title="交易方向"><option value="long">多</option><option value="short">空</option></select><button type="submit" class="primary-btn add-button" aria-label="新增美股" title="新增美股">+</button></div>
           </form>
 
           <div class="table-wrap">
@@ -206,7 +205,7 @@
               目前總額
               <input id="fundAmountInput" type="number" min="0" step="0.01" placeholder="200000" required />
             </label>
-            <button type="submit" class="primary-btn">新增基金</button>
+            <div class="add-controls"><button type="submit" class="primary-btn add-button" aria-label="新增基金" title="新增基金">+</button></div>
           </form>
 
           <div class="table-wrap compact-table">
@@ -239,14 +238,6 @@
               <input id="cryptoNameInput" autocomplete="off" placeholder="BTCUSDT" required />
             </label>
             <label>
-              方向
-              <select id="cryptoSideInput" required>
-                <option value="" selected disabled>請選擇</option>
-                <option value="long">做多</option>
-                <option value="short">做空</option>
-              </select>
-            </label>
-            <label>
               合約倍數
               <input id="cryptoLeverageInput" type="number" min="1" step="1" placeholder="10" required />
             </label>
@@ -266,7 +257,7 @@
               目前價
               <input id="cryptoCurrentPriceInput" type="number" min="0" step="0.01" placeholder="67000" required />
             </label>
-            <button type="submit" class="primary-btn">新增合約</button>
+            <div class="add-controls"><select id="cryptoSideInput" aria-label="合約方向" title="交易方向"><option value="long">多</option><option value="short">空</option></select><button type="submit" class="primary-btn add-button" aria-label="新增合約" title="新增合約">+</button></div>
           </form>
           <div id="cryptoList" class="crypto-list"></div>
         </div>
