@@ -2256,10 +2256,57 @@ button:disabled {
     padding: 6px 9px;
   }
 
-  .fund-form .primary-btn,
-  .crypto-form .primary-btn {
-    min-height: 38px;
-    padding: 6px 14px;
+  .holding-form,
+  .fund-form,
+  .crypto-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .holding-form > label,
+  .fund-form > label,
+  .crypto-form > label {
+    min-width: 0;
+  }
+
+  .fund-form label:first-child,
+  .crypto-form .add-controls {
+    grid-column: auto;
+  }
+
+  .us-holding-form > label:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .holding-form input,
+  .fund-form input,
+  .crypto-form input {
+    width: 100%;
+    min-width: 0;
+    height: 40px;
+    min-height: 40px;
+    padding: 6px 8px;
+  }
+
+  .add-controls {
+    gap: 6px;
+    max-width: 100%;
+  }
+
+  .add-controls select {
+    width: 60px;
+    min-width: 60px;
+    height: 40px;
+    min-height: 40px;
+    padding: 6px;
+  }
+
+  .add-controls .add-button {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0;
   }
 
   .fund-panel .compact-table tbody,
