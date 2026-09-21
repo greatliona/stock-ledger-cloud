@@ -1574,10 +1574,8 @@ tbody tr:last-child td {
 .trade-record {
   display: grid;
   grid-template-columns:
-    minmax(82px, 0.82fr) minmax(106px, 1.15fr) minmax(82px, 0.82fr)
-    minmax(62px, 0.62fr) minmax(78px, 0.76fr) minmax(78px, 0.76fr)
-    minmax(88px, 0.88fr) minmax(88px, 0.88fr) minmax(88px, 0.88fr)
-    minmax(64px, 0.62fr) 58px;
+    minmax(78px, 0.9fr) minmax(78px, 0.9fr) minmax(45px, 0.55fr)
+    minmax(0, 1.4fr) repeat(6, minmax(0, 1fr)) minmax(0, 0.7fr) 58px;
   align-items: center;
   gap: 8px;
 }
@@ -1621,10 +1619,16 @@ tbody tr:last-child td {
   font-size: 0.74rem;
   font-weight: 700;
   text-align: right;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .trade-record-field:first-child {
+  text-align: left;
+}
+
+.trade-record-buy-date,
+.trade-record-header span:nth-child(4) {
   text-align: left;
 }
 
@@ -1648,6 +1652,7 @@ tbody tr:last-child td {
   display: block;
   font-size: 0.8rem;
 }
+
 
 .trade-record-name,
 .trade-record-native {
@@ -2352,4 +2357,15 @@ button:disabled {
     flex-direction: row;
     gap: 8px;
   }
+}
+
+@media (max-width: 640px) {
+  .trade-history-list { gap: 6px; }
+  .trade-record { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 8px; padding: 8px; align-items: start; }
+  .trade-record-field { font-size: 0.72rem; line-height: 1.35; }
+  .trade-record-field small { margin-bottom: 1px; font-size: 0.6rem; }
+  .trade-record-symbol-field { grid-column: 1 / -1; }
+  .trade-record-symbol { font-size: 0.75rem; }
+  .trade-record-native { margin-top: 1px; }
+  .trade-record-actions { padding-top: 0; }
 }

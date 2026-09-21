@@ -16,6 +16,17 @@ assert.equal(context.calculateTradeValues('us', 10, 100, 80, 32, 'short').pnlTwd
 assert.equal(context.calculateTradeValues('us', 10, 100, 120, 32, 'short').pnlPct, -20);
 assert.equal(context.calculateTradeValues('tw', 10, 100, 80, 1).pnlTwd, -200);
 const trade = context.createTradeRecord({ ...holding, market: 'us', sellPrice: 80, fxRate: 32, buyDate: '2026-09-05', sellDate: '2026-09-14' });
+assert.equal(context.tradeDate('2026-9-5'), '2026/09/05');
+assert.equal(context.holdingDays(trade), 9);
+assert.equal(context.holdingDays({ buyDate: '2024-02-28', sellDate: '2024-03-01' }), 2);
+assert.equal(context.holdingDays({ buyDate: '2026/09/21', sellDate: '2026/09/21' }), 0);
+const html = context.renderTradeRecord(trade);
+assert.equal(context.getTradeDisplayLabel({ market: 'tw', name: '台積電', symbol: '2330' }), '台積電 / 2330');
+assert.equal(context.getTradeDisplayLabel({ market: 'us', name: 'Apple', symbol: 'AAPL' }), 'Apple');
+assert.equal(context.getTradeDisplayLabel({ market: 'us', symbol: 'AAPL', side: 'short' }), 'AAPL(short)');
+assert.equal(context.getTradeDisplayLabel({ market: 'us', name: 'Apple', symbol: 'AAPL', side: 'short' }), 'Apple(short)');
+assert.ok(html.indexOf('賣出</small>') < html.indexOf('買入</small>'));
+assert.ok(html.indexOf('持有天數') < html.indexOf('股名／股號'));
 const data = context.migrateState(JSON.parse(JSON.stringify({ holdings: [holding], usHoldings: [holding], history: [], tradeHistory: [trade], usdTwdRate: 32 })));
 assert.equal(data.holdings[0].side, 'short');
 assert.equal(data.usHoldings[0].side, 'short');

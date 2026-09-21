@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stock Ledger!</title>
-    <link rel="stylesheet" href="styles.css?v=20260920-01" />
+    <link rel="stylesheet" href="styles.css?v=20260921-01" />
   </head>
   <body>
     <main class="app-shell">
@@ -13,7 +13,7 @@
           <p class="eyebrow">Portfolio Ledger！</p>
           <div class="title-line">
             <h1>Stock Ledger!</h1>
-            <span class="app-version">L1.5.9</span>
+            <span class="app-version">L1.5.10</span>
           </div>
         </div>
       </header>
@@ -396,9 +396,10 @@
               <button id="exportTradesBtn" class="secondary-btn" type="button">匯出全部 Excel</button>
             </div>
             <div class="trade-record-header" aria-hidden="true">
-              <span>賣出日</span>
-              <span>市場／股票</span>
-              <span>買入日</span>
+              <span>賣出</span>
+              <span>買入</span>
+              <span>持有天數</span>
+              <span>股名／股號</span>
               <span>股數</span>
               <span>平均成本</span>
               <span>賣出價</span>
@@ -434,8 +435,8 @@
           <p id="tradeDecisionStock" class="trade-dialog-stock"></p>
         </div>
         <div class="trade-dialog-fields">
-          <label>買入日期<input id="tradeBuyDateInput" type="date" required /></label>
-          <label>賣出日期<input id="tradeSellDateInput" type="date" required /></label>
+          <label>買入日期<input id="tradeBuyDateInput" type="text" placeholder="YYYY/MM/DD" required /></label>
+          <label>賣出日期<input id="tradeSellDateInput" type="text" placeholder="YYYY/MM/DD" required /></label>
           <label>股數<input id="tradeSharesInput" type="number" min="0.000001" step="any" required /></label>
           <label><span id="tradeAverageCostLabel">平均成本</span><input id="tradeAverageCostInput" type="number" min="0" step="0.01" required /></label>
           <label><span id="tradeSellPriceLabel">賣出價格</span><input id="tradeSellPriceInput" type="number" min="0" step="0.01" required /></label>
@@ -478,6 +479,6 @@
     </template>
 
     <script src="xlsx.mini.min.js?v=0.20.3"></script>
-    <script src="app.js?v=20260914-01"></script>
+    <script src="app.js?v=20260921-01"></script>
   </body>
 </html>

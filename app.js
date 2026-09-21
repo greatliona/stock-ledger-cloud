@@ -1280,8 +1280,8 @@ function openTradeDecision(market, holding) {
   pendingHoldingSale = { market, holdingId: holding.id, side: holding.side };
   const isUs = market === "us";
   els.tradeDecisionStock.textContent = getTradeDisplayLabel({ market, ...holding });
-  els.tradeBuyDate.value = holding.purchaseDate || LEGACY_PURCHASE_DATE;
-  els.tradeSellDate.value = todayISO();
+  els.tradeBuyDate.value = tradeDate(holding.purchaseDate || LEGACY_PURCHASE_DATE);
+  els.tradeSellDate.value = tradeDate(todayISO());
   els.tradeShares.value = String(holding.shares || "");
   els.tradeAverageCost.value = String(holding.avgCost ?? "");
   els.tradeSellPrice.value = String(holding.currentPrice ?? holding.avgCost ?? "");
@@ -1469,6 +1469,16 @@ function compareTradeRecords(a, b) {
     || String(a.symbol).localeCompare(String(b.symbol));
 }
 
+function tradeDate(value) {
+  return (parseDateInput(value) || "").replaceAll("-", "/");
+}
+
+function holdingDays(trade) {
+  const buy = parseDateInput(trade.buyDate);
+  const sell = parseDateInput(trade.sellDate);
+  return buy && sell ? Math.max(0, Math.round((Date.parse(sell + "T00:00:00Z") - Date.parse(buy + "T00:00:00Z")) / 86400000)) : 0;
+}
+
 function renderTradeRecord(trade) {
   const averageCost = trade.market === "us" ? usdMoney(trade.avgCost) : unitMoney(trade.avgCost);
   const sellPrice = trade.market === "us" ? usdMoney(trade.sellPrice) : unitMoney(trade.sellPrice);
@@ -1476,12 +1486,13 @@ function renderTradeRecord(trade) {
   const proceedsNative = trade.market === "us" ? `<span class="trade-record-native">${usdMoney(trade.proceedsNative)}</span>` : "";
   const pnlNative = trade.market === "us" ? `<span class="trade-record-native">${signedUsdMoney(trade.pnlNative)}</span>` : "";
   return `
-    <span class="trade-record-field trade-record-sell-date"><small>賣出日</small>${escapeHTML(trade.sellDate)}</span>
+    <span class="trade-record-field trade-record-sell-date"><small>賣出</small>${tradeDate(trade.sellDate)}</span>
+    <span class="trade-record-field trade-record-buy-date"><small>買入</small>${tradeDate(trade.buyDate)}</span>
+    <span class="trade-record-field"><small>持有天數</small>${holdingDays(trade)} 天</span>
     <span class="trade-record-field trade-record-symbol-field">
-      <small>市場／股票</small>
+      <small>股名／股號</small>
       <span class="trade-record-symbol">${escapeHTML(getTradeDisplayLabel(trade))}</span>
     </span>
-    <span class="trade-record-field trade-record-buy-date"><small>買入日</small>${escapeHTML(trade.buyDate)}</span>
     <span class="trade-record-field"><small>股數</small>${formatNumber(trade.shares, 3)}</span>
     <span class="trade-record-field"><small>平均成本</small>${averageCost}</span>
     <span class="trade-record-field"><small>賣出價</small>${sellPrice}</span>
@@ -1502,8 +1513,8 @@ function renderTradeEditForm(trade) {
       <label>市場<select data-trade-field="market"><option value="tw"${trade.market === "tw" ? " selected" : ""}>台股</option><option value="us"${trade.market === "us" ? " selected" : ""}>美股</option></select></label>
       <label>股票代號<input data-trade-field="symbol" autocomplete="off" value="${escapeHTML(trade.symbol)}" required /></label>
       <label>股票名稱<input data-trade-field="name" autocomplete="off" value="${escapeHTML(trade.name)}" /></label>
-      <label>買入日期<input data-trade-field="buyDate" type="date" value="${escapeHTML(trade.buyDate)}" required /></label>
-      <label>賣出日期<input data-trade-field="sellDate" type="date" value="${escapeHTML(trade.sellDate)}" required /></label>
+      <label>買入日期<input data-trade-field="buyDate" type="text" placeholder="YYYY/MM/DD" value="${tradeDate(trade.buyDate)}" required /></label>
+      <label>賣出日期<input data-trade-field="sellDate" type="text" placeholder="YYYY/MM/DD" value="${tradeDate(trade.sellDate)}" required /></label>
       <label>股數<input data-trade-field="shares" type="number" min="0.000001" step="any" value="${trade.shares}" required /></label>
       <label>平均成本<input data-trade-field="avgCost" type="number" min="0" step="0.01" value="${trade.avgCost}" required /></label>
       <label>賣出價格<input data-trade-field="sellPrice" type="number" min="0" step="0.01" value="${trade.sellPrice}" required /></label>
@@ -1541,7 +1552,7 @@ function readTradeEditForm(form, trade) {
 
 function openDeleteTradeDialog(trade) {
   pendingTradeDeleteId = trade.id;
-  els.deleteTradeDescription.textContent = `${getTradeDisplayLabel(trade)} · ${trade.buyDate} → ${trade.sellDate} · ${signedMoney(trade.pnlTwd)}`;
+  els.deleteTradeDescription.textContent = `${getTradeDisplayLabel(trade)} · ${tradeDate(trade.buyDate)} → ${tradeDate(trade.sellDate)} · ${signedMoney(trade.pnlTwd)}`;
   showTradeDialog(els.deleteTradeDialog);
 }
 
@@ -1557,8 +1568,8 @@ function findTradeRecord(id) {
 function getTradeDisplayLabel(trade) {
   const symbol = stockDisplaySymbol(trade);
   const name = String(trade.name || "").trim();
-  if (trade.market === "us") return `美股 / ${name ? name + " / " : ""}${symbol}`;
-  return `台股 / ${[name, symbol].filter(Boolean).join(" / ")}`;
+  if (trade.market === "us") return name ? `${name}${trade.side === "short" ? "(short)" : ""}` : symbol;
+  return [name, symbol].filter(Boolean).join(" / ");
 }
 
 function downloadBlob(blob, fileName) {
@@ -1631,13 +1642,13 @@ function exportTradeHistoryExcel() {
   setStatus("正在產生交易紀錄 Excel...");
   showTradeExportFeedback("正在產生...");
   try {
-    const headers = ["賣出日期", "市場", "股票代號", "股票名稱", "買入日期", "股數", "幣別", "平均成本", "賣出價格", "賣出匯率", "原幣成本", "原幣賣出金額", "原幣獲利", "台幣成本", "台幣賣出金額", "台幣獲利", "獲利%"];
+    const headers = ["賣出", "買入", "持有天數", "股名／股號", "市場", "股數", "幣別", "平均成本", "賣出價格", "賣出匯率", "原幣成本", "原幣賣出金額", "原幣獲利", "台幣成本", "台幣賣出金額", "台幣獲利", "獲利%"];
     const rows = trades.map((trade) => [
-      trade.sellDate,
+      tradeDate(trade.sellDate),
+      tradeDate(trade.buyDate),
+      holdingDays(trade),
+      getTradeDisplayLabel(trade),
       trade.market === "us" ? "美股" : "台股",
-      stockDisplaySymbol(trade),
-      trade.name,
-      trade.buyDate,
       trade.shares,
       trade.currency,
       trade.avgCost,
@@ -1658,7 +1669,7 @@ function exportTradeHistoryExcel() {
     const totalRow = ["", "合計", "", "", "", "", "", "", "", "", "", "", "", totalCost, totalProceeds, totalPnl, totalPnlPct];
     const worksheet = window.XLSX.utils.aoa_to_sheet([headers, ...rows, [], totalRow]);
     worksheet["!cols"] = [
-      { wch: 12 }, { wch: 8 }, { wch: 13 }, { wch: 18 }, { wch: 12 }, { wch: 12 },
+      { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 36 }, { wch: 8 }, { wch: 12 },
       { wch: 8 }, { wch: 13 }, { wch: 13 }, { wch: 11 }, { wch: 15 }, { wch: 16 },
       { wch: 15 }, { wch: 15 }, { wch: 16 }, { wch: 15 }, { wch: 11 },
     ];
