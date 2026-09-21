@@ -1491,7 +1491,8 @@ function renderTradeRecord(trade) {
     <span class="trade-record-field"><small>持有天數</small>${holdingDays(trade)} 天</span>
     <span class="trade-record-field trade-record-symbol-field">
       <small>股名／股號</small>
-      <span class="trade-record-symbol">${escapeHTML(getTradeDisplayLabel(trade))}</span>
+      <span class="trade-record-symbol">${escapeHTML(trade.market === "us" ? stockDisplaySymbol(trade) : (trade.name || stockDisplaySymbol(trade)))}</span>
+      ${trade.market !== "us" && trade.name ? `<span class="trade-record-code">${escapeHTML(stockDisplaySymbol(trade))}</span>` : ""}
     </span>
     <span class="trade-record-field"><small>股數</small>${formatNumber(trade.shares, 3)}</span>
     <span class="trade-record-field"><small>平均成本</small>${averageCost}</span>
@@ -1568,7 +1569,7 @@ function findTradeRecord(id) {
 function getTradeDisplayLabel(trade) {
   const symbol = stockDisplaySymbol(trade);
   const name = String(trade.name || "").trim();
-  if (trade.market === "us") return name ? `${name}${trade.side === "short" ? "(short)" : ""}` : symbol;
+  if (trade.market === "us") return symbol;
   return [name, symbol].filter(Boolean).join(" / ");
 }
 
@@ -1642,13 +1643,13 @@ function exportTradeHistoryExcel() {
   setStatus("正在產生交易紀錄 Excel...");
   showTradeExportFeedback("正在產生...");
   try {
-    const headers = ["賣出", "買入", "持有天數", "股名／股號", "市場", "股數", "幣別", "平均成本", "賣出價格", "賣出匯率", "原幣成本", "原幣賣出金額", "原幣獲利", "台幣成本", "台幣賣出金額", "台幣獲利", "獲利%"];
+    const headers = ["賣出", "買入", "持有天數", "股名", "股號／Ticker", "股數", "幣別", "平均成本", "賣出價格", "賣出匯率", "原幣成本", "原幣賣出金額", "原幣獲利", "台幣成本", "台幣賣出金額", "台幣獲利", "獲利%"];
     const rows = trades.map((trade) => [
       tradeDate(trade.sellDate),
       tradeDate(trade.buyDate),
       holdingDays(trade),
-      getTradeDisplayLabel(trade),
-      trade.market === "us" ? "美股" : "台股",
+      trade.market === "us" ? "" : trade.name,
+      stockDisplaySymbol(trade),
       trade.shares,
       trade.currency,
       trade.avgCost,
@@ -1669,7 +1670,7 @@ function exportTradeHistoryExcel() {
     const totalRow = ["", "合計", "", "", "", "", "", "", "", "", "", "", "", totalCost, totalProceeds, totalPnl, totalPnlPct];
     const worksheet = window.XLSX.utils.aoa_to_sheet([headers, ...rows, [], totalRow]);
     worksheet["!cols"] = [
-      { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 36 }, { wch: 8 }, { wch: 12 },
+      { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 22 }, { wch: 18 }, { wch: 12 },
       { wch: 8 }, { wch: 13 }, { wch: 13 }, { wch: 11 }, { wch: 15 }, { wch: 16 },
       { wch: 15 }, { wch: 15 }, { wch: 16 }, { wch: 15 }, { wch: 11 },
     ];

@@ -1653,6 +1653,15 @@ tbody tr:last-child td {
   font-size: 0.8rem;
 }
 
+.trade-record-code {
+  display: block;
+  margin-top: 2px;
+  color: #737b78;
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
 
 .trade-record-name,
 .trade-record-native {
@@ -2368,4 +2377,9 @@ button:disabled {
   .trade-record-symbol { font-size: 0.75rem; }
   .trade-record-native { margin-top: 1px; }
   .trade-record-actions { padding-top: 0; }
+}
+
+.trade-record .trade-record-symbol-field,
+.trade-record-header span:nth-child(4) {
+  text-align: center;
 }
