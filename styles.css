@@ -2383,3 +2383,25 @@ button:disabled {
 .trade-record-header span:nth-child(4) {
   text-align: center;
 }
+
+.trade-history-panel .trade-record-header > span,
+.trade-record .trade-record-field {
+  text-align: center;
+}
+
+.trade-record .trade-record-actions { justify-content: center; }
+
+.category-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.category-heading .category-current-total {
+  color: #7c8580;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}

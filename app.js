@@ -822,6 +822,9 @@ function render() {
 
 function renderSummary() {
   const totals = getPortfolioTotals();
+  document.querySelectorAll("[data-category-total]").forEach((node) => {
+    node.textContent = `目前總值 ${money(totals[node.dataset.categoryTotal])}`;
+  });
   els.totalValue.textContent = money(totals.value);
   els.cashTotal.textContent = money(totals.cash);
   els.totalCost.textContent = money(totals.cost);

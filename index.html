@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stock Ledger!</title>
-    <link rel="stylesheet" href="styles.css?v=20260921-02" />
+    <link rel="stylesheet" href="styles.css?v=20260921-03" />
   </head>
   <body>
     <main class="app-shell">
@@ -13,7 +13,7 @@
           <p class="eyebrow">Portfolio Ledger！</p>
           <div class="title-line">
             <h1>Stock Ledger!</h1>
-            <span class="app-version">L1.5.11</span>
+            <span class="app-version">L1.5.12</span>
           </div>
         </div>
       </header>
@@ -106,7 +106,7 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Holdings！</p>
-              <h2>台灣股市</h2>
+              <h2 class="category-heading">台灣股市<small class="category-current-total" data-category-total="stockTotal">目前總值 $0</small></h2>
             </div>
           </div>
 
@@ -157,7 +157,7 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">US Market！</p>
-              <h2>美國股市</h2>
+              <h2 class="category-heading">美國股市<small class="category-current-total" data-category-total="usStockTotal">目前總值 $0</small></h2>
             </div>
           </div>
 
@@ -188,7 +188,7 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Funds！</p>
-              <h2>基金</h2>
+              <h2 class="category-heading">基金<small class="category-current-total" data-category-total="fundTotal">目前總值 $0</small></h2>
             </div>
           </div>
 
@@ -228,7 +228,7 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Crypto！</p>
-              <h2>加密貨幣合約</h2>
+              <h2 class="category-heading">加密貨幣合約<small class="category-current-total" data-category-total="cryptoTotal">目前總值 $0</small></h2>
             </div>
           </div>
 
@@ -479,6 +479,6 @@
     </template>
 
     <script src="xlsx.mini.min.js?v=0.20.3"></script>
-    <script src="app.js?v=20260921-02"></script>
+    <script src="app.js?v=20260921-03"></script>
   </body>
 </html>
