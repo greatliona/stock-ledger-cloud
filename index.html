@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stock Ledger!</title>
-    <link rel="stylesheet" href="styles.css?v=20260921-03" />
+    <link rel="stylesheet" href="styles.css?v=20260929-01" />
   </head>
   <body>
     <main class="app-shell">
@@ -13,7 +13,7 @@
           <p class="eyebrow">Portfolio Ledger！</p>
           <div class="title-line">
             <h1>Stock Ledger!</h1>
-            <span class="app-version">L1.5.12</span>
+            <span class="app-version">L1.5.13</span>
           </div>
         </div>
       </header>
@@ -311,27 +311,27 @@
         </div>
         <div class="asset-chart-carousel" aria-label="資產市值圖表">
           <article class="asset-chart-slide">
-            <h3>合併市值</h3>
+            <h3 class="category-heading">合併市值<small class="category-current-total" data-category-total="value">目前總值 $0</small></h3>
             <canvas id="assetChart" data-asset-chart="combined" height="260"></canvas>
           </article>
           <article class="asset-chart-slide">
-            <h3>現金市值</h3>
+            <h3 class="category-heading">現金市值<small class="category-current-total" data-category-total="cash">目前總值 $0</small></h3>
             <canvas id="cashValueChart" data-asset-chart="cash" height="260"></canvas>
           </article>
           <article class="asset-chart-slide">
-            <h3>台灣股市市值</h3>
+            <h3 class="category-heading">台灣股市市值<small class="category-current-total" data-category-total="stockTotal">目前總值 $0</small></h3>
             <canvas id="stockValueChart" data-asset-chart="stock" height="260"></canvas>
           </article>
           <article class="asset-chart-slide">
-            <h3>加密合約</h3>
+            <h3 class="category-heading">加密合約<small class="category-current-total" data-category-total="cryptoTotal">目前總值 $0</small></h3>
             <canvas id="cryptoValueChart" data-asset-chart="crypto" height="260"></canvas>
           </article>
           <article class="asset-chart-slide">
-            <h3>基金市值</h3>
+            <h3 class="category-heading">基金市值<small class="category-current-total" data-category-total="fundTotal">目前總值 $0</small></h3>
             <canvas id="fundValueChart" data-asset-chart="fund" height="260"></canvas>
           </article>
           <article class="asset-chart-slide">
-            <h3>美國股市市值</h3>
+            <h3 class="category-heading">美國股市市值<small class="category-current-total" data-category-total="usStockTotal">目前總值 $0</small></h3>
             <canvas id="usStockValueChart" data-asset-chart="usStock" height="260"></canvas>
           </article>
         </div>
@@ -479,6 +479,6 @@
     </template>
 
     <script src="xlsx.mini.min.js?v=0.20.3"></script>
-    <script src="app.js?v=20260921-03"></script>
+    <script src="app.js?v=20260929-01"></script>
   </body>
 </html>
