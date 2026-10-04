@@ -1067,6 +1067,7 @@ function renderCryptoContracts() {
         ${escapeHTML(baseAsset)}持倉數量
         <input data-crypto-id="${escapeHTML(contract.id)}" data-crypto-field="quantity" type="number" min="0" step="0.000001" value="${contract.quantity}" />
       </label>
+      <div class="crypto-price-fields">
       <label>
         開倉價
         <input data-crypto-id="${escapeHTML(contract.id)}" data-crypto-field="entryPrice" type="number" min="0" step="0.01" value="${contract.entryPrice}" />
@@ -1075,13 +1076,14 @@ function renderCryptoContracts() {
         目前價
         <input data-crypto-id="${escapeHTML(contract.id)}" data-crypto-field="currentPrice" type="number" min="0" step="0.01" value="${contract.currentPrice}" />
       </label>
+      <label>強平價<input data-crypto-field="liquidationPrice" type="number" min="0" step="any" value="${contract.liquidationPrice ?? ""}" placeholder="未設定" /></label>
+      </div>
       </div>
       <div class="crypto-position-details">
         <span>開倉部位 <strong>${formatNumber(position.notionalUsdt, 2)}</strong></span>
         <span>${escapeHTML(baseAsset)} 數量 <strong>${formatNumber(position.quantity, 6)}</strong></span>
         <span>未實現損益 <strong>${signedNumber(position.pnlUsdt, 2)}</strong></span>
         <span>目前權益 <strong>${formatNumber(position.equityUsdt, 2)}</strong></span>
-        <label>強平價<input data-crypto-field="liquidationPrice" type="number" min="0" step="any" value="${contract.liquidationPrice ?? ""}" placeholder="未設定" /></label>
       </div>
       <div class="crypto-card-bottom">
         <div class="crypto-card-metrics">
