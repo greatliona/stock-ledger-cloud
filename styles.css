@@ -2414,3 +2414,25 @@ button:disabled {
 .crypto-price-fields { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px 8px; }
 .crypto-price-fields > label { min-width: 0; }
 .crypto-price-fields input { width: 100%; min-width: 0; box-sizing: border-box; }
+
+/* Compact contract card: common typography, aligned columns, actions in flow. */
+.crypto-card:not(.fund-card) .crypto-card-content { gap: 10px; margin-top: 10px; }
+.crypto-card:not(.fund-card) label { min-width: 0; font-size: .7rem; font-weight: 500; line-height: 1.35; }
+.crypto-card:not(.fund-card) .contract-readonly-value {
+  color: var(--ink); font-size: .84rem; font-weight: 600;
+  line-height: 1.4; font-variant-numeric: tabular-nums;
+}
+.crypto-card .crypto-position-details {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--line); padding-top: 8px; gap: 8px;
+  font-size: .7rem;
+}
+.crypto-card .crypto-position-details span { align-items: flex-start; text-align: left; white-space: normal; }
+.crypto-card .crypto-position-details strong { color: var(--ink); font-size: .84rem; font-weight: 600; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.crypto-card .crypto-card-bottom { display: flex; align-items: center; justify-content: space-between; padding: 8px 0 0; border-top: 1px solid var(--line); gap: 8px; }
+.crypto-card .crypto-card-metrics { display: block; min-width: 0; }
+.crypto-card .crypto-cost-metric { display: flex; align-items: baseline; gap: 8px; font-size: .84rem; }
+.crypto-card .crypto-card-bottom .fund-bottom-line { width: auto; display: block; flex-shrink: 0; }
+.crypto-card .crypto-card-bottom .row-actions { position: static; }
+.crypto-card .crypto-card-toggle { flex-wrap: wrap; gap: 4px 8px; }
+.crypto-card .crypto-card-toggle-pnl { margin-left: auto; }

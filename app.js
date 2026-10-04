@@ -1081,7 +1081,6 @@ function renderCryptoContracts() {
       </div>
       <div class="crypto-position-details">
         <span>開倉部位 <strong>${formatNumber(position.notionalUsdt, 2)}</strong></span>
-        <span>${escapeHTML(baseAsset)} 數量 <strong>${formatNumber(position.quantity, 6)}</strong></span>
         <span>未實現損益 <strong>${signedNumber(position.pnlUsdt, 2)}</strong></span>
         <span>目前權益 <strong>${formatNumber(position.equityUsdt, 2)}</strong></span>
       </div>
@@ -1090,13 +1089,6 @@ function renderCryptoContracts() {
           <div class="crypto-cost-metric">
             <span class="crypto-pnl-label">成本</span>
             <span>${money(position.costTwd)}</span>
-          </div>
-          <div class="crypto-pnl-metric ${position.pnlTwd >= 0 ? "gain" : "loss"}">
-            <span class="crypto-pnl-label">損益</span>
-            <div class="fund-pnl-line">
-              <span>${signedMoney(position.pnlTwd)}</span>
-              <span class="stock-name">${signedPercent(position.pnlPct)}</span>
-            </div>
           </div>
         </div>
         <div class="fund-bottom-line">
