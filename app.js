@@ -10,6 +10,8 @@ let cloudSaveTimer = null;
 let editingHistoryDate = "";
 const openHistoryMonths = new Set();
 const openCryptoCards = new Set();
+const openFundCards = new Set();
+let editingCryptoId = "";
 let editingHoldingId = "";
 let editingUsHoldingId = "";
 let editingFundId = "";
@@ -231,23 +233,30 @@ els.cryptoForm.addEventListener("submit", (event) => {
     quantity: toNumber(els.cryptoQuantity.value),
     entryPrice: toNumber(els.cryptoEntryPrice.value),
     currentPrice: toNumber(els.cryptoCurrentPrice.value),
+    liquidationPrice: null,
   });
   saveAndRender("已新增加密貨幣合約。");
   els.cryptoForm.reset();
   els.cryptoName.focus();
 });
 
-els.cryptoList.addEventListener("change", (event) => {
-  const input = event.target.closest("[data-crypto-field]");
-  if (!input) return;
-  const contract = findCryptoContract(input.dataset.cryptoId);
+els.cryptoList.addEventListener("click", (event) => {
+  const edit = event.target.closest("[data-edit-crypto]");
+  if (edit) { editingCryptoId = edit.dataset.editCrypto; renderCryptoContracts(); return; }
+  if (event.target.closest("[data-cancel-crypto]")) { editingCryptoId = ""; renderCryptoContracts(); return; }
+  const save = event.target.closest("[data-save-crypto]");
+  if (!save) return;
+  const contract = findCryptoContract(save.dataset.saveCrypto);
   if (!contract) return;
-  const field = input.dataset.cryptoField;
-  contract[field] = field === "side"
-    ? (input.value === "short" ? "short" : "long")
-    : field === "leverage"
-      ? Math.max(1, toNumber(input.value))
-      : toNumber(input.value);
+  const inputs = [...save.closest(".crypto-card").querySelectorAll("[data-crypto-field]")];
+  if (inputs.some(input => !input.checkValidity())) { inputs.find(input => !input.checkValidity()).reportValidity(); return; }
+  const changes = {};
+  inputs.forEach(input => {
+    const field = input.dataset.cryptoField;
+    changes[field] = field === "side" ? input.value : field === "liquidationPrice" ? toOptionalNumber(input.value) : toNumber(input.value);
+  });
+  Object.assign(contract, changes);
+  editingCryptoId = "";
   saveAndRender("已更新加密貨幣合約。");
 });
 
@@ -407,6 +416,8 @@ els.fundsBody.addEventListener("click", (event) => {
     const editRow = saveBtn.closest("[data-edit-fund-row]");
     if (!fund || !editRow) return;
     const name = editRow.querySelector("[data-edit-fund-field='name']").value.trim();
+    const invalid = [...editRow.querySelectorAll("input")].find(input => !input.checkValidity());
+    if (invalid) { invalid.reportValidity(); return; }
     if (!name) {
       setStatus("基金名稱不能空白。");
       return;
@@ -985,69 +996,28 @@ function renderUsHoldings() {
 
 function renderFunds() {
   els.fundsBody.innerHTML = "";
-
-  if (!state.funds.length) {
-    const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="5" class="empty-cell">尚未新增基金</td>';
-    els.fundsBody.append(row);
-    return;
-  }
-
+  if (!state.funds.length) { els.fundsBody.innerHTML = '<p class="status-text">尚未新增基金</p>'; return; }
   for (const fund of state.funds) {
     const pnl = (fund.currentValue || 0) - (fund.cost || 0);
-    const pnlPct = fund.cost ? (pnl / fund.cost) * 100 : 0;
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>
-        <strong>${escapeHTML(fund.name)}</strong>
-      </td>
-      <td class="fund-input-cell">
-        <input data-fund-cost-id="${fund.id}" type="number" min="0" step="0.01" value="${fund.cost ?? 0}" aria-label="${escapeHTML(fund.name)} 基金成本" />
-      </td>
-      <td class="fund-input-cell">
-        <input data-fund-value-id="${fund.id}" type="number" min="0" step="0.01" value="${fund.currentValue ?? 0}" aria-label="${escapeHTML(fund.name)} 目前總額" />
-      </td>
-      <td class="fund-pnl-cell ${pnl >= 0 ? "gain" : "loss"}">
-        <div class="fund-bottom-line">
-          <div class="fund-pnl-line">
-            <span>${signedMoney(pnl)}</span>
-            <span class="stock-name">${signedPercent(pnlPct)}</span>
-          </div>
-          <div class="row-actions">
-            <button class="mini-btn" data-delete-fund-id="${escapeHTML(fund.id)}" type="button" aria-label="刪除 ${escapeHTML(fund.name)}">x</button>
-          </div>
+    const pct = fund.cost ? pnl / fund.cost * 100 : 0;
+    const editing = editingFundId === fund.id;
+    const card = document.createElement("details");
+    card.className = "crypto-card fund-card";
+    card.open = openFundCards.has(fund.id) || editing;
+    card.innerHTML = `
+      <summary class="crypto-card-toggle"><strong>${escapeHTML(fund.name)}</strong><span class="crypto-card-toggle-pnl ${pnl >= 0 ? "gain" : "loss"}"><span>${signedMoney(pnl)}</span><span>${signedPercent(pct)}</span></span></summary>
+      <div class="crypto-card-content" data-edit-fund-row>
+        ${editing ? `<label>基金名稱<input data-edit-fund-field="name" value="${escapeHTML(fund.name)}" required /></label>` : ""}
+        <div class="fund-card-fields">
+          <label>成本${editing ? `<input data-edit-fund-field="cost" type="number" min="0" step="any" required value="${fund.cost}" />` : `<strong>${money(fund.cost)}</strong>`}</label>
+          <label>目前總額${editing ? `<input data-edit-fund-field="currentValue" type="number" min="0" step="any" required value="${fund.currentValue}" />` : `<strong>${money(fund.currentValue)}</strong>`}</label>
         </div>
-      </td>
-      <td class="fund-actions-cell"></td>
-    `;
-    els.fundsBody.append(row);
-
-    if (editingFundId === fund.id) {
-      const editRow = document.createElement("tr");
-      editRow.className = "edit-fund-row";
-      editRow.dataset.editFundRow = fund.id;
-      editRow.innerHTML = `
-        <td colspan="5">
-          <div class="edit-fund-form">
-            <label>
-              基金名稱
-              <input data-edit-fund-field="name" autocomplete="off" value="${escapeHTML(fund.name || "")}" />
-            </label>
-            <label>
-              基金成本
-              <input data-edit-fund-field="cost" type="number" min="0" step="1" value="${fund.cost ?? 0}" />
-            </label>
-            <label>
-              目前總額
-              <input data-edit-fund-field="currentValue" type="number" min="0" step="1" value="${fund.currentValue ?? 0}" />
-            </label>
-            <button class="primary-btn" data-edit-fund-save-id="${escapeHTML(fund.id)}" type="button">儲存</button>
-            <button class="secondary-btn" data-edit-fund-cancel-id="${escapeHTML(fund.id)}" type="button">取消</button>
-          </div>
-        </td>
-      `;
-      els.fundsBody.append(editRow);
-    }
+        <div class="card-edit-actions">
+          ${editing ? `<button type="button" class="secondary-btn" data-edit-fund-save-id="${escapeHTML(fund.id)}">儲存</button><button type="button" class="secondary-btn" data-edit-fund-cancel-id="${escapeHTML(fund.id)}">取消</button>` : `<button type="button" class="secondary-btn" data-edit-fund-id="${escapeHTML(fund.id)}">修改</button><button type="button" class="mini-btn" data-delete-fund-id="${escapeHTML(fund.id)}" aria-label="刪除 ${escapeHTML(fund.name)}">x</button>`}
+        </div>
+      </div>`;
+    card.addEventListener("toggle", () => { if (card.open) openFundCards.add(fund.id); else openFundCards.delete(fund.id); });
+    els.fundsBody.append(card);
   }
 }
 
@@ -1107,6 +1077,7 @@ function renderCryptoContracts() {
       </label>
       </div>
       <div class="crypto-position-details">
+        <label>強平價 USDT（選填）<input data-crypto-field="liquidationPrice" type="number" min="0" step="any" value="${contract.liquidationPrice ?? ""}" placeholder="未設定" /></label>
         <span>開倉部位 <strong>${formatNumber(position.notionalUsdt, 2)}</strong></span>
         <span>${escapeHTML(baseAsset)} 數量 <strong>${formatNumber(position.quantity, 6)}</strong></span>
         <span>未實現損益 <strong>${signedNumber(position.pnlUsdt, 2)}</strong></span>
@@ -1134,6 +1105,20 @@ function renderCryptoContracts() {
       </div>
       </div>
     `;
+    const editing = editingCryptoId === contract.id;
+    card.querySelectorAll("[data-crypto-field]").forEach(input => {
+      if (editing) return;
+      const value = document.createElement("strong");
+      value.className = "contract-readonly-value";
+      value.textContent = input.tagName === "SELECT" ? input.options[input.selectedIndex].text : (input.value || "未設定");
+      input.replaceWith(value);
+    });
+    const actions = card.querySelector(".row-actions");
+    actions.innerHTML = editing
+      ? '<button type="button" class="secondary-btn" data-save-crypto="' + escapeHTML(contract.id) + '">儲存</button><button type="button" class="secondary-btn" data-cancel-crypto>取消</button>'
+      : '<button type="button" class="secondary-btn" data-edit-crypto="' + escapeHTML(contract.id) + '">修改</button>' + actions.innerHTML;
+    actions.classList.add("card-edit-actions");
+    if (editing) card.open = true;
     card.addEventListener("toggle", () => {
       if (card.open) openCryptoCards.add(contract.id);
       else openCryptoCards.delete(contract.id);
@@ -3757,6 +3742,7 @@ function migrateState(value) {
               : (entryPrice ? (marginUsdt * leverage) / entryPrice : 0),
             entryPrice,
             currentPrice: toNumber(contract.currentPrice),
+            liquidationPrice: toOptionalNumber(contract.liquidationPrice),
           };
         }
 
@@ -3772,6 +3758,7 @@ function migrateState(value) {
           quantity: legacyCost * leverage,
           entryPrice: 1,
           currentPrice: Math.max(0, 1 + legacyMove),
+          liquidationPrice: toOptionalNumber(contract.liquidationPrice),
         };
       })
     : [];

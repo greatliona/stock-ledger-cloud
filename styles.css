@@ -2405,3 +2405,9 @@ button:disabled {
   line-height: 1.4;
   white-space: nowrap;
 }
+.fund-card-list { display: grid; gap: 8px; }
+.fund-card-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.fund-card-fields strong, .contract-readonly-value { display: block; font-size: 0.9rem; overflow-wrap: anywhere; }
+.card-edit-actions, .crypto-card-bottom .row-actions.card-edit-actions { display: flex; justify-content: flex-end; align-items: center; gap: 6px; width: auto; margin: 0; }
+.card-edit-actions .secondary-btn { padding: 4px 10px; min-height: 30px; font-size: 0.78rem; }
+.fund-card .crypto-card-toggle strong { white-space: normal; overflow-wrap: anywhere; }
