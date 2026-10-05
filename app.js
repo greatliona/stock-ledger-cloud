@@ -12,6 +12,46 @@ const openHistoryMonths = new Set();
 const openCryptoCards = new Set();
 const openFundCards = new Set();
 let editingCryptoId = "";
+const refreshingCryptoIds = new Set();
+const cryptoRefreshMessages = new Map();
+
+async function fetchBinanceContractPrice(symbol) {
+  if (!/^[A-Z0-9]+USDT$/.test(symbol)) throw new Error("請使用完整 USDT 合約代號，例如 BTCUSDT。");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch("https://fapi.binance.com/fapi/v2/ticker/price?symbol=" + encodeURIComponent(symbol), {
+      signal: controller.signal, credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer"
+    });
+    if (!response.ok) throw new Error(response.status === 429 || response.status === 418
+      ? "行情請求受限，請稍後再試。" : "無法取得合約行情，請確認代號或網路／地區限制。");
+    const data = await response.json();
+    const price = Number(data.price);
+    if (data.symbol !== symbol || !Number.isFinite(price) || price <= 0) throw new Error("行情資料無效，未更新現價。");
+    return price;
+  } finally { clearTimeout(timer); }
+}
+
+async function refreshCryptoPrice(id) {
+  const contract = findCryptoContract(id);
+  if (!contract || refreshingCryptoIds.has(id) || editingCryptoId) return;
+  const symbol = normalizeSymbol(contract.name);
+  refreshingCryptoIds.add(id);
+  cryptoRefreshMessages.set(id, "正在取得幣安合約現價…");
+  renderCryptoContracts();
+  try {
+    const price = await fetchBinanceContractPrice(symbol);
+    if (findCryptoContract(id) !== contract || normalizeSymbol(contract.name) !== symbol) return;
+    contract.currentPrice = price;
+    cryptoRefreshMessages.set(id, "已更新 · " + new Date().toLocaleTimeString("zh-TW", { hour12: false }));
+    saveAndRender("已更新 " + symbol + " 現價與損益。");
+  } catch (error) {
+    cryptoRefreshMessages.set(id, error.name === "AbortError" ? "連線逾時，保留原現價。" : (error instanceof TypeError ? "行情連線失敗，保留原現價；請檢查網路或地區限制。" : error.message));
+  } finally {
+    refreshingCryptoIds.delete(id);
+    renderCryptoContracts();
+  }
+}
 let editingHoldingId = "";
 let editingUsHoldingId = "";
 let editingFundId = "";
@@ -241,6 +281,8 @@ els.cryptoForm.addEventListener("submit", (event) => {
 });
 
 els.cryptoList.addEventListener("click", (event) => {
+  const reload = event.target.closest("[data-refresh-crypto]");
+  if (reload) { void refreshCryptoPrice(reload.dataset.refreshCrypto); return; }
   const edit = event.target.closest("[data-edit-crypto]");
   if (edit) { editingCryptoId = edit.dataset.editCrypto; renderCryptoContracts(); return; }
   if (event.target.closest("[data-cancel-crypto]")) { editingCryptoId = ""; renderCryptoContracts(); return; }
@@ -1112,6 +1154,26 @@ function renderCryptoContracts() {
       ? '<button type="button" class="secondary-btn" data-save-crypto="' + escapeHTML(contract.id) + '">儲存</button><button type="button" class="secondary-btn" data-cancel-crypto>取消</button>'
       : '<button type="button" class="secondary-btn" data-edit-crypto="' + escapeHTML(contract.id) + '">修改</button>' + actions.innerHTML;
     actions.classList.add("card-edit-actions");
+    if (!editing) {
+      const reload = document.createElement("button");
+      reload.type = "button";
+      reload.className = "mini-btn crypto-reload";
+      reload.dataset.refreshCrypto = contract.id;
+      reload.textContent = "↻";
+      reload.title = "取得幣安 USDT 合約最新成交價";
+      reload.setAttribute("aria-label", "更新 " + contract.name + " 現價");
+      reload.disabled = refreshingCryptoIds.has(contract.id) || Boolean(editingCryptoId);
+      actions.insertBefore(reload, actions.children[1]);
+    }
+    if (refreshingCryptoIds.has(contract.id)) actions.querySelectorAll("button").forEach(button => { button.disabled = true; });
+    const message = cryptoRefreshMessages.get(contract.id);
+    if (message) {
+      const status = document.createElement("small");
+      status.className = "crypto-refresh-status";
+      status.setAttribute("role", "status");
+      status.textContent = message;
+      card.querySelector(".crypto-card-content").append(status);
+    }
     if (editing) card.open = true;
     card.addEventListener("toggle", () => {
       if (card.open) openCryptoCards.add(contract.id);
