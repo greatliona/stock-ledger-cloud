@@ -40,6 +40,14 @@ window.addEventListener("message", event => {
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = false;
   button.removeAttribute("aria-busy");
+  if (event.data.error) {
+    document.querySelector("#usQuoteStatus").textContent = event.data.error;
+    return;
+  }
+  if (event.data.quoteProtocol !== "overnight-v1") {
+    document.querySelector("#usQuoteStatus").textContent = "報價服務仍是舊版，未更新任何價格。請重新啟動 Streamlit 服務後重整頁面。";
+    return;
+  }
   let updated = 0;
   const failed = [];
   const times = [];
@@ -47,7 +55,7 @@ window.addEventListener("message", event => {
     const holding = state.usHoldings.find(h => h.id === original.id);
     const quote = event.data.quotes?.[original.symbol];
     if (!holding || holding.symbol !== original.symbol || holding.currentPrice !== original.price || editingUsHoldingId === holding.id) return;
-    if (!quote || quote.currency !== "USD" || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(Date.parse(quote.time))) { failed.push(original.symbol); return; }
+    if (!quote || !["正常盤", "盤前", "盤後", "夜盤"].includes(quote.session) || quote.currency !== "USD" || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(Date.parse(quote.time))) { failed.push(original.symbol); return; }
     holding.currentPrice = quote.price;
     holding.lastUpdated = "Yahoo " + (quote.session || "") + " " + quote.time;
     times.push(original.symbol + " " + (quote.session || "") + " " + new Date(quote.time).toLocaleString("zh-TW", {hour12:false}));

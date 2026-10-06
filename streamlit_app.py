@@ -2,10 +2,15 @@ import json
 import hmac
 import re
 import time
+import importlib
 from pathlib import Path
 
 import streamlit as st
-from quote_backend import fetch_us_quotes
+import quote_backend
+
+# HTML/JS are read on every rerun; keep the imported quote code in sync too.
+importlib.invalidate_caches()
+quote_backend = importlib.reload(quote_backend)
 
 
 ROOT = Path(__file__).parent
@@ -91,7 +96,7 @@ if check_password():
             if now - st.session_state.get("last_quote_request", -60) < 15:
                 raise ValueError("請間隔 15 秒再更新，避免 Yahoo 限流。")
             st.session_state["last_quote_request"] = now
-            result = fetch_us_quotes(request.get("symbols"))
+            result = quote_backend.fetch_us_quotes(request.get("symbols"))
         except ValueError as error:
             result = {"quotes": {}, "errors": {}, "error": str(error)}
         st.session_state["quote_reply"] = {"id": request["id"], **result}

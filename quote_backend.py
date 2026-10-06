@@ -65,4 +65,4 @@ def fetch_us_quotes(symbols):
                 quotes[symbol] = select_quote(rows[symbol])
             except ValueError as error:
                 errors[symbol] = str(error)
-    return {"quotes": quotes, "errors": errors}
+    return {"quotes": quotes, "errors": errors, "quoteProtocol": "overnight-v1"}
