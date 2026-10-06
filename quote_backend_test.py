@@ -32,8 +32,23 @@ class QuoteTests(unittest.TestCase):
         self.assertEqual(result["quotes"]["AAPL"]["price"],123.45)
         self.assertIn("BAD",result["errors"])
         calls=ticker.return_value._data.get_raw_json.call_args_list
-        self.assertEqual([c.kwargs["params"]["overnightPrice"] for c in calls],["false","true"])
+        self.assertEqual([c.kwargs["params"]["overnightPrice"] for c in calls],["true","false"])
         self.assertEqual(calls[0].kwargs["params"]["symbols"],"AAPL,BAD")
+
+    @patch("quote_backend.yf.Ticker")
+    def test_optional_snapshot_failure_does_not_discard_night(self,ticker):
+        row={"symbol":"AAPL","currency":"USD","marketState":"OVERNIGHT",
+             "overnightMarketPrice":123.45,"overnightMarketTime":datetime.now(timezone.utc).timestamp()}
+        ticker.return_value._data.get_raw_json.side_effect=[{"quoteResponse":{"result":[row]}},RuntimeError("offline"),RuntimeError("offline")]
+        self.assertEqual(fetch_us_quotes(["AAPL"])["quotes"]["AAPL"]["price"],123.45)
+
+    @patch("quote_backend.yf.Ticker")
+    def test_retry_alternate_host(self,ticker):
+        row={"symbol":"AAPL","currency":"USD","regularMarketPrice":123.45,
+             "regularMarketTime":datetime.now(timezone.utc).timestamp()}
+        response={"quoteResponse":{"result":[row]}}
+        ticker.return_value._data.get_raw_json.side_effect=[RuntimeError("offline"),response,response]
+        self.assertIn("AAPL",fetch_us_quotes(["AAPL"])["quotes"])
 
     @patch("quote_backend.yf.Ticker")
     def test_invalid_input_never_requests(self,ticker):

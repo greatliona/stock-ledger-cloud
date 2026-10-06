@@ -1,10 +1,32 @@
 """Read-only Yahoo quotes with explicit overnight coverage."""
 import math
 import re
+import logging
 from datetime import datetime, timezone
 import yfinance as yf
 
 SESSIONS = {"regular": "正常盤", "pre": "盤前", "post": "盤後", "overnight": "夜盤"}
+
+def request_snapshot(client, batch, overnight):
+    last_code = "NETWORK"
+    for host in ("query1.finance.yahoo.com", "query2.finance.yahoo.com"):
+        try:
+            data = client.get_raw_json("https://" + host + "/v7/finance/quote",
+                params={"symbols": ",".join(s.replace(".", "-") for s in batch),
+                        "formatted": "false", "overnightPrice": overnight}, timeout=10)
+            response = data.get("quoteResponse", {})
+            if response.get("error") or not isinstance(response.get("result"), list):
+                raise ValueError("Invalid quote response")
+            return response["result"]
+        except Exception as error:
+            status = getattr(getattr(error, "response", None), "status_code", None)
+            name = type(error).__name__
+            last_code = "HTTP_" + str(status) if status else name
+            # Do not log response URLs, cookies, crumbs, or account data.
+            logging.getLogger(__name__).warning("Yahoo quote failed: host=%s mode=%s code=%s", host, overnight, last_code)
+            if status == 429 or "RateLimit" in name:
+                break
+    raise ValueError("Yahoo 查詢失敗（" + last_code + "），未更新")
 
 def select_quote(rows, now=None):
     now = now or datetime.now(timezone.utc).timestamp()
@@ -46,22 +68,21 @@ def fetch_us_quotes(symbols):
     for start in range(0, len(symbols), 10):
         batch = symbols[start:start + 10]
         rows = {s: [] for s in batch}
-        complete = True
+        overnight_error = None
         # Overnight mode may omit pre/post fields, so request both snapshots.
-        for overnight in ("false", "true"):
+        for overnight in ("true", "false"):
             try:
-                data = client.get_raw_json("https://query1.finance.yahoo.com/v7/finance/quote",
-                    params={"symbols": ",".join(s.replace(".", "-") for s in batch),
-                            "formatted": "false", "overnightPrice": overnight}, timeout=15)
-                result = data["quoteResponse"]["result"]
+                result = request_snapshot(client, batch, overnight)
                 for symbol in batch:
                     rows[symbol].extend(r for r in result if r.get("symbol") == symbol.replace(".", "-"))
-            except Exception:
-                complete = False
+            except ValueError as error:
+                if overnight == "true":
+                    overnight_error = str(error)
+                    break
         for symbol in batch:
             try:
-                if not complete:
-                    raise ValueError("查價不完整，保留原價")
+                if overnight_error:
+                    raise ValueError(overnight_error)
                 quotes[symbol] = select_quote(rows[symbol])
             except ValueError as error:
                 errors[symbol] = str(error)
