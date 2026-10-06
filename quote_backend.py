@@ -2,12 +2,22 @@
 import math
 import re
 import logging
+import time
+import threading
 from datetime import datetime, timezone
 import yfinance as yf
 
 SESSIONS = {"regular": "正常盤", "pre": "盤前", "post": "盤後", "overnight": "夜盤"}
+# Preserve the guard across Streamlit's module reload, shared by browser sessions.
+if "_request_guard" not in globals():
+    _request_guard = threading.Lock()
+    _cooldown_until = 0.0
+
+class QuoteRateLimited(ValueError):
+    pass
 
 def request_snapshot(client, batch, overnight):
+    global _cooldown_until
     last_code = "NETWORK"
     for host in ("query1.finance.yahoo.com", "query2.finance.yahoo.com"):
         try:
@@ -25,7 +35,8 @@ def request_snapshot(client, batch, overnight):
             # Do not log response URLs, cookies, crumbs, or account data.
             logging.getLogger(__name__).warning("Yahoo quote failed: host=%s mode=%s code=%s", host, overnight, last_code)
             if status == 429 or "RateLimit" in name:
-                break
+                _cooldown_until = time.monotonic() + 120
+                raise QuoteRateLimited("Yahoo 限流，暫停請求 120 秒；原價不變") from None
     raise ValueError("Yahoo 查詢失敗（" + last_code + "），未更新")
 
 def select_quote(rows, now=None):
@@ -57,7 +68,7 @@ def select_quote(rows, now=None):
     return {"price": price, "time": datetime.fromtimestamp(stamp, timezone.utc).isoformat(),
             "currency": "USD", "session": label}
 
-def fetch_us_quotes(symbols):
+def _fetch_us_quotes(symbols):
     if not isinstance(symbols, list) or not 1 <= len(symbols) <= 50:
         raise ValueError("一次最多更新 50 個代號。")
     if any(not isinstance(s, str) or not re.fullmatch(r"[A-Z][A-Z0-9.\-^=]{0,19}", s) for s in symbols):
@@ -75,6 +86,10 @@ def fetch_us_quotes(symbols):
                 result = request_snapshot(client, batch, overnight)
                 for symbol in batch:
                     rows[symbol].extend(r for r in result if r.get("symbol") == symbol.replace(".", "-"))
+                if overnight == "true" and all(rows[s] and rows[s][-1].get("marketState") == "OVERNIGHT" for s in batch):
+                    break
+            except QuoteRateLimited:
+                raise
             except ValueError as error:
                 if overnight == "true":
                     overnight_error = str(error)
@@ -87,3 +102,14 @@ def fetch_us_quotes(symbols):
             except ValueError as error:
                 errors[symbol] = str(error)
     return {"quotes": quotes, "errors": errors, "quoteProtocol": "overnight-v1"}
+
+def fetch_us_quotes(symbols):
+    with _request_guard:
+        remaining = _cooldown_until - time.monotonic()
+        if remaining > 0:
+            return {"quotes": {}, "errors": {}, "quoteProtocol": "overnight-v1",
+                    "error": f"Yahoo 限流冷卻中，約 {math.ceil(remaining)} 秒後可再查；原價不變"}
+        try:
+            return _fetch_us_quotes(symbols)
+        except QuoteRateLimited as error:
+            return {"quotes": {}, "errors": {}, "quoteProtocol": "overnight-v1", "error": str(error)}

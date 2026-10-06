@@ -4,6 +4,9 @@ from datetime import datetime, timezone
 from quote_backend import fetch_us_quotes, select_quote
 
 class QuoteTests(unittest.TestCase):
+    def setUp(self):
+        import quote_backend
+        quote_backend._cooldown_until = 0
     def test_newest_session_not_fixed_priority(self):
         row = {"currency":"USD", "regularMarketPrice":100, "regularMarketTime":990,
                "overnightMarketPrice":90, "overnightMarketTime":900}
@@ -41,6 +44,15 @@ class QuoteTests(unittest.TestCase):
              "overnightMarketPrice":123.45,"overnightMarketTime":datetime.now(timezone.utc).timestamp()}
         ticker.return_value._data.get_raw_json.side_effect=[{"quoteResponse":{"result":[row]}},RuntimeError("offline"),RuntimeError("offline")]
         self.assertEqual(fetch_us_quotes(["AAPL"])["quotes"]["AAPL"]["price"],123.45)
+        self.assertEqual(ticker.return_value._data.get_raw_json.call_count,1)
+
+    @patch("quote_backend.yf.Ticker")
+    def test_rate_limit_stops_retries_and_subsequent_requests(self,ticker):
+        from yfinance.exceptions import YFRateLimitError
+        ticker.return_value._data.get_raw_json.side_effect=YFRateLimitError()
+        self.assertIn("限流",fetch_us_quotes(["AAPL"])["error"])
+        self.assertIn("冷卻",fetch_us_quotes(["AAPL"])["error"])
+        self.assertEqual(ticker.return_value._data.get_raw_json.call_count,1)
 
     @patch("quote_backend.yf.Ticker")
     def test_retry_alternate_host(self,ticker):
