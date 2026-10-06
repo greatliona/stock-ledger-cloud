@@ -49,13 +49,14 @@ window.addEventListener("message", event => {
     if (!holding || holding.symbol !== original.symbol || holding.currentPrice !== original.price || editingUsHoldingId === holding.id) return;
     if (!quote || quote.currency !== "USD" || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(Date.parse(quote.time))) { failed.push(original.symbol); return; }
     holding.currentPrice = quote.price;
-    holding.lastUpdated = "Yahoo " + quote.time;
-    times.push(Date.parse(quote.time));
+    holding.lastUpdated = "Yahoo " + (quote.session || "") + " " + quote.time;
+    times.push(original.symbol + " " + (quote.session || "") + " " + new Date(quote.time).toLocaleString("zh-TW", {hour12:false}));
     updated++;
   });
   if (updated) saveAndRender("已更新美股現價與損益。");
-  const time = times.length ? " · 報價 " + new Date(Math.min(...times)).toLocaleString("zh-TW", {hour12:false}) + (Math.max(...times) !== Math.min(...times) ? " 起" : "") : "";
-  document.querySelector("#usQuoteStatus").textContent = event.data.error || ("已更新 " + updated + " 筆" + time + (failed.length ? " · 未更新：" + [...new Set(failed)].join("、") : "") + " · Yahoo 最新可用分鐘價，可能延遲");
+  const details = times.length ? " · " + times.join("；") : "";
+  const errors = [...new Set(failed)].map(symbol => symbol + "：" + (event.data.errors?.[symbol] || "未取得報價，保留原價"));
+  document.querySelector("#usQuoteStatus").textContent = event.data.error || ("已更新 " + updated + " 筆" + details + (errors.length ? " · " + errors.join("；") : "") + " · Yahoo 報價可能延遲");
 });
 
 const state = loadState();
