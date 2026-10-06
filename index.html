@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stock Ledger!</title>
-    <link rel="stylesheet" href="styles.css?v=20261005-01" />
+    <link rel="stylesheet" href="styles.css?v=20261005-02" />
   </head>
   <body>
     <main class="app-shell">
@@ -13,7 +13,7 @@
           <p class="eyebrow">Portfolio Ledger！</p>
           <div class="title-line">
             <h1>Stock Ledger!</h1>
-            <span class="app-version">L1.5.18</span>
+            <span class="app-version">L1.5.19</span>
           </div>
         </div>
       </header>
@@ -171,8 +171,9 @@
             <label>股數<input id="usSharesInput" type="number" min="0" step="0.001" placeholder="10" required /></label>
             <label>平均成本 USD<input id="usCostInput" type="number" min="0" step="0.01" placeholder="180" required /></label>
             <label>現價 USD<input id="usPriceInput" type="number" min="0" step="0.01" placeholder="可空白" /></label>
-            <div class="add-controls"><select id="usHoldingSideInput" aria-label="美股方向" title="交易方向"><option value="long">多</option><option value="short">空</option></select><button type="submit" class="primary-btn add-button" aria-label="新增美股" title="新增美股">+</button></div>
+            <div class="add-controls"><select id="usHoldingSideInput" aria-label="美股方向" title="交易方向"><option value="long">多</option><option value="short">空</option></select><button type="submit" class="primary-btn add-button" aria-label="新增美股" title="新增美股">+</button><button id="reloadUsPrices" type="button" class="secondary-btn reload-button" aria-label="更新全部美股現價" title="取得 Yahoo 最新可用報價"></button></div>
           </form>
+          <p id="usQuoteStatus" class="quote-status" role="status"></p>
 
           <div class="table-wrap">
             <table>
@@ -466,6 +467,6 @@
     </template>
 
     <script src="xlsx.mini.min.js?v=0.20.3"></script>
-    <script src="app.js?v=20261005-01"></script>
+    <script src="app.js?v=20261005-02"></script>
   </body>
 </html>

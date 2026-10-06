@@ -3,6 +3,60 @@ const CLOUD_CONFIG = window.STOCK_LEDGER_SUPABASE || {};
 const CLOUD_TABLE = CLOUD_CONFIG.table || "stock_ledger_state";
 const CLOUD_ROW_ID = CLOUD_CONFIG.rowId || "main";
 const LEGACY_PURCHASE_DATE = "2026-09-05";
+const RELOAD_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.3 8.5A9 9 0 1 0 21 12"/><path d="M20.3 3.5v5h-5"/></svg>';
+let pendingUsQuoteRequest = null;
+
+function refreshUsPrices() {
+  if (pendingUsQuoteRequest) return;
+  const status = document.querySelector("#usQuoteStatus");
+  if (!window.STOCK_LEDGER_QUOTE_BRIDGE) { status.textContent = "請在 Streamlit 部署版使用美股更新。"; return; }
+  if (editingUsHoldingId) { status.textContent = "請先儲存或取消修改。"; return; }
+  const holdings = state.usHoldings.map(h => ({id:h.id, symbol:h.symbol, price:h.currentPrice}));
+  const symbols = [...new Set(holdings.map(h => h.symbol))];
+  if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
+  if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
+  const id = crypto.randomUUID();
+  const button = document.querySelector("#reloadUsPrices");
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  status.textContent = "正在取得 Yahoo 最新可用報價…";
+  const timer = setTimeout(() => {
+    if (pendingUsQuoteRequest?.id !== id) return;
+    pendingUsQuoteRequest = null;
+    button.disabled = false;
+    button.removeAttribute("aria-busy");
+    status.textContent = "查價逾時，保留原價。";
+  }, 180000);
+  pendingUsQuoteRequest = {id, holdings, timer};
+  window.parent.postMessage({type:"ledger-us-quotes-request", id, symbols}, "*");
+}
+
+window.addEventListener("message", event => {
+  if (!window.STOCK_LEDGER_QUOTE_BRIDGE || event.source !== window.parent || event.data?.type !== "ledger-us-quotes-result") return;
+  const pending = pendingUsQuoteRequest;
+  if (!pending || event.data.id !== pending.id) return;
+  clearTimeout(pending.timer);
+  pendingUsQuoteRequest = null;
+  const button = document.querySelector("#reloadUsPrices");
+  button.disabled = false;
+  button.removeAttribute("aria-busy");
+  let updated = 0;
+  const failed = [];
+  const times = [];
+  pending.holdings.forEach(original => {
+    const holding = state.usHoldings.find(h => h.id === original.id);
+    const quote = event.data.quotes?.[original.symbol];
+    if (!holding || holding.symbol !== original.symbol || holding.currentPrice !== original.price || editingUsHoldingId === holding.id) return;
+    if (!quote || quote.currency !== "USD" || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(Date.parse(quote.time))) { failed.push(original.symbol); return; }
+    holding.currentPrice = quote.price;
+    holding.lastUpdated = "Yahoo " + quote.time;
+    times.push(Date.parse(quote.time));
+    updated++;
+  });
+  if (updated) saveAndRender("已更新美股現價與損益。");
+  const time = times.length ? " · 報價 " + new Date(Math.min(...times)).toLocaleString("zh-TW", {hour12:false}) + (Math.max(...times) !== Math.min(...times) ? " 起" : "") : "";
+  document.querySelector("#usQuoteStatus").textContent = event.data.error || ("已更新 " + updated + " 筆" + time + (failed.length ? " · 未更新：" + [...new Set(failed)].join("、") : "") + " · Yahoo 最新可用分鐘價，可能延遲");
+});
 
 const state = loadState();
 let cloudClient = null;
@@ -229,6 +283,9 @@ els.form.addEventListener("submit", (event) => {
   els.form.reset();
   els.symbol.focus();
 });
+
+document.querySelector("#reloadUsPrices").innerHTML = RELOAD_ICON;
+document.querySelector("#reloadUsPrices").addEventListener("click", refreshUsPrices);
 
 els.usForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -1159,7 +1216,7 @@ function renderCryptoContracts() {
       reload.type = "button";
       reload.className = "mini-btn crypto-reload";
       reload.dataset.refreshCrypto = contract.id;
-      reload.textContent = "↻";
+      reload.innerHTML = RELOAD_ICON;
       reload.title = "取得幣安 USDT 合約最新成交價";
       reload.setAttribute("aria-label", "更新 " + contract.name + " 現價");
       reload.disabled = refreshingCryptoIds.has(contract.id) || Boolean(editingCryptoId);

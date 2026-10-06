@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+html,body { margin:0; padding:0; } iframe { display:block; width:100%; height:1800px; border:0; }
+</style></head><body>
+<iframe id="ledger" title="股票帳本"></iframe>
+<script>
+const frame = document.getElementById("ledger");
+let mounted = false, reply = null, loaded = false;
+function send(type, fields = {}) { parent.postMessage({isStreamlitMessage:true, type, ...fields}, "*"); }
+function deliver() { if (loaded && reply) frame.contentWindow.postMessage({type:"ledger-us-quotes-result", ...reply}, "*"); }
+frame.addEventListener("load", () => { loaded = true; deliver(); });
+window.addEventListener("message", event => {
+  if (event.source === parent && event.data?.type === "streamlit:render") {
+    const args = event.data.args;
+    reply = args.reply;
+    if (!mounted) { mounted = true; frame.srcdoc = args.html; }
+    else deliver();
+    send("streamlit:setFrameHeight", {height:1800});
+  } else if (event.source === frame.contentWindow && event.data?.type === "ledger-us-quotes-request") {
+    const {id, symbols} = event.data;
+    if (typeof id === "string" && Array.isArray(symbols) && symbols.length <= 50)
+      send("streamlit:setComponentValue", {value:{id, symbols}, dataType:"json"});
+  }
+});
+send("streamlit:componentReady", {apiVersion:1});
+send("streamlit:setFrameHeight", {height:1800});
+</script></body></html>

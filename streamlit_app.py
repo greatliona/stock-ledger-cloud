@@ -1,9 +1,11 @@
 import json
 import hmac
 import re
+import time
 from pathlib import Path
 
 import streamlit as st
+from quote_backend import fetch_us_quotes
 
 
 ROOT = Path(__file__).parent
@@ -43,6 +45,7 @@ def build_page() -> str:
         r'<script\s+src="app\.js[^"]*"></script>',
         lambda _: (
             "<script>"
+            "window.STOCK_LEDGER_QUOTE_BRIDGE = true;"
             f"window.STOCK_LEDGER_SUPABASE = {json.dumps(config, ensure_ascii=False)};"
             "</script>"
             f"<script>{js}</script>"
@@ -79,4 +82,17 @@ def check_password() -> bool:
 st.set_page_config(page_title="Stock Ledger!", page_icon="💰", layout="wide")
 
 if check_password():
-    st.components.v1.html(build_page(), height=1800, scrolling=True)
+    ledger = st.components.v1.declare_component("ledger_quote_bridge", path=str(ROOT / "quote_bridge"))
+    request = ledger(html=build_page(), reply=st.session_state.get("quote_reply"), key="ledger")
+    if isinstance(request, dict) and isinstance(request.get("id"), str) and request["id"] != st.session_state.get("quote_request_id"):
+        st.session_state["quote_request_id"] = request["id"]
+        try:
+            now = time.monotonic()
+            if now - st.session_state.get("last_quote_request", -60) < 15:
+                raise ValueError("請間隔 15 秒再更新，避免 Yahoo 限流。")
+            st.session_state["last_quote_request"] = now
+            result = fetch_us_quotes(request.get("symbols"))
+        except ValueError as error:
+            result = {"quotes": {}, "errors": {}, "error": str(error)}
+        st.session_state["quote_reply"] = {"id": request["id"], **result}
+        st.rerun()
