@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 from cryptography.hazmat.primitives import serialization
+from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 HOST = "https://webapi.futunn.com"
@@ -45,14 +46,30 @@ def load_credentials(config):
     app_key = config.get("app_key", "")
     pem = config.get("private_key_pem", "")
     password = config.get("private_key_password", "")
-    if not all(isinstance(v, str) and v.strip() for v in (app_key, pem, password)):
-        raise ValueError("尚未設定富途：請依 FUTU_SETUP.md 將 AppKey、加密私鑰與私鑰密碼填入 Streamlit Secrets 的 [futu]。")
-    if "ENCRYPTED PRIVATE KEY" not in pem:
-        raise ValueError("請使用加密的富途私鑰，不接受未加密私鑰。")
+    if not all(isinstance(v, str) and v.strip() for v in (app_key, pem)):
+        raise ValueError("尚未設定富途：請在 Streamlit Secrets 的 [futu] 填入 AppKey ID 與私鑰；未加密私鑰不需密碼。")
+    app_key, pem = app_key.strip(), pem.strip()
     try:
-        key = serialization.load_pem_private_key(pem.encode(), password=password.encode())
-    except (ValueError, TypeError):
-        raise ValueError("富途私鑰或解密密碼無效；原價不變。") from None
+        if pem.startswith("-----BEGIN"):
+            raw, loader = pem.encode(), serialization.load_pem_private_key
+        else:
+            # Accept the full Base64 PKCS#8 text too; never infer a raw seed.
+            raw = base64.b64decode("".join(pem.split()), validate=True)
+            loader = serialization.load_der_private_key
+    except (ValueError, UnicodeError):
+        raise ValueError("富途私鑰格式無效；請貼完整 PEM 或 Base64 私鑰，不是公鑰或檔案路徑。") from None
+    try:
+        # Unencrypted keys work even if an obsolete password placeholder remains.
+        key = loader(raw, password=None)
+    except TypeError:
+        if not isinstance(password, str) or not password:
+            raise ValueError("這把私鑰已加密，才需要 private_key_password；請填加密時使用的密碼。") from None
+        try:
+            key = loader(raw, password=password.encode())
+        except (ValueError, TypeError, UnsupportedAlgorithm):
+            raise ValueError("富途私鑰或解密密碼無效；原價不變。") from None
+    except (ValueError, UnsupportedAlgorithm):
+        raise ValueError("富途私鑰無效；請貼完整 Ed25519 私鑰，不是公鑰或檔案路徑。") from None
     if not isinstance(key, Ed25519PrivateKey):
         raise ValueError("此版本使用 Ed25519；請在富途 AppKey 選擇相同演算法。")
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,256}", app_key):

@@ -96,6 +96,35 @@ class FutuTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "私鑰或解密密碼"):
             q.fetch_us_quotes(["SOXL"], {**self.config, "private_key_password": "wrong"})
 
+    def test_unencrypted_pem_without_password(self):
+        pem = self.key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
+                                     serialization.NoEncryption()).decode()
+        for extra in ({}, {"private_key_password": ""}, {"private_key_password": "old-placeholder"}):
+            app_key, key = q.load_credentials({"app_key": "test-key", "private_key_pem": pem, **extra})
+            signature = key.sign(b"test")
+            self.key.public_key().verify(signature, b"test")
+            self.assertEqual(app_key, "test-key")
+
+    def test_base64_der_without_password(self):
+        raw = self.key.private_bytes(serialization.Encoding.DER, serialization.PrivateFormat.PKCS8,
+                                     serialization.NoEncryption())
+        encoded = base64.b64encode(raw).decode()
+        _, key = q.load_credentials({"app_key": "test-key", "private_key_pem": encoded})
+        self.key.public_key().verify(key.sign(b"test"), b"test")
+
+    def test_encrypted_requires_password(self):
+        config = {k: v for k, v in self.config.items() if k != "private_key_password"}
+        with self.assertRaisesRegex(ValueError, "這把私鑰已加密"):
+            q.load_credentials(config)
+
+    def test_public_or_corrupt_key_rejected(self):
+        public = self.key.public_key().public_bytes(serialization.Encoding.PEM,
+            serialization.PublicFormat.SubjectPublicKeyInfo).decode()
+        for text in (public, "invalid-secret-contents", "/tmp/private.pem"):
+            with self.assertRaises(ValueError) as error:
+                q.load_credentials({"app_key": "test-key", "private_key_pem": text})
+            self.assertNotIn(text, str(error.exception))
+
     def test_http_errors_sanitized(self):
         for code in (401, 403, 429, 500):
             with patch.object(q, "build_opener") as opener:

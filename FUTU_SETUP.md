@@ -1,93 +1,57 @@
-# L1.5.25 富途報價設定
+# L1.5.26 富途查價設定（私鑰密碼選用）
 
-## 已有 AppKey，但出現「不接受未加密私鑰」
+## Secrets 需要什麼？
 
-不要重新建立 AppKey，也不要執行產生全新金鑰的 futu_key_setup.py。
-請使用原本與富途後台公鑰配對的私鑰檔，執行：
+需要 **AppKey ID + 與該 AppKey 配對的私鑰**。不是公鑰 + 私鑰。
+公鑰由富途後台保存，用來驗證請求，不需要再放進 Streamlit Secrets。
+此版本使用 Ed25519 簽章；現有 AppKey 和公鑰配對不用重建。
 
-```sh
-cd "/Users/vision/Documents/Codex/2026-07-15/app-users-vision-documents-codex-2026/stock-ledger-cloud"
-python3 -m pip install -r requirements.txt
-python3 futu_encrypt_key.py
-```
+## 最簡單設定：沒有加密過的私鑰
 
-1. 提示路徑時，把原本的私鑰檔拖進終端機，再按 Enter。不是 public.pem。
-2. 設定至少 12 字元的私鑰密碼，輸入兩次。輸入時不顯示文字是正常的。
-3. 工具將原本金鑰加密成 `.futu-private/existing.encrypted.pem`，原檔與公鑰配對不變。
-4. 複製加密檔內容（以下命令不會把內容印到終端機）：
-
-   ```sh
-   pbcopy < .futu-private/existing.encrypted.pem
-   ```
-
-5. 進入你的 Streamlit Settings → Secrets，只修改既有 `[futu]`：
-   `app_key` 保持原值；`private_key_password` 改成第 2 步密碼；
-   `private_key_pem` 三引號內的內容整段替換成剪貼簿內容。
-   開頭應是 `-----BEGIN ENCRYPTED PRIVATE KEY-----`，不要自行改標頭。
-6. 儲存，重新啟動服務。測試完後清空剪貼簿：`pbcopy < /dev/null`。
-
-不需要重新上傳公鑰。不要把金鑰貼到聊天或提交 Git。
-若金鑰只存在 Secrets 而沒有本機檔案，先在自己的電腦存成私鑰檔再執行；
-不要把 Secrets 畫面截圖傳出。若工具表示不是 Ed25519，先停下，不要覆蓋或刪除原始金鑰。
-
-此版本真正使用富途官方 REST，不使用 OpenD、不需 Mac 常駐、不再呼叫 Yahoo。
-按美股 reload 才查價；一次請求包含所有持股代號。只查公開行情，不讀券商持倉、不下單、不購買任何服務。
-
-## 取得 API（AppKey 方式）
-
-1. 在本機專案終端機執行：
-
-   ```sh
-   python3 -m pip install -r requirements.txt
-   python3 futu_key_setup.py
-   ```
-
-   輸入並保管至少 12 字元的私鑰密碼。工具會建立本專案內的 `.futu-private`；
-   不會覆蓋舊金鑰，也不會在終端機印出私鑰或密碼。此資料夾已排除 Git。
-2. 開啟 [富途開發者後台](https://open.futunn.com/dashboard)，用自己的富途帳號登入。
-3. 進入 User Center（用戶中心）建立 AppKey，簽章演算法選 **Ed25519**。
-   上傳剛產生的 `.futu-private/public.pem` 公鑰。不要上傳私鑰。
-4. 保存後台提供的 AppKey。若可選權限，只選行情查詢，不選交易。
-   若帳號沒有 AppKey 入口或行情權限，不要購買、不要把電話號碼當 API Key；需先向富途確認帳戶資格。
-
-## 放到線上 Streamlit（不要貼到 GitHub 或聊天）
-
-打開你自己的 Streamlit 管理介面 → Settings → Secrets。
-保留原本的 app 與其他設定，在最後另加：
+先部署 L1.5.26，再到 Streamlit 帳本 Settings → Secrets。
+保留原本其他設定，只新增或修改唯一的一段 [futu]：
 
 ```toml
 [futu]
-app_key = "富途後台提供的AppKey"
-private_key_password = "剛才設定的私鑰密碼"
+app_key = "富途後台顯示的 AppKey ID"
 private_key_pem = """
------BEGIN ENCRYPTED PRIVATE KEY-----
-將 private.encrypted.pem 的內容完整貼在這裡
------END ENCRYPTED PRIVATE KEY-----
+貼上完整私鑰內容
 """
 ```
 
-注意 PEM 開頭結尾只留一組；整份複製取代範例內容。密碼若包含引號或反斜線，
-請按 TOML 規則跳脫。不要刪除原本 Secrets。儲存設定並重新啟動服務。
-本機測試可將相同設定放入已被 Git 忽略的 `.streamlit/secrets.toml`。
+- app_key 是 AppKey ID，不是公鑰、手機號碼或富途登入密碼。
+- private_key_pem 接受完整 PEM（包含 BEGIN/END PRIVATE KEY 標頭），
+  也接受只有一長串 Base64 的完整 PKCS#8 私鑰（例如 MC4…）。
+- 不要貼檔案路徑，不可省略字元，也不要貼 public.pem。
+- **不需要 private_key_password**，可刪掉之前的示範密碼那一行。
+- 不需執行終端機、不需建立新密碼、不需另外加密。
+- 按 Save 儲存後重新啟動服務，確認頁面版本為 L1.5.26。
+- 私鑰只由你自己貼到伺服器 Secrets；不要貼在聊天、截圖或 GitHub。
 
-AppKey、加密私鑰及其密碼均只在 Streamlit 伺服器使用，HTML 和 JavaScript 不會收到。
-沒有設定時，reload 明確顯示「尚未設定富途」，不退回 Yahoo。
+## 只有原私鑰本來就已加密時
 
-## 盤別及驗證
+若內容開頭是 BEGIN ENCRYPTED PRIVATE KEY，則使用同樣的設定，
+並在 [futu] 區段加入：
 
-- 富途端點：POST `https://webapi.futunn.com/api/v1.0/quote/stock-quote`。
-- 一次帶入 `code_list`，例如 `US.BITU`、`US.EPP`、`US.IVV`。
-- 依官方欄位使用有效的盤前／盤後／夜盤價，否則用正常盤價；顯示富途提供的資料時間，不冒充按鈕點擊時間。
-- 官方說非當前盤別欄位為 0。若實際回應同時出現多個盤別又沒有各自時間，本版不猜最新價，保留原價。
-- 權限不足、無效代號、錯誤資料只保留原价，不會把 0 寫入持股。
-- 這次交付的自動測試使用假資料及臨時測試金鑰；尚未用你的 AppKey 驗證真實報價。
-- 正式帳本尚未操作、尚未推送。設定完成後應先用不連雲端儲存的測試副本核對報價與盤別。
+```toml
+private_key_password = "當初加密此私鑰時使用的密碼"
+```
 
-富途平台表示 API 無額外費用，但即時行情仍受帳戶權限／所在地／當時政策限制；
-本程式沒有訂購或付費路徑，也不會自動開通收費行情。
+此密碼不是富途登入密碼，不能隨便填一個新密碼。
+未加密私鑰即使留有舊的密碼範例也不會被阻擋，但建議移除多餘欄位。
+舊版 futu_key_setup.py / futu_encrypt_key.py 是選用工具，不是必要設定步驟。
 
-## 官方依據
+## 查價方式與安全界線
 
-- [REST 與 AppKey 簽章流程](https://open.futunn.com/api/overview/getting-started)
-- [Stock Quote 欄位](https://open.futunn.com/api/quote/realtime/stock-quote)
-- [富途平台與費用說明](https://open.futunn.com/)
+- 只按美股 reload 時查價，一次請求帶所有股票代號，不下单、不讀券商持倉、不購買服務。
+- 私鑰留在 Streamlit 伺服器；發給富途的是 AppKey、時間、隨機值和數位簽章，不傳私鑰本身。
+- 移除檔案密碼不代表可公開私鑰；Streamlit Secrets 的存取權限仍須保護好。
+- 價格與盤別依富途回應顯示，錯誤時保留原價，不退回 Yahoo。
+- 使用測試金鑰驗證未加密 PEM、Base64 PKCS#8、加密私鑰與錯誤密碼；
+  尚未使用你的憑證驗證真實行情。
+- 現有手機捲動修正保留，不修改正式帳本資料。
+
+## 官方文件
+
+- [AppKey 與簽章](https://open.futunn.com/api/overview/getting-started)
+- [Stock Quote](https://open.futunn.com/api/quote/realtime/stock-quote)
