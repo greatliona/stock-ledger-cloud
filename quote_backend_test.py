@@ -23,24 +23,6 @@ class FutuTests(unittest.TestCase):
         return {"ret_code": 0, "data": {"code": "US."+symbol,
             "ticker_list": rows if rows is not None else [self.tick()]}}
 
-    def test_seven_symbols_and_get_signature(self):
-        symbols = ["BITU", "EPP", "IVV", "SEMI", "SOXL", "SOXX", "VOO"]
-        replies = [self.response(s, [self.tick(period_type=p)]) for s in symbols for p in q.PERIODS]
-        with patch.object(q, "request_json", side_effect=replies) as request, patch.object(q.time, "sleep"):
-            result = q.fetch_us_quotes(symbols+["SOXL"], self.config)
-        self.assertEqual(len(result["quotes"]), 7)
-        self.assertEqual(result["quoteProtocol"], "futu-session-v3")
-        self.assertEqual(request.call_count, 28)
-        expected = [(s,p) for s in symbols for p in q.PERIODS]
-        for call, (symbol,period) in zip(request.call_args_list, expected):
-            path = call.args[0]
-            self.assertEqual(path, "/api/v1.0/quote/US."+symbol+"/rt-ticker?num=20&period="+period)
-            headers = call.kwargs["headers"]
-            route, query = path.split("?")
-            payload = "\n".join((headers["X-Timestamp"], "GET", route, query, ""))
-            self.key.public_key().verify(base64.b64decode(headers["Authorization"]), payload.encode())
-            self.assertNotIn("test-password-only", str(headers))
-
     def test_latest_actual_trade_across_sessions(self):
         now = int(time.time()*1000)
         rows = [self.tick(time=now-1000, price=102, period_type="AFTER"),
@@ -51,40 +33,6 @@ class FutuTests(unittest.TestCase):
         self.assertAlmostEqual(__import__("datetime").datetime.fromisoformat(result["time"]).timestamp(), (now-1000)/1000)
         rows.append(self.tick(time=now, price=103, period_type="OVERNIGHT"))
         self.assertEqual(q.select_quote(rows)["session"],"夜盤")
-
-    def test_explicit_afterhours_is_newer_than_regular_close(self):
-        now = int(time.time()*1000)
-        replies = [self.response(rows=[self.tick(time=now-4*3600000, price=100, period_type="NORMAL")]),
-                   self.response(rows=[]),
-                   self.response(rows=[self.tick(time=now-1000, price=105, period_type="AFTER")]),
-                   self.response(rows=[])]
-        with patch.object(q,"request_json",side_effect=replies) as request, patch.object(q.time,"sleep"):
-            result = q.fetch_us_quotes(["SOXL"],self.config)
-        self.assertEqual(result["quotes"]["SOXL"]["price"],105)
-        self.assertEqual(result["quotes"]["SOXL"]["session"],"盤後")
-        self.assertEqual(len(result["quotes"]["SOXL"]["checkedPeriods"]),4)
-        self.assertFalse(result["warnings"])
-        self.assertEqual(request.call_count,4)
-
-    def test_semi_15_minute_old_trade_is_not_asserted_realtime(self):
-        replies = [self.response("SEMI",[self.tick(time=int(time.time()*1000)-895000,period_type="NORMAL")])] + [self.response("SEMI",[]) for _ in range(3)]
-        with patch.object(q,"request_json",side_effect=replies), patch.object(q.time,"sleep"):
-            result=q.fetch_us_quotes(["SEMI"],self.config)
-        self.assertGreaterEqual(result["quotes"]["SEMI"]["ageSeconds"],895)
-        self.assertIn("14 分鐘",result["warnings"]["SEMI"])
-        self.assertIn("未證實",result["warnings"]["SEMI"])
-
-    def test_ignored_session_filter_does_not_masquerade_as_afterhours(self):
-        with patch.object(q,"request_json",return_value=self.response(rows=[self.tick(period_type="NORMAL")])), patch.object(q.time,"sleep"):
-            result=q.fetch_us_quotes(["SOXL"],self.config)
-        self.assertEqual(result["quotes"]["SOXL"]["session"],"正常盤")
-        self.assertIn("盤後：回傳盤別不符",result["warnings"]["SOXL"])
-
-    def test_budget_expired_stops_network(self):
-        with patch.object(q.time,"monotonic",side_effect=[0,121]), patch.object(q,"request_json") as request:
-            result=q.fetch_us_quotes(["SOXL"],self.config)
-        request.assert_not_called()
-        self.assertIn("逾時",result["errors"]["SOXL"])
 
     def test_new_regular_session_beats_old_afterhours(self):
         now = int(time.time()*1000)
@@ -101,34 +49,6 @@ class FutuTests(unittest.TestCase):
                       {"trade_type":"U"},{"period_type":"UNKNOWN"}):
             with self.assertRaises(ValueError):
                 q.select_quote([self.tick(**extra)])
-
-    def test_missing_data_or_symbol_mismatch_preserves_price(self):
-        for response in (self.response("OTHER"), {"ret_code":0,"data":{"code":"US.SOXL"}}):
-            with patch.object(q,"request_json",return_value=response):
-                result=q.fetch_us_quotes(["SOXL"],self.config)
-            self.assertEqual(result["quotes"],{})
-            self.assertIn("SOXL",result["errors"])
-
-    def test_partial_success_and_rate_limit_stops_remaining(self):
-        with patch.object(q,"request_json",side_effect=[self.response(rows=[self.tick(period_type="NORMAL")]),q.QuoteRateLimited("限流")]) as req, patch.object(q.time,"sleep"):
-            result=q.fetch_us_quotes(["SOXL","IVV","VOO"],self.config)
-        self.assertEqual(req.call_count,2)
-        self.assertIn("SOXL",result["quotes"])
-        self.assertIn("未查全",result["warnings"]["SOXL"])
-        self.assertEqual(set(result["errors"]),{"IVV","VOO"})
-
-    def test_clock_correction(self):
-        replies=[{"ret_code":-12006},{"server_time_ms":str(int(time.time()*1000))}]+[self.response(rows=[self.tick(period_type=p)]) for p in q.PERIODS]
-        with patch.object(q,"request_json",side_effect=replies) as request, patch.object(q.time,"sleep"):
-            result=q.fetch_us_quotes(["SOXL"],self.config)
-        self.assertIn("SOXL",result["quotes"])
-        self.assertEqual(request.call_count,6)
-
-    def test_permission_error_redacted(self):
-        with patch.object(q,"request_json",return_value={"ret_code":123,"ret_msg":"SECRET"}):
-            result=q.fetch_us_quotes(["SOXL"],self.config)
-        self.assertNotIn("SECRET",str(result))
-        self.assertIn("123",result["errors"]["SOXL"])
 
     def test_invalid_symbols_no_network(self):
         for symbols in ([], ["AAPL"]*51, ["US/AAPL"], ["AAPL\r\n"], [None]):
@@ -172,13 +92,120 @@ class FutuTests(unittest.TestCase):
             self.assertNotIn("SECRET",str(error.exception))
 
     def test_only_readonly_endpoints(self):
-        for path in ("/api/v1.0/trade/place-order","/api/v1.0/quote/stock-quote",
+        for path in ("/api/v1.0/trade/place-order","/api/v1.0/quote/stock-quote?evil=1",
                      "/api/v1.0/quote/US.AAPL/rt-ticker?num=20&evil=1"):
             with self.assertRaises(ValueError):
                 q.request_json(path)
         with self.assertRaises(ValueError):
             q.request_json("/api/v1.0/quote/US.SOXL/rt-ticker?num=20&period=AFTER",b"{}")
         self.assertIsNone(q.NoRedirect().redirect_request(None,None,302,"",{},"https://example.com"))
+
+
+    def setUp(self):
+        self.clock = patch.object(q.time, "time", return_value=1791566000.0) # 2026-10-09 regular session
+        self.clock.start()
+        self.addCleanup(self.clock.stop)
+        self.sleep = patch.object(q.time, "sleep")
+        self.sleep.start()
+        self.addCleanup(self.sleep.stop)
+
+    def market(self, symbols, state="AFTERNOON"):
+        return {"ret_code":0,"data":{"market_state_list":[{"code":"US."+s,"market_state":state} for s in symbols]}}
+
+    def snapshots(self, symbols, age=0):
+        return {"ret_code":0,"data":{"quote_list":[{"code":"US."+s,"last_price":101,"data_time":int(time.time()*1000)-age*1000} for s in symbols]}}
+
+    def minute(self, symbol, age=0, price=103, volume=100, section="US_REGULAR"):
+        return {"ret_code":0,"data":{"section_list":[{"code":"US."+symbol,"trade_section":section,"point_list":[{"time":int(time.time()*1000)-age*1000,"cur_price":price,"volume":volume}]}]}}
+
+    def test_seven_fresh_symbols_use_two_batch_calls_and_signed_body(self):
+        symbols=["BITU","EPP","IVV","SEMI","VOO","SOXX","SOXL"]
+        with patch.object(q,"request_json",side_effect=[self.market(symbols),self.snapshots(symbols)]) as req:
+            result=q.fetch_us_quotes(symbols+["SEMI"],self.config)
+        self.assertEqual(len(result["quotes"]),7)
+        self.assertFalse(result["warnings"])
+        self.assertEqual(req.call_count,2)
+        for call in req.call_args_list:
+            body=call.kwargs["body"]
+            self.assertEqual(q.json.loads(body)["code_list"],["US."+s for s in symbols])
+            headers=call.kwargs["headers"]
+            payload="\n".join((headers["X-Timestamp"],"POST",call.args[0],"",q.hashlib.sha256(body).hexdigest()))
+            self.key.public_key().verify(base64.b64decode(headers["Authorization"]),payload.encode())
+        self.assertEqual(result["quotes"]["SEMI"]["timeKind"],"quote")
+
+    def test_only_stale_semi_gets_independent_minute_fallback(self):
+        symbols=["SEMI","VOO"]
+        snapshots=self.snapshots(symbols)
+        snapshots["data"]["quote_list"][0]["data_time"]-=900000
+        with patch.object(q,"request_json",side_effect=[self.market(symbols),snapshots,self.minute("SEMI",age=30)]) as req:
+            result=q.fetch_us_quotes(symbols,self.config)
+        self.assertEqual(req.call_count,3)
+        self.assertIn("US.SEMI/rt-data?request_section=NORMAL",req.call_args_list[-1].args[0])
+        self.assertEqual(result["quotes"]["SEMI"]["price"],103)
+        self.assertEqual(result["quotes"]["SEMI"]["timeKind"],"minute")
+        self.assertFalse(result["warnings"])
+
+    def test_stale_both_sources_compare_book_without_using_bid_price(self):
+        book={"ret_code":0,"data":[{"code":"US.SEMI","books":[{"exchange_data_time_ms":int(time.time()*1000)-1000,"bid_list":[{"price":999}]}]}]}
+        with patch.object(q,"request_json",side_effect=[self.market(["SEMI"]),self.snapshots(["SEMI"],900),self.minute("SEMI",age=890),book]) as req:
+            result=q.fetch_us_quotes(["SEMI"],self.config)
+        self.assertEqual(req.call_count,4)
+        self.assertEqual(result["quotes"]["SEMI"]["price"],103)
+        self.assertIn("買賣報價距今 1 秒",result["warnings"]["SEMI"])
+        self.assertNotIn("999",str(result))
+
+    def test_afterhours_queries_only_current_period(self):
+        with patch.object(q,"request_json",side_effect=[self.market(["SOXL"],"AFTER_HOURS_BEGIN"),self.response()]) as req:
+            result=q.fetch_us_quotes(["SOXL"],self.config)
+        self.assertEqual(req.call_count,2)
+        self.assertEqual(result["quotes"]["SOXL"]["session"],"盤後")
+        self.assertTrue(req.call_args_list[1].args[0].endswith("period=AFTER"))
+
+    def test_empty_afterhours_uses_afterhours_minute_not_regular_close(self):
+        with patch.object(q,"request_json",side_effect=[self.market(["SOXL"],"AFTER_HOURS_BEGIN"),self.response(rows=[]),self.minute("SOXL",section="US_AFTERHOURS")]):
+            result=q.fetch_us_quotes(["SOXL"],self.config)
+        self.assertEqual(result["quotes"]["SOXL"]["session"],"盤後")
+        self.assertEqual(result["quotes"]["SOXL"]["timeKind"],"minute")
+
+    def test_zero_volume_minute_cannot_fabricate_freshness(self):
+        with self.assertRaises(ValueError):
+            q.minute_quote(self.minute("SEMI",volume=0)["data"],"SEMI","NORMAL",time.time())
+
+    def test_wrong_symbol_and_wrong_section_minute_rejected(self):
+        for data in [self.minute("OTHER"),self.minute("SEMI",section="US_OVERNIGHT")]:
+            with self.assertRaises(ValueError):
+                q.minute_quote(data["data"],"SEMI","NORMAL",time.time())
+
+    def test_snapshot_does_not_use_afterhours_or_yesterday_time(self):
+        for age in [86400,9*3600]:
+            with self.assertRaises(ValueError):
+                q.regular_snapshot(self.snapshots(["SOXL"],age)["data"]["quote_list"][0],time.time())
+
+    def test_rate_limit_latches_no_followup_requests(self):
+        with patch.object(q,"request_json",side_effect=[self.market(["SOXL","IVV"]),q.QuoteRateLimited("限流")]) as req:
+            result=q.fetch_us_quotes(["SOXL","IVV"],self.config)
+        self.assertEqual(req.call_count,2)
+        self.assertFalse(result["quotes"])
+        self.assertEqual(set(result["errors"]),{"SOXL","IVV"})
+
+    def test_clock_correction_for_post_preserves_body(self):
+        with patch.object(q,"request_json",side_effect=[{"ret_code":-12006},{"server_time_ms":int(time.time()*1000)},self.market(["SOXL"]),self.snapshots(["SOXL"])]) as req:
+            result=q.fetch_us_quotes(["SOXL"],self.config)
+        self.assertIn("SOXL",result["quotes"])
+        self.assertEqual(req.call_count,4)
+        self.assertEqual(req.call_args_list[0].kwargs["body"],req.call_args_list[2].kwargs["body"])
+
+    def test_budget_expired_no_network(self):
+        with patch.object(q.time,"monotonic",side_effect=[0]+[121]*10),patch.object(q,"request_json") as req:
+            result=q.fetch_us_quotes(["SOXL"],self.config)
+        req.assert_not_called()
+        self.assertFalse(result["quotes"])
+
+    def test_unsupported_state_uses_full_and_overnight_minute(self):
+        with patch.object(q,"request_json",side_effect=[self.market(["SOXL"],"CLOSED"),self.minute("SOXL",age=60,section="US_AFTERHOURS"),self.minute("SOXL",section="US_OVERNIGHT")]) as req:
+            result=q.fetch_us_quotes(["SOXL"],self.config)
+        self.assertEqual(req.call_count,3)
+        self.assertEqual(result["quotes"]["SOXL"]["session"],"夜盤")
 
 if __name__=="__main__":
     unittest.main()

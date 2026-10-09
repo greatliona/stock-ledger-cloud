@@ -1,11 +1,13 @@
 """Futu REST quotes only. No trading, subscriptions, or Yahoo fallback."""
 import base64
+import hashlib
 import json
 import math
 import re
 import secrets
 import time
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 from urllib.parse import urlsplit
@@ -14,7 +16,7 @@ from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 HOST = "https://webapi.futunn.com"
-PROTOCOL = "futu-session-v3"
+PROTOCOL = "futu-smart-v4"
 PERIODS = {"NORMAL": "正常盤", "BEFORE": "盤前", "AFTER": "盤後", "OVERNIGHT": "夜盤"}
 
 class QuoteRateLimited(ValueError):
@@ -25,11 +27,14 @@ class NoRedirect(HTTPRedirectHandler):
         return None  # Never forward credentials to a redirected host.
 
 def request_json(path, body=None, headers=None):
-    if not (path == "/api/v1.0/server-time" or
-            re.fullmatch(r"/api/v1\.0/quote/US\.[A-Z][A-Z0-9.\-]{0,19}/rt-ticker\?num=20&period=(NORMAL|BEFORE|AFTER|OVERNIGHT)", path)):
+    post_paths = {"/api/v1.0/quote/stock-quote", "/api/v1.0/quote/market-state", "/api/v1.0/quote/order-book"}
+    is_get = (path == "/api/v1.0/server-time" or
+        re.fullmatch(r"/api/v1\.0/quote/US\.[A-Z][A-Z0-9.\-]{0,19}/rt-ticker\?num=20&period=(NORMAL|BEFORE|AFTER|OVERNIGHT)", path) or
+        re.fullmatch(r"/api/v1\.0/quote/US\.[A-Z][A-Z0-9.\-]{0,19}/rt-data\?request_section=(NORMAL|FULL|PREMARKET|AFTERHOURS|OVERNIGHT)", path))
+    if not (is_get or path in post_paths):
         raise ValueError("僅允許富途唯讀報價端點。")
-    if body is not None:
-        raise ValueError("逐筆查價僅允許 GET 請求。")
+    if (is_get and body is not None) or (path in post_paths and body is None):
+        raise ValueError("報價端點請求方法不符。")
     request = Request(HOST + path, data=body, headers=headers or {},
                       method="POST" if body is not None else "GET")
     try:
@@ -84,9 +89,10 @@ def load_credentials(config):
         raise ValueError("富途 AppKey 格式無效。")
     return app_key, key
 
-def signed_headers(app_key, key, path, timestamp):
+def signed_headers(app_key, key, path, timestamp, body=None):
     url = urlsplit(path)
-    payload = "\n".join((str(timestamp), "GET", url.path, url.query, ""))
+    payload = "\n".join((str(timestamp), "POST" if body is not None else "GET", url.path, url.query,
+                         hashlib.sha256(body).hexdigest() if body is not None else ""))
     return {"Content-Type": "application/json", "X-Api-Key": app_key,
             "X-Timestamp": str(timestamp), "X-Nonce": secrets.token_urlsafe(24),
             "Authorization": base64.b64encode(key.sign(payload.encode())).decode()}
@@ -127,6 +133,55 @@ def select_quote(rows, now=None):
             "currency": "USD", "session": session, "source": "Futu", "timeKind": "trade"}
 
 
+MARKET_PERIOD = {
+    "MORNING": "NORMAL", "AFTERNOON": "NORMAL",
+    "PRE_MARKET_BEGIN": "BEFORE", "AFTER_HOURS_BEGIN": "AFTER",
+    "NIGHT_OPEN": "OVERNIGHT",
+    "PRE_MARKET_END": "BEFORE", "AFTER_HOURS_END": "AFTER", "NIGHT_END": "OVERNIGHT",
+}
+SECTIONS = {"NORMAL": "NORMAL", "BEFORE": "PREMARKET", "AFTER": "AFTERHOURS", "OVERNIGHT": "OVERNIGHT"}
+SECTION_PERIOD = {"US_REGULAR": "NORMAL", "REGULAR": "NORMAL", "US_PREMARKET": "BEFORE",
+                  "US_AFTERHOURS": "AFTER", "US_OVERNIGHT": "OVERNIGHT"}
+
+
+def minute_quote(data, symbol, section, now):
+    if not isinstance(data, dict) or not isinstance(data.get("section_list"), list):
+        raise ValueError("分時資料缺漏")
+    rows = []
+    allowed = {"NORMAL", "BEFORE", "AFTER"} if section == "FULL" else {p for p, s in SECTIONS.items() if s == section}
+    for segment in data["section_list"]:
+        if not isinstance(segment, dict) or segment.get("code") != "US." + symbol:
+            continue
+        period = SECTION_PERIOD.get(segment.get("trade_section"))
+        if period not in allowed or not isinstance(segment.get("point_list"), list):
+            continue
+        for point in segment["point_list"]:
+            # No-volume fill-forward minutes must not manufacture a fresh trade.
+            if isinstance(point, dict) and positive_number(point.get("volume")):
+                rows.append({"time": point.get("time"), "price": point.get("cur_price"), "period_type": period})
+    quote = select_quote(rows, now)
+    quote["timeKind"] = "minute"
+    return quote
+
+
+def regular_snapshot(row, now):
+    if not isinstance(row, dict):
+        raise ValueError("正常盤報價缺漏")
+    stamp = positive_number(row.get("data_time"))
+    if not stamp:
+        raise ValueError("正常盤報價缺少交易所時間")
+    ny = ZoneInfo("America/New_York")
+    dt = datetime.fromtimestamp(stamp / 1000, ny)
+    current = datetime.fromtimestamp(now, ny)
+    # Use last_price only while market-state says regular, and only for this
+    # regular trading date. Never attach this timestamp to extended subobjects.
+    if dt.date() != current.date() or not 570 <= dt.hour * 60 + dt.minute <= 960:
+        raise ValueError("不是當日正常盤報價")
+    quote = select_quote([{"time": stamp, "price": row.get("last_price"), "period_type": "NORMAL"}], now)
+    quote["timeKind"] = "quote"
+    return quote
+
+
 def fetch_us_quotes(symbols, config=None):
     if not isinstance(symbols, list) or not 1 <= len(symbols) <= 50:
         raise ValueError("一次最多更新 50 個代號。")
@@ -136,67 +191,113 @@ def fetch_us_quotes(symbols, config=None):
     app_key, key = load_credentials(config or {})
     quotes, errors, warnings = {}, {}, {}
     deadline = time.monotonic() + 120
-    clock_offset = 0
-    stop_reason = None
-    request_count = 0
-    for symbol in symbols:
-        if stop_reason or time.monotonic() >= deadline:
-            errors[symbol] = stop_reason or "本次查價逾時，保留原價"
-            continue
-        rows, session_errors, checked = [], [], []
-        # Explicit independent sessions: a default response containing only regular
-        # prints must not prevent an after-hours/overnight request being made.
-        for period, label in PERIODS.items():
-            if stop_reason or time.monotonic() >= deadline:
-                session_errors.append(label + "：" + (stop_reason or "查價逾時"))
-                continue
-            if request_count:
-                time.sleep(0.3)
-            request_count += 1
-            path = "/api/v1.0/quote/US." + symbol + "/rt-ticker?num=20&period=" + period
-            try:
-                timestamp = int(time.time() * 1000) + clock_offset
-                result = request_json(path, headers=signed_headers(app_key, key, path, timestamp))
-                if result.get("ret_code") == -12006:
-                    server = request_json("/api/v1.0/server-time")
-                    stamp = positive_number(server.get("server_time_ms"))
-                    if stamp is None:
-                        raise ValueError("無法校正富途簽章時間")
-                    clock_offset = int(stamp) - int(time.time() * 1000)
-                    result = request_json(path, headers=signed_headers(app_key, key, path, int(stamp)))
-                if result.get("ret_code") != 0:
-                    code = result.get("ret_code")
-                    safe_code = str(code) if isinstance(code, int) else "UNKNOWN"
-                    raise ValueError("行情請求失敗（代碼 " + safe_code + "）")
-                data = result.get("data")
-                if not isinstance(data, dict) or data.get("code") != "US." + symbol:
-                    raise ValueError("報價代號不符")
-                ticks = data.get("ticker_list")
-                if not isinstance(ticks, list):
-                    raise ValueError("缺少逐筆資料")
-                # Do not relabel regular prints as after-hours if the server ignores
-                # a filter. Report the mismatch instead of silently accepting it.
-                if any(not isinstance(t, dict) or t.get("period_type") != period for t in ticks):
-                    raise ValueError("回傳盤別不符")
-                checked.append(period)
-                rows.extend(ticks)
-            except QuoteRateLimited as error:
-                stop_reason = str(error)
-                session_errors.append(label + "：" + stop_reason)
-            except ValueError as error:
-                session_errors.append(label + "：" + str(error))
+    clock_offset, count, stopped = 0, 0, None
+
+    def now():
+        return time.time() + clock_offset / 1000
+
+    def call(path, payload=None):
+        nonlocal clock_offset, count, stopped
+        if stopped:
+            raise QuoteRateLimited(stopped)
+        if time.monotonic() >= deadline:
+            raise ValueError("本次查價逾時")
+        if count:
+            time.sleep(0.3)
+        count += 1
+        body = json.dumps(payload, separators=(",", ":")).encode() if payload is not None else None
         try:
-            quote = select_quote(rows, now=time.time() + clock_offset / 1000)
-            age = max(0, int(time.time() + clock_offset / 1000 - datetime.fromisoformat(quote["time"]).timestamp()))
-            quote.update(ageSeconds=age, checkedPeriods=checked)
-            notes = []
-            if age >= 300:
-                notes.append("最新回傳成交距查詢已 " + str(age // 60) + " 分鐘；未證實即時或延遲原因")
-            if session_errors:
-                notes.append("部分盤別未查全（" + "；".join(session_errors) + "），不能確認全盤最新")
-            if notes:
-                warnings[symbol] = "；".join(notes)
-            quotes[symbol] = quote
+            result = request_json(path, body=body, headers=signed_headers(app_key, key, path, int(now()*1000), body))
+            if result.get("ret_code") == -12006:
+                server = request_json("/api/v1.0/server-time")
+                stamp = positive_number(server.get("server_time_ms"))
+                if not stamp:
+                    raise ValueError("無法校正富途簽章時間")
+                clock_offset = int(stamp) - int(time.time()*1000)
+                result = request_json(path, body=body, headers=signed_headers(app_key, key, path, int(stamp), body))
+        except QuoteRateLimited as error:
+            stopped = str(error)
+            raise
+        if result.get("ret_code") != 0:
+            code = result.get("ret_code")
+            raise ValueError("富途請求失敗（代碼 " + (str(code) if isinstance(code, int) else "UNKNOWN") + "）")
+        return result.get("data")
+
+    codes = ["US." + s for s in symbols]
+    states, snapshots = {}, {}
+    state_error = None
+    try:
+        data = call("/api/v1.0/quote/market-state", {"code_list": codes})
+        if not isinstance(data, dict) or not isinstance(data.get("market_state_list"), list):
+            raise ValueError("市場狀態缺漏")
+        states = {r["code"]: r.get("market_state") for r in data["market_state_list"]
+                  if isinstance(r, dict) and r.get("code") in codes}
+    except ValueError as error:
+        state_error = str(error)
+
+    regular = [c for c in codes if states.get(c) in ("MORNING", "AFTERNOON")]
+    if regular:
+        try:
+            data = call("/api/v1.0/quote/stock-quote", {"code_list": regular})
+            if isinstance(data, dict) and isinstance(data.get("quote_list"), list):
+                snapshots = {r["code"]: r for r in data["quote_list"]
+                             if isinstance(r, dict) and r.get("code") in regular}
+        except ValueError:
+            pass  # Per-symbol read-only fallback below; a 429 remains latched.
+
+    for symbol in symbols:
+        code = "US." + symbol
+        period = MARKET_PERIOD.get(states.get(code))
+        candidate, issues = None, []
+        try:
+            if code in regular:
+                try:
+                    candidate = regular_snapshot(snapshots.get(code), now())
+                except ValueError:
+                    pass
+            elif period:
+                data = call("/api/v1.0/quote/" + code + "/rt-ticker?num=20&period=" + period)
+                if not isinstance(data, dict) or data.get("code") != code:
+                    raise ValueError("逐筆報價代號不符")
+                ticks = data.get("ticker_list") or []
+                if not isinstance(ticks, list) or any(not isinstance(t, dict) or t.get("period_type") != period for t in ticks):
+                    raise ValueError("逐筆回傳盤別不符")
+                candidate = select_quote(ticks, now())
         except ValueError as error:
-            errors[symbol] = "；".join(session_errors) or str(error)
+            issues.append(str(error))
+
+        age = now() - datetime.fromisoformat(candidate["time"]).timestamp() if candidate else float("inf")
+        if age >= 300:
+            # Only missing/old symbols need an additional independent price source.
+            sections = [SECTIONS[period]] if period else ["FULL", "OVERNIGHT"]
+            for section in sections:
+                try:
+                    other = minute_quote(call("/api/v1.0/quote/" + code + "/rt-data?request_section=" + section), symbol, section, now())
+                    if candidate is None or other["time"] > candidate["time"]:
+                        candidate = other
+                except ValueError as error:
+                    issues.append(str(error))
+
+        if candidate:
+            age = max(0, int(now() - datetime.fromisoformat(candidate["time"]).timestamp()))
+            candidate.update(ageSeconds=age, checkedPeriods=[period] if period else [p for p, label in PERIODS.items() if label == candidate["session"]])
+            quotes[symbol] = candidate
+            if age >= 300:
+                # A diagnostic only: never use bid/ask or dispatch time as last price.
+                detail = "供應商最新可用價已距今 " + str(age // 60) + " 分鐘"
+                try:
+                    book_data = call("/api/v1.0/quote/order-book", {"code": code, "num": 1})
+                    stamps = [positive_number(b.get("exchange_data_time_ms")) for r in (book_data if isinstance(book_data, list) else [])
+                              if isinstance(r, dict) and r.get("code") == code for b in (r.get("books") or []) if isinstance(b, dict)]
+                    stamps = [s for s in stamps if s and -60 <= now()-s/1000 <= 7*86400]
+                    if stamps:
+                        book_age = max(0, int(now()-max(stamps)/1000))
+                        detail += "；買賣報價距今 " + str(book_age) + " 秒（未當成交價套用）"
+                except ValueError:
+                    pass
+                warnings[symbol] = detail + "；尚不能判定延遲原因"
+            elif not period:
+                warnings[symbol] = "市場狀態不明，採最新可用分時價"
+        else:
+            errors[symbol] = stopped or (issues[-1] if issues else state_error or "無有效報價") + "；保留原價"
     return {"quotes": quotes, "errors": errors, "warnings": warnings, "quoteProtocol": PROTOCOL}

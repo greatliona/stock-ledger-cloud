@@ -1,4 +1,4 @@
-# L1.5.28 富途查價設定（私鑰密碼選用）
+# L1.5.29 富途查價設定（私鑰密碼選用）
 
 ## Secrets 需要什麼？
 
@@ -8,7 +8,7 @@
 
 ## 最簡單設定：沒有加密過的私鑰
 
-先部署 L1.5.28，再到 Streamlit 帳本 Settings → Secrets。
+先部署 L1.5.29，再到 Streamlit 帳本 Settings → Secrets。
 保留原本其他設定，只新增或修改唯一的一段 [futu]：
 
 ```toml
@@ -25,7 +25,7 @@ private_key_pem = """
 - 不要貼檔案路徑，不可省略字元，也不要貼 public.pem。
 - **不需要 private_key_password**，可刪掉之前的示範密碼那一行。
 - 不需執行終端機、不需建立新密碼、不需另外加密。
-- 按 Save 儲存後重新啟動服務，確認頁面版本為 L1.5.28。已設定者不需更改 Secrets。
+- 按 Save 儲存後重新啟動服務，確認頁面版本為 L1.5.29。已設定者不需更改 Secrets。
 - 私鑰只由你自己貼到伺服器 Secrets；不要貼在聊天、截圖或 GitHub。
 
 ## 只有原私鑰本來就已加密時
@@ -43,12 +43,12 @@ private_key_password = "當初加密此私鑰時使用的密碼"
 
 ## 查價方式與安全界線
 
-- 只按美股 reload 時查價，使用 rt-ticker（一次一個代號），循序查詢以避免併發突發請求，不下單、不讀券商持倉、不購買服務。
+- 只按美股 reload 時查價；正常盤使用批次 stock-quote，延長盤使用 rt-ticker，只對舊資料補查 rt-data；不下單、不讀券商持倉、不購買服務。
 - 私鑰留在 Streamlit 伺服器；發給富途的是 AppKey、時間、隨機值和數位簽章，不傳私鑰本身。
 - 移除檔案密碼不代表可公開私鑰；Streamlit Secrets 的存取權限仍須保護好。
-- 每檔明確分開查詢正常盤、盤前、盤後、夜盤各最多 20 筆成交，依成交時間選最新有效價格；最多 4 次請求，不把快照 data_time 當作盤後成交時間。
-- 超過 5 分鐘的成交會顯示距查詢多久；不僅憑時間差判斷是延遲或無成交。部分盤別未查全、伺服器忽略盤別篩選都會提示，不宣稱全盤最新。
-- 顯示的是成交時間，不是按下 reload 的時間。不持續串流；供應商行情權限／延遲仍受帳戶條件限制。
+- 先取得供應商市場狀態，只查當前盤別；正常盤 7 檔資料正常時共 2 次請求（市場狀態 + 批次報價）。不把快照 data_time 當作盤後成交時間。
+- 超過 5 分鐘的資料會補查有成交量的分時價格；仍偏舊時核對買賣報價時間，不把 bid/ask 當成交價，也不僅憑時間差判斷延遲原因。
+- 顯示各來源實際資料時間與類型（報價／成交／分時），不是按下 reload 的時間。不持續串流；供應商行情權限／延遲仍受帳戶條件限制。
 - 若逐筆行情未授權或沒有有效成交，會明確報錯並保留原價，不偽裝成即時、不退回 Yahoo、不自動購買行情。
 - 使用測試金鑰驗證未加密 PEM、Base64 PKCS#8、加密私鑰與錯誤密碼；
   尚未使用你的憑證驗證真實行情。
@@ -59,3 +59,7 @@ private_key_password = "當初加密此私鑰時使用的密碼"
 - [AppKey 與簽章](https://open.futunn.com/api/overview/getting-started)
 - [Real-time Ticker（成交價格／時間／盤別）](https://open.futunn.com/api/quote/realtime/rt-ticker)
 - [盤別枚舉](https://open.futunn.com/api/quote/naming-dictionary)
+- [批次報價](https://open.futunn.com/api/quote/realtime/stock-quote)
+- [市場狀態](https://open.futunn.com/api/quote/basic-data/market-state)
+- [分時資料](https://open.futunn.com/api/quote/realtime/rt-data)
+- [買賣報價](https://open.futunn.com/api/quote/realtime/order-book)
