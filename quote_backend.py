@@ -1,6 +1,5 @@
 """Futu REST quotes only. No trading, subscriptions, or Yahoo fallback."""
 import base64
-import hashlib
 import json
 import math
 import re
@@ -9,27 +8,36 @@ import time
 from datetime import datetime, timezone
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, build_opener, HTTPRedirectHandler
+from urllib.parse import urlsplit
 from cryptography.hazmat.primitives import serialization
 from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 HOST = "https://webapi.futunn.com"
-QUOTE_PATH = "/api/v1.0/quote/stock-quote"
-PROTOCOL = "futu-v1"
+PROTOCOL = "futu-tick-v2"
+PERIODS = {"NORMAL": "正常盤", "BEFORE": "盤前", "AFTER": "盤後", "OVERNIGHT": "夜盤"}
+
+class QuoteRateLimited(ValueError):
+    pass
 
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None  # Never forward credentials to a redirected host.
 
 def request_json(path, body=None, headers=None):
-    if path not in (QUOTE_PATH, "/api/v1.0/server-time"):
+    if not (path == "/api/v1.0/server-time" or
+            re.fullmatch(r"/api/v1\.0/quote/US\.[A-Z][A-Z0-9.\-]{0,19}/rt-ticker\?num=20", path)):
         raise ValueError("僅允許富途唯讀報價端點。")
+    if body is not None:
+        raise ValueError("逐筆查價僅允許 GET 請求。")
     request = Request(HOST + path, data=body, headers=headers or {},
                       method="POST" if body is not None else "GET")
     try:
         with build_opener(NoRedirect()).open(request, timeout=15) as response:
             result = json.loads(response.read(2_000_000))
     except HTTPError as error:
+        if error.code == 429:
+            raise QuoteRateLimited("富途暫時限流，已停止本次剩餘請求；未取得報價的原價不變。") from None
         messages = {401: "富途授權失敗，請檢查 AppKey 與金鑰配對。",
                     403: "富途未授予行情權限；不會自動購買服務。",
                     429: "富途請求額度暫時受限；原價不變。"}
@@ -76,8 +84,9 @@ def load_credentials(config):
         raise ValueError("富途 AppKey 格式無效。")
     return app_key, key
 
-def signed_headers(app_key, key, body, timestamp):
-    payload = "\n".join((str(timestamp), "POST", QUOTE_PATH, "", hashlib.sha256(body).hexdigest()))
+def signed_headers(app_key, key, path, timestamp):
+    url = urlsplit(path)
+    payload = "\n".join((str(timestamp), "GET", url.path, url.query, ""))
     return {"Content-Type": "application/json", "X-Api-Key": app_key,
             "X-Timestamp": str(timestamp), "X-Nonce": secrets.token_urlsafe(24),
             "Authorization": base64.b64encode(key.sign(payload.encode())).decode()}
@@ -91,27 +100,32 @@ def positive_number(value):
     except (ValueError, TypeError):
         return None
 
-def select_quote(row, now=None):
+def select_quote(rows, now=None):
+    """Choose by actual trade time across all sessions; never label snapshot time as a trade."""
     now = time.time() if now is None else now
-    stamp = positive_number(row.get("data_time"))
-    if stamp is None or not -60 <= now - stamp / 1000 <= 7 * 86400:
-        raise ValueError("報價時間無效或過舊，保留原價")
-    # Official contract: inactive session objects contain zero.
-    sessions = []
-    for field, label in (("pre_market", "盤前"), ("after_market", "盤後"), ("overnight", "夜盤")):
-        data = row.get(field) or {}
-        if not isinstance(data, dict):
-            raise ValueError("盤別資料無效，保留原價")
-        price = positive_number(data.get("price"))
-        if price is not None:
-            sessions.append((price, label))
-    if len(sessions) > 1:
-        raise ValueError("富途回傳多個盤別但無獨立時間，無法確定最新價，保留原價")
-    price, session = sessions[0] if sessions else (positive_number(row.get("last_price")), "正常盤")
-    if price is None:
-        raise ValueError("無有效報價，保留原價")
+    if not isinstance(rows, list):
+        raise ValueError("富途缺少逐筆成交資料，保留原價")
+    candidates = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        price = positive_number(row.get("price"))
+        stamp = positive_number(row.get("time"))
+        session = PERIODS.get(row.get("period_type"))
+        # Cancelled US prints are not a usable last price.
+        if str(row.get("trade_type") or "").strip() == "U":
+            continue
+        if price is None or stamp is None or not session:
+            continue
+        if not -60 <= now - stamp / 1000 <= 7 * 86400:
+            continue
+        candidates.append((stamp, price, session))
+    if not candidates:
+        raise ValueError("未取得有效最新成交，保留原價")
+    stamp, price, session = max(candidates, key=lambda item: item[0])
     return {"price": price, "time": datetime.fromtimestamp(stamp / 1000, timezone.utc).isoformat(),
-            "currency": "USD", "session": session, "source": "Futu"}
+            "currency": "USD", "session": session, "source": "Futu", "timeKind": "trade"}
+
 
 def fetch_us_quotes(symbols, config=None):
     if not isinstance(symbols, list) or not 1 <= len(symbols) <= 50:
@@ -120,31 +134,38 @@ def fetch_us_quotes(symbols, config=None):
         raise ValueError("股票代號格式不正確。")
     symbols = list(dict.fromkeys(symbols))
     app_key, key = load_credentials(config or {})
-    body = json.dumps({"code_list": ["US." + s for s in symbols]}, separators=(",", ":")).encode()
-    result = request_json(QUOTE_PATH, body, signed_headers(app_key, key, body, int(time.time() * 1000)))
-    if result.get("ret_code") == -12006:
-        server = request_json("/api/v1.0/server-time")
-        stamp = positive_number(server.get("server_time_ms"))
-        if stamp is None:
-            raise ValueError("無法校正富途簽章時間；原價不變。")
-        result = request_json(QUOTE_PATH, body, signed_headers(app_key, key, body, int(stamp)))
-    if result.get("ret_code") != 0:
-        code = result.get("ret_code")
-        safe_code = str(code) if isinstance(code, int) else "UNKNOWN"
-        raise ValueError("富途拒絕報價請求（代碼 " + safe_code + "）；請核對 AppKey／行情權限，原價不變，不會購買服務。")
-    data = result.get("data")
-    rows = data.get("quote_list") if isinstance(data, dict) else None
-    if not isinstance(rows, list):
-        raise ValueError("富途缺少 quote_list；原價不變。")
-    by_code = {row.get("code"): row for row in rows if isinstance(row, dict) and isinstance(row.get("code"), str)}
     quotes, errors = {}, {}
-    for symbol in symbols:
-        row = by_code.get("US." + symbol)
-        if row is None:
-            errors[symbol] = "富途未回傳此代號，請確認代號及行情權限"
+    deadline = time.monotonic() + 120
+    clock_offset = 0
+    stop_reason = None
+    for index, symbol in enumerate(symbols):
+        if stop_reason or time.monotonic() >= deadline:
+            errors[symbol] = stop_reason or "本次查價逾時，保留原價"
             continue
+        if index:
+            time.sleep(0.3)  # Sequential requests, no concurrent burst or retry storm.
+        path = "/api/v1.0/quote/US." + symbol + "/rt-ticker?num=20"
         try:
-            quotes[symbol] = select_quote(row)
+            timestamp = int(time.time() * 1000) + clock_offset
+            result = request_json(path, headers=signed_headers(app_key, key, path, timestamp))
+            if result.get("ret_code") == -12006:
+                server = request_json("/api/v1.0/server-time")
+                stamp = positive_number(server.get("server_time_ms"))
+                if stamp is None:
+                    raise ValueError("無法校正富途簽章時間；原價不變。")
+                clock_offset = int(stamp) - int(time.time() * 1000)
+                result = request_json(path, headers=signed_headers(app_key, key, path, int(stamp)))
+            if result.get("ret_code") != 0:
+                code = result.get("ret_code")
+                safe_code = str(code) if isinstance(code, int) else "UNKNOWN"
+                raise ValueError("富途逐筆行情未授權或請求失敗（代碼 " + safe_code + "）；不會自動購買行情")
+            data = result.get("data")
+            if not isinstance(data, dict) or data.get("code") != "US." + symbol:
+                raise ValueError("富途逐筆報價代號不符，保留原價")
+            quotes[symbol] = select_quote(data.get("ticker_list"))
+        except QuoteRateLimited as error:
+            stop_reason = str(error)
+            errors[symbol] = stop_reason
         except ValueError as error:
             errors[symbol] = str(error)
     return {"quotes": quotes, "errors": errors, "quoteProtocol": PROTOCOL}

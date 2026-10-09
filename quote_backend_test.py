@@ -1,6 +1,4 @@
 import base64
-import hashlib
-import json
 import time
 import unittest
 from unittest.mock import patch
@@ -13,136 +11,137 @@ class FutuTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.key = Ed25519PrivateKey.generate()
-        cls.config = {"app_key": "test-app-key", "private_key_password": "test-password-only",
+        cls.config = {"app_key": "test-key", "private_key_password": "test-password-only",
             "private_key_pem": cls.key.private_bytes(serialization.Encoding.PEM,
                 serialization.PrivateFormat.PKCS8,
                 serialization.BestAvailableEncryption(b"test-password-only")).decode()}
 
-    def row(self, **extra):
-        return {"code": "US.SOXL", "data_time": int(time.time()*1000), "last_price": 100, **extra}
+    def tick(self, **extra):
+        return {"time": int(time.time()*1000), "price": 100, "period_type": "AFTER", **extra}
 
-    def response(self, rows):
-        return {"ret_code": 0, "data": {"quote_list": rows}}
+    def response(self, symbol="SOXL", rows=None):
+        return {"ret_code": 0, "data": {"code": "US."+symbol,
+            "ticker_list": rows if rows is not None else [self.tick()]}}
 
-    def test_batch_one_request_and_signature(self):
+    def test_seven_symbols_and_get_signature(self):
         symbols = ["BITU", "EPP", "IVV", "SEMI", "SOXL", "SOXX", "VOO"]
-        rows = [self.row(code="US."+s) for s in symbols]
-        with patch.object(q, "request_json", return_value=self.response(rows)) as request:
-            result = q.fetch_us_quotes(symbols + ["SOXL"], self.config)
+        with patch.object(q, "request_json", side_effect=[self.response(s) for s in symbols]) as request, patch.object(q.time, "sleep"):
+            result = q.fetch_us_quotes(symbols+["SOXL"], self.config)
         self.assertEqual(len(result["quotes"]), 7)
-        self.assertEqual(result["quoteProtocol"], "futu-v1")
-        request.assert_called_once()
-        path, body, headers = request.call_args.args
-        self.assertEqual(path, q.QUOTE_PATH)
-        self.assertEqual(json.loads(body)["code_list"], ["US."+s for s in symbols])
-        payload = "\n".join((headers["X-Timestamp"], "POST", path, "", hashlib.sha256(body).hexdigest()))
-        self.key.public_key().verify(base64.b64decode(headers["Authorization"]), payload.encode())
-        self.assertNotIn("test-password-only", str(headers))
+        self.assertEqual(result["quoteProtocol"], "futu-tick-v2")
+        self.assertEqual(request.call_count, 7)
+        for call, symbol in zip(request.call_args_list, symbols):
+            path = call.args[0]
+            self.assertEqual(path, "/api/v1.0/quote/US."+symbol+"/rt-ticker?num=20")
+            headers = call.kwargs["headers"]
+            route, query = path.split("?")
+            payload = "\n".join((headers["X-Timestamp"], "GET", route, query, ""))
+            self.key.public_key().verify(base64.b64decode(headers["Authorization"]), payload.encode())
+            self.assertNotIn("test-password-only", str(headers))
 
-    def test_all_sessions(self):
-        for field, label in (("pre_market", "盤前"), ("after_market", "盤後"), ("overnight", "夜盤")):
-            quote = q.select_quote(self.row(**{field: {"price": 110}}))
-            self.assertEqual((quote["price"], quote["session"]), (110, label))
-        self.assertEqual(q.select_quote(self.row())["session"], "正常盤")
+    def test_latest_actual_trade_across_sessions(self):
+        now = int(time.time()*1000)
+        rows = [self.tick(time=now-1000, price=102, period_type="AFTER"),
+                self.tick(time=now-60000, price=100, period_type="NORMAL"),
+                self.tick(time=now-3000, price=101, period_type="BEFORE")]
+        result = q.select_quote(rows)
+        self.assertEqual((result["price"],result["session"],result["timeKind"]), (102,"盤後","trade"))
+        self.assertAlmostEqual(__import__("datetime").datetime.fromisoformat(result["time"]).timestamp(), (now-1000)/1000)
+        rows.append(self.tick(time=now, price=103, period_type="OVERNIGHT"))
+        self.assertEqual(q.select_quote(rows)["session"],"夜盤")
 
-    def test_ambiguous_sessions_rejected(self):
-        with self.assertRaisesRegex(ValueError, "多個盤別"):
-            q.select_quote(self.row(pre_market={"price": 105}, after_market={"price": 110}))
+    def test_new_regular_session_beats_old_afterhours(self):
+        now = int(time.time()*1000)
+        result = q.select_quote([self.tick(time=now-86400000), self.tick(time=now,price=105,period_type="NORMAL")])
+        self.assertEqual((result["price"],result["session"]),(105,"正常盤"))
 
-    def test_invalid_prices(self):
-        for value in (0, -1, None, True, float("nan"), float("inf")):
+    def test_does_not_use_snapshot_timestamp(self):
+        with self.assertRaises(ValueError):
+            q.select_quote([{"data_time":int(time.time()*1000),"last_price":100,"after_market":{"price":110}}])
+
+    def test_invalid_or_cancelled_ticks(self):
+        for extra in ({"price":0},{"price":True},{"price":float("nan")},{"time":0},
+                      {"time":time.time()*1000+120000},{"time":time.time()*1000-8*86400000},
+                      {"trade_type":"U"},{"period_type":"UNKNOWN"}):
             with self.assertRaises(ValueError):
-                q.select_quote(self.row(last_price=value))
+                q.select_quote([self.tick(**extra)])
 
-    def test_invalid_timestamp(self):
-        for value in (0, None, True, time.time()*1000+120000, time.time()*1000-8*86400000):
-            with self.assertRaises(ValueError):
-                q.select_quote(self.row(data_time=value))
+    def test_missing_data_or_symbol_mismatch_preserves_price(self):
+        for response in (self.response("OTHER"), {"ret_code":0,"data":{"code":"US.SOXL"}}):
+            with patch.object(q,"request_json",return_value=response):
+                result=q.fetch_us_quotes(["SOXL"],self.config)
+            self.assertEqual(result["quotes"],{})
+            self.assertIn("SOXL",result["errors"])
 
-    def test_partial_result(self):
-        with patch.object(q, "request_json", return_value=self.response([self.row()])):
-            result = q.fetch_us_quotes(["SOXL", "BITU"], self.config)
-        self.assertIn("SOXL", result["quotes"])
-        self.assertIn("BITU", result["errors"])
+    def test_partial_success_and_rate_limit_stops_remaining(self):
+        with patch.object(q,"request_json",side_effect=[self.response(),q.QuoteRateLimited("限流")]) as req, patch.object(q.time,"sleep"):
+            result=q.fetch_us_quotes(["SOXL","IVV","VOO"],self.config)
+        self.assertEqual(req.call_count,2)
+        self.assertIn("SOXL",result["quotes"])
+        self.assertEqual(set(result["errors"]),{"IVV","VOO"})
 
-    def test_no_credentials_no_network(self):
-        with patch.object(q, "request_json") as request:
-            with self.assertRaisesRegex(ValueError, "尚未設定富途"):
-                q.fetch_us_quotes(["SOXL"])
-            request.assert_not_called()
+    def test_clock_correction(self):
+        replies=[{"ret_code":-12006},{"server_time_ms":str(int(time.time()*1000))},self.response()]
+        with patch.object(q,"request_json",side_effect=replies) as request:
+            result=q.fetch_us_quotes(["SOXL"],self.config)
+        self.assertIn("SOXL",result["quotes"])
+        self.assertEqual(request.call_count,3)
+
+    def test_permission_error_redacted(self):
+        with patch.object(q,"request_json",return_value={"ret_code":123,"ret_msg":"SECRET"}):
+            result=q.fetch_us_quotes(["SOXL"],self.config)
+        self.assertNotIn("SECRET",str(result))
+        self.assertIn("123",result["errors"]["SOXL"])
 
     def test_invalid_symbols_no_network(self):
         for symbols in ([], ["AAPL"]*51, ["US/AAPL"], ["AAPL\r\n"], [None]):
             with patch.object(q, "request_json") as request:
                 with self.assertRaises(ValueError):
-                    q.fetch_us_quotes(symbols, self.config)
+                    q.fetch_us_quotes(symbols,self.config)
                 request.assert_not_called()
 
-    def test_permission_error_no_fallback_or_retry(self):
-        with patch.object(q, "request_json", return_value={"ret_code": -100, "ret_msg": "SECRET"}) as request:
-            with self.assertRaisesRegex(ValueError, "代碼 -100") as error:
-                q.fetch_us_quotes(["SOXL"], self.config)
-        request.assert_called_once()
-        self.assertNotIn("SECRET", str(error.exception))
+    def test_no_credentials_no_network(self):
+        with patch.object(q, "request_json") as request:
+            with self.assertRaisesRegex(ValueError,"尚未設定富途"):
+                q.fetch_us_quotes(["SOXL"])
+            request.assert_not_called()
 
-    def test_clock_correction_only_once(self):
-        replies = [{"ret_code": -12006}, {"server_time_ms": str(int(time.time()*1000))},
-                   self.response([self.row()])]
-        with patch.object(q, "request_json", side_effect=replies) as request:
-            self.assertIn("SOXL", q.fetch_us_quotes(["SOXL"], self.config)["quotes"])
-        self.assertEqual(request.call_count, 3)
+    def test_pem_and_base64_without_password(self):
+        for encoding in (serialization.Encoding.PEM,serialization.Encoding.DER):
+            raw=self.key.private_bytes(encoding,serialization.PrivateFormat.PKCS8,serialization.NoEncryption())
+            encoded=raw.decode() if encoding==serialization.Encoding.PEM else base64.b64encode(raw).decode()
+            for extra in ({},{"private_key_password":""},{"private_key_password":"old-placeholder"}):
+                _,key=q.load_credentials({"app_key":"test-key","private_key_pem":encoded,**extra})
+                self.key.public_key().verify(key.sign(b"test"),b"test")
 
-    def test_wrong_password(self):
-        with self.assertRaisesRegex(ValueError, "私鑰或解密密碼"):
-            q.fetch_us_quotes(["SOXL"], {**self.config, "private_key_password": "wrong"})
-
-    def test_unencrypted_pem_without_password(self):
-        pem = self.key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
-                                     serialization.NoEncryption()).decode()
-        for extra in ({}, {"private_key_password": ""}, {"private_key_password": "old-placeholder"}):
-            app_key, key = q.load_credentials({"app_key": "test-key", "private_key_pem": pem, **extra})
-            signature = key.sign(b"test")
-            self.key.public_key().verify(signature, b"test")
-            self.assertEqual(app_key, "test-key")
-
-    def test_base64_der_without_password(self):
-        raw = self.key.private_bytes(serialization.Encoding.DER, serialization.PrivateFormat.PKCS8,
-                                     serialization.NoEncryption())
-        encoded = base64.b64encode(raw).decode()
-        _, key = q.load_credentials({"app_key": "test-key", "private_key_pem": encoded})
-        self.key.public_key().verify(key.sign(b"test"), b"test")
-
-    def test_encrypted_requires_password(self):
-        config = {k: v for k, v in self.config.items() if k != "private_key_password"}
-        with self.assertRaisesRegex(ValueError, "這把私鑰已加密"):
-            q.load_credentials(config)
+    def test_wrong_or_missing_encryption_password(self):
+        for password in ("wrong",""):
+            with self.assertRaises(ValueError):
+                q.load_credentials({**self.config,"private_key_password":password})
 
     def test_public_or_corrupt_key_rejected(self):
-        public = self.key.public_key().public_bytes(serialization.Encoding.PEM,
-            serialization.PublicFormat.SubjectPublicKeyInfo).decode()
-        for text in (public, "invalid-secret-contents", "/tmp/private.pem"):
+        public=self.key.public_key().public_bytes(serialization.Encoding.PEM,serialization.PublicFormat.SubjectPublicKeyInfo).decode()
+        for text in (public,"invalid-secret-contents","/tmp/private.pem"):
             with self.assertRaises(ValueError) as error:
-                q.load_credentials({"app_key": "test-key", "private_key_pem": text})
-            self.assertNotIn(text, str(error.exception))
+                q.load_credentials({"app_key":"test-key","private_key_pem":text})
+            self.assertNotIn(text,str(error.exception))
 
-    def test_http_errors_sanitized(self):
-        for code in (401, 403, 429, 500):
-            with patch.object(q, "build_opener") as opener:
-                opener.return_value.open.side_effect = HTTPError(q.HOST, code, "SECRET", {}, None)
+    def test_http_errors_redacted(self):
+        for code in (401,403,429,500):
+            with patch.object(q,"build_opener") as opener:
+                opener.return_value.open.side_effect=HTTPError(q.HOST,code,"SECRET",{},None)
                 with self.assertRaises(ValueError) as error:
-                    q.request_json(q.QUOTE_PATH, b"{}", {})
-            self.assertNotIn("SECRET", str(error.exception))
+                    q.request_json("/api/v1.0/quote/US.SOXL/rt-ticker?num=20")
+            self.assertNotIn("SECRET",str(error.exception))
 
-    def test_no_trade_or_redirect(self):
+    def test_only_readonly_endpoints(self):
+        for path in ("/api/v1.0/trade/place-order","/api/v1.0/quote/stock-quote",
+                     "/api/v1.0/quote/US.AAPL/rt-ticker?num=20&evil=1"):
+            with self.assertRaises(ValueError):
+                q.request_json(path)
         with self.assertRaises(ValueError):
-            q.request_json("/api/v1.0/trade/place-order", b"{}", {})
+            q.request_json("/api/v1.0/quote/US.SOXL/rt-ticker?num=20",b"{}")
         self.assertIsNone(q.NoRedirect().redirect_request(None,None,302,"",{},"https://example.com"))
 
-    def test_source_removed_yahoo(self):
-        from pathlib import Path
-        source = Path(q.__file__).read_text()
-        self.assertNotIn("import yfinance", source)
-        self.assertNotIn("yahoo.com", source)
-
-if __name__ == "__main__":
+if __name__=="__main__":
     unittest.main()

@@ -12,15 +12,17 @@ function run(extra, session = "夜盤") {
     let editingUsHoldingId="";function saveAndRender(){};
     pendingUsQuoteRequest={id:"test",holdings:[{id:"1",symbol:"SOXL",price:165.4}]};`,context);
   handler({source:context.window.parent,data:{type:"ledger-us-quotes-result",id:"test",
-    quotes:{SOXL:{price:163.92,currency:"USD",time:"2026-10-06T02:05:49Z",session}},...extra}});
+    quotes:{SOXL:{price:163.92,currency:"USD",time:"2026-10-06T02:05:49Z",timeKind:"trade",session}},...extra}});
   return {price:vm.runInContext("state.usHoldings[0].currentPrice",context),text:status.textContent};
 }
 assert.equal(run({}).price,165.4);
+assert.equal(run({quoteProtocol:"futu-v1"}).price,165.4);
+assert.equal(run({quoteProtocol:"futu-tick-v2",quotes:{SOXL:{price:163.92,currency:"USD",time:"2026-10-06T02:05:49Z",session:"盤後"}}}).price,165.4);
 assert.equal(run({quoteProtocol:"overnight-v1"}).price,165.4);
 assert(run({}).text.includes("舊版"));
-assert.equal(run({quoteProtocol:"futu-v1"}).price,163.92);
-assert(run({quoteProtocol:"futu-v1"}).text.includes("SOXL 夜盤"));
-assert.equal(run({quoteProtocol:"futu-v1"}, undefined).price,163.92);
-assert.equal(run({quoteProtocol:"futu-v1"}, "").price,165.4);
+assert.equal(run({quoteProtocol:"futu-tick-v2"}).price,163.92);
+assert(run({quoteProtocol:"futu-tick-v2"}).text.includes("SOXL 夜盤"));
+assert.equal(run({quoteProtocol:"futu-tick-v2"}, undefined).price,163.92);
+assert.equal(run({quoteProtocol:"futu-tick-v2"}, "").price,165.4);
 assert.equal(run({error:"查價失敗"}).price,165.4);
 console.log("PASS: old protocol blocked, valid quote applied, session required, errors preserve price");

@@ -19,7 +19,7 @@ function refreshUsPrices() {
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
   button.setAttribute("aria-busy", "true");
-  status.textContent = "正在取得富途最新可用報價…";
+  status.textContent = "正在取得富途最新成交價（含盤前、盤後、夜盤）…";
   const timer = setTimeout(() => {
     if (pendingUsQuoteRequest?.id !== id) return;
     pendingUsQuoteRequest = null;
@@ -44,7 +44,7 @@ window.addEventListener("message", event => {
     document.querySelector("#usQuoteStatus").textContent = event.data.error;
     return;
   }
-  if (event.data.quoteProtocol !== "futu-v1") {
+  if (event.data.quoteProtocol !== "futu-tick-v2") {
     document.querySelector("#usQuoteStatus").textContent = "報價服務仍是舊版，未更新任何價格。請重新啟動 Streamlit 服務後重整頁面。";
     return;
   }
@@ -55,7 +55,7 @@ window.addEventListener("message", event => {
     const holding = state.usHoldings.find(h => h.id === original.id);
     const quote = event.data.quotes?.[original.symbol];
     if (!holding || holding.symbol !== original.symbol || holding.currentPrice !== original.price || editingUsHoldingId === holding.id) return;
-    if (!quote || !["正常盤", "盤前", "盤後", "夜盤"].includes(quote.session) || quote.currency !== "USD" || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(Date.parse(quote.time))) { failed.push(original.symbol); return; }
+    if (!quote || quote.timeKind !== "trade" || !["正常盤", "盤前", "盤後", "夜盤"].includes(quote.session) || quote.currency !== "USD" || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(Date.parse(quote.time))) { failed.push(original.symbol); return; }
     holding.currentPrice = quote.price;
     holding.lastUpdated = "Futu " + (quote.session || "") + " " + quote.time;
     times.push(original.symbol + " " + (quote.session || "") + " " + new Date(quote.time).toLocaleString("zh-TW", {hour12:false}));
