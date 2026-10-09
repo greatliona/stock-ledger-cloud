@@ -1,4 +1,34 @@
-# L1.5.24 富途報價設定
+# L1.5.25 富途報價設定
+
+## 已有 AppKey，但出現「不接受未加密私鑰」
+
+不要重新建立 AppKey，也不要執行產生全新金鑰的 futu_key_setup.py。
+請使用原本與富途後台公鑰配對的私鑰檔，執行：
+
+```sh
+cd "/Users/vision/Documents/Codex/2026-07-15/app-users-vision-documents-codex-2026/stock-ledger-cloud"
+python3 -m pip install -r requirements.txt
+python3 futu_encrypt_key.py
+```
+
+1. 提示路徑時，把原本的私鑰檔拖進終端機，再按 Enter。不是 public.pem。
+2. 設定至少 12 字元的私鑰密碼，輸入兩次。輸入時不顯示文字是正常的。
+3. 工具將原本金鑰加密成 `.futu-private/existing.encrypted.pem`，原檔與公鑰配對不變。
+4. 複製加密檔內容（以下命令不會把內容印到終端機）：
+
+   ```sh
+   pbcopy < .futu-private/existing.encrypted.pem
+   ```
+
+5. 進入你的 Streamlit Settings → Secrets，只修改既有 `[futu]`：
+   `app_key` 保持原值；`private_key_password` 改成第 2 步密碼；
+   `private_key_pem` 三引號內的內容整段替換成剪貼簿內容。
+   開頭應是 `-----BEGIN ENCRYPTED PRIVATE KEY-----`，不要自行改標頭。
+6. 儲存，重新啟動服務。測試完後清空剪貼簿：`pbcopy < /dev/null`。
+
+不需要重新上傳公鑰。不要把金鑰貼到聊天或提交 Git。
+若金鑰只存在 Secrets 而沒有本機檔案，先在自己的電腦存成私鑰檔再執行；
+不要把 Secrets 畫面截圖傳出。若工具表示不是 Ed25519，先停下，不要覆蓋或刪除原始金鑰。
 
 此版本真正使用富途官方 REST，不使用 OpenD、不需 Mac 常駐、不再呼叫 Yahoo。
 按美股 reload 才查價；一次請求包含所有持股代號。只查公開行情，不讀券商持倉、不下單、不購買任何服務。

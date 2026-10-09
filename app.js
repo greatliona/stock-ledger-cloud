@@ -1293,40 +1293,28 @@ function renderSettlementRows() {
 }
 
 function getTradeDialogPlacement() {
-  const ownViewport = window.visualViewport;
-  let centerX = (ownViewport?.offsetLeft || 0) + (ownViewport?.width || window.innerWidth) / 2;
-  let centerY = (ownViewport?.offsetTop || 0) + (ownViewport?.height || window.innerHeight) / 2;
-  let visibleHeight = ownViewport?.height || window.innerHeight;
-
+  let left = 0, top = 0, right = window.innerWidth, bottom = window.innerHeight;
+  let current = window, offsetX = 0, offsetY = 0;
+  // A content-height iframe can be thousands of pixels tall. Intersect all
+  // readable ancestor viewports, not just the equally tall bridge iframe.
   try {
-    if (window.parent === window || !window.frameElement) return { centerX, centerY, visibleHeight };
-    const frameRect = window.frameElement.getBoundingClientRect();
-    const parentViewport = window.parent.visualViewport;
-    const viewportLeft = parentViewport?.offsetLeft || 0;
-    const viewportTop = parentViewport?.offsetTop || 0;
-    const viewportRight = viewportLeft + (parentViewport?.width || window.parent.innerWidth);
-    const viewportBottom = viewportTop + (parentViewport?.height || window.parent.innerHeight);
-    const visibleLeft = Math.max(frameRect.left, viewportLeft);
-    const visibleRight = Math.min(frameRect.right, viewportRight);
-    const visibleTop = Math.max(frameRect.top, viewportTop);
-    const visibleBottom = Math.min(frameRect.bottom, viewportBottom);
-    const scaleX = frameRect.width ? window.innerWidth / frameRect.width : 1;
-    const scaleY = frameRect.height ? window.innerHeight / frameRect.height : 1;
-
-    if (visibleRight > visibleLeft) {
-      centerX = ((visibleLeft + visibleRight) / 2 - frameRect.left) * scaleX;
+    while (current.parent !== current && current.frameElement) {
+      const rect = current.frameElement.getBoundingClientRect();
+      offsetX += rect.left;
+      offsetY += rect.top;
+      current = current.parent;
+      const viewport = current.visualViewport;
+      const x = (viewport?.offsetLeft || 0) - offsetX;
+      const y = (viewport?.offsetTop || 0) - offsetY;
+      left = Math.max(left, x);
+      top = Math.max(top, y);
+      right = Math.min(right, x + (viewport?.width || current.innerWidth));
+      bottom = Math.min(bottom, y + (viewport?.height || current.innerHeight));
     }
-    if (visibleBottom > visibleTop) {
-      centerY = ((visibleTop + visibleBottom) / 2 - frameRect.top) * scaleY;
-      visibleHeight = (visibleBottom - visibleTop) * scaleY;
-    }
-  } catch {
-    // Cross-origin containers use the current frame viewport as a safe fallback.
-  }
-
-  return { centerX, centerY, visibleHeight };
+  } catch { /* Cross-origin ancestors cannot be inspected. */ }
+  return {centerX: (left + right) / 2, centerY: (top + bottom) / 2,
+    visibleHeight: Math.max(160, bottom - top)};
 }
-
 function positionTradeDialog(dialog) {
   const placement = getTradeDialogPlacement();
   dialog.style.setProperty("--trade-dialog-center-x", `${placement.centerX}px`);
@@ -1339,7 +1327,9 @@ function showTradeDialog(dialog) {
   const updatePosition = () => positionTradeDialog(dialog);
   const parentWindow = (() => {
     try {
-      return window.parent !== window ? window.parent : null;
+      let parent = window;
+      while (parent.parent !== parent && parent.parent.document) parent = parent.parent;
+      return parent !== window ? parent : null;
     } catch {
       return null;
     }
