@@ -19,7 +19,7 @@ function refreshUsPrices() {
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
   button.setAttribute("aria-busy", "true");
-  status.textContent = "正在取得 Yahoo 最新可用報價…";
+  status.textContent = "正在取得富途最新可用報價…";
   const timer = setTimeout(() => {
     if (pendingUsQuoteRequest?.id !== id) return;
     pendingUsQuoteRequest = null;
@@ -44,7 +44,7 @@ window.addEventListener("message", event => {
     document.querySelector("#usQuoteStatus").textContent = event.data.error;
     return;
   }
-  if (event.data.quoteProtocol !== "overnight-v1") {
+  if (event.data.quoteProtocol !== "futu-v1") {
     document.querySelector("#usQuoteStatus").textContent = "報價服務仍是舊版，未更新任何價格。請重新啟動 Streamlit 服務後重整頁面。";
     return;
   }
@@ -57,14 +57,14 @@ window.addEventListener("message", event => {
     if (!holding || holding.symbol !== original.symbol || holding.currentPrice !== original.price || editingUsHoldingId === holding.id) return;
     if (!quote || !["正常盤", "盤前", "盤後", "夜盤"].includes(quote.session) || quote.currency !== "USD" || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(Date.parse(quote.time))) { failed.push(original.symbol); return; }
     holding.currentPrice = quote.price;
-    holding.lastUpdated = "Yahoo " + (quote.session || "") + " " + quote.time;
+    holding.lastUpdated = "Futu " + (quote.session || "") + " " + quote.time;
     times.push(original.symbol + " " + (quote.session || "") + " " + new Date(quote.time).toLocaleString("zh-TW", {hour12:false}));
     updated++;
   });
   if (updated) saveAndRender("已更新美股現價與損益。");
   const details = times.length ? " · " + times.join("；") : "";
   const errors = [...new Set(failed)].map(symbol => symbol + "：" + (event.data.errors?.[symbol] || "未取得報價，保留原價"));
-  document.querySelector("#usQuoteStatus").textContent = event.data.error || ("已更新 " + updated + " 筆" + details + (errors.length ? " · " + errors.join("；") : "") + " · Yahoo 報價可能延遲");
+  document.querySelector("#usQuoteStatus").textContent = event.data.error || ("已更新 " + updated + " 筆" + details + (errors.length ? " · " + errors.join("；") : "") + " · 富途行情（依帳戶權限）");
 });
 
 const state = loadState();

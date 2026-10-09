@@ -94,9 +94,9 @@ if check_password():
         try:
             now = time.monotonic()
             if now - st.session_state.get("last_quote_request", -60) < 15:
-                raise ValueError("請間隔 15 秒再更新，避免 Yahoo 限流。")
+                raise ValueError("請間隔 15 秒再更新，避免重複查價。")
             st.session_state["last_quote_request"] = now
-            result = quote_backend.fetch_us_quotes(request.get("symbols"))
+            result = quote_backend.fetch_us_quotes(request.get("symbols"), st.secrets.get("futu", {}))
         except ValueError as error:
             result = {"quotes": {}, "errors": {}, "error": str(error)}
         st.session_state["quote_reply"] = {"id": request["id"], **result}

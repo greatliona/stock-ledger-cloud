@@ -1,76 +1,119 @@
+import base64
+import hashlib
+import json
+import time
 import unittest
 from unittest.mock import patch
-from datetime import datetime, timezone
-from quote_backend import fetch_us_quotes, select_quote
+from urllib.error import HTTPError
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+import quote_backend as q
 
-class QuoteTests(unittest.TestCase):
-    def setUp(self):
-        import quote_backend
-        quote_backend._cooldown_until = 0
-    def test_newest_session_not_fixed_priority(self):
-        row = {"currency":"USD", "regularMarketPrice":100, "regularMarketTime":990,
-               "overnightMarketPrice":90, "overnightMarketTime":900}
-        self.assertEqual(select_quote([row],1000)["price"],100)
-        row.update(overnightMarketTime=999, marketState="OVERNIGHT")
-        self.assertEqual(select_quote([row],1000)["session"],"夜盤")
+class FutuTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.key = Ed25519PrivateKey.generate()
+        cls.config = {"app_key": "test-app-key", "private_key_password": "test-password-only",
+            "private_key_pem": cls.key.private_bytes(serialization.Encoding.PEM,
+                serialization.PrivateFormat.PKCS8,
+                serialization.BestAvailableEncryption(b"test-password-only")).decode()}
 
-    def test_missing_or_old_overnight_preserves_price(self):
-        for stamp in [None, 1]:
-            row={"currency":"USD","marketState":"OVERNIGHT","regularMarketPrice":100,
-                 "regularMarketTime":999,"overnightMarketPrice":90,"overnightMarketTime":stamp}
-            with self.assertRaises(ValueError): select_quote([row],10000)
+    def row(self, **extra):
+        return {"code": "US.SOXL", "data_time": int(time.time()*1000), "last_price": 100, **extra}
 
-    def test_invalid_price_currency_and_future(self):
-        for row in [{"currency":"EUR","regularMarketPrice":100,"regularMarketTime":999},
-                    {"currency":"USD","regularMarketPrice":float("nan"),"regularMarketTime":999},
-                    {"currency":"USD","regularMarketPrice":100,"regularMarketTime":2000}]:
-            with self.assertRaises(ValueError): select_quote([row],1000)
+    def response(self, rows):
+        return {"ret_code": 0, "data": {"quote_list": rows}}
 
-    @patch("quote_backend.yf.Ticker")
-    def test_batch_overnight_parameter_partial_failure_and_dedup(self,ticker):
-        row={"symbol":"AAPL","currency":"USD","marketState":"OVERNIGHT",
-             "overnightMarketPrice":123.45,"overnightMarketTime":datetime.now(timezone.utc).timestamp()}
-        ticker.return_value._data.get_raw_json.return_value={"quoteResponse":{"result":[row]}}
-        result=fetch_us_quotes(["AAPL","AAPL","BAD"])
-        self.assertEqual(result["quotes"]["AAPL"]["price"],123.45)
-        self.assertIn("BAD",result["errors"])
-        calls=ticker.return_value._data.get_raw_json.call_args_list
-        self.assertEqual([c.kwargs["params"]["overnightPrice"] for c in calls],["true","false"])
-        self.assertEqual(calls[0].kwargs["params"]["symbols"],"AAPL,BAD")
+    def test_batch_one_request_and_signature(self):
+        symbols = ["BITU", "EPP", "IVV", "SEMI", "SOXL", "SOXX", "VOO"]
+        rows = [self.row(code="US."+s) for s in symbols]
+        with patch.object(q, "request_json", return_value=self.response(rows)) as request:
+            result = q.fetch_us_quotes(symbols + ["SOXL"], self.config)
+        self.assertEqual(len(result["quotes"]), 7)
+        self.assertEqual(result["quoteProtocol"], "futu-v1")
+        request.assert_called_once()
+        path, body, headers = request.call_args.args
+        self.assertEqual(path, q.QUOTE_PATH)
+        self.assertEqual(json.loads(body)["code_list"], ["US."+s for s in symbols])
+        payload = "\n".join((headers["X-Timestamp"], "POST", path, "", hashlib.sha256(body).hexdigest()))
+        self.key.public_key().verify(base64.b64decode(headers["Authorization"]), payload.encode())
+        self.assertNotIn("test-password-only", str(headers))
 
-    @patch("quote_backend.yf.Ticker")
-    def test_optional_snapshot_failure_does_not_discard_night(self,ticker):
-        row={"symbol":"AAPL","currency":"USD","marketState":"OVERNIGHT",
-             "overnightMarketPrice":123.45,"overnightMarketTime":datetime.now(timezone.utc).timestamp()}
-        ticker.return_value._data.get_raw_json.side_effect=[{"quoteResponse":{"result":[row]}},RuntimeError("offline"),RuntimeError("offline")]
-        self.assertEqual(fetch_us_quotes(["AAPL"])["quotes"]["AAPL"]["price"],123.45)
-        self.assertEqual(ticker.return_value._data.get_raw_json.call_count,1)
+    def test_all_sessions(self):
+        for field, label in (("pre_market", "盤前"), ("after_market", "盤後"), ("overnight", "夜盤")):
+            quote = q.select_quote(self.row(**{field: {"price": 110}}))
+            self.assertEqual((quote["price"], quote["session"]), (110, label))
+        self.assertEqual(q.select_quote(self.row())["session"], "正常盤")
 
-    @patch("quote_backend.yf.Ticker")
-    def test_rate_limit_stops_retries_and_subsequent_requests(self,ticker):
-        from yfinance.exceptions import YFRateLimitError
-        ticker.return_value._data.get_raw_json.side_effect=YFRateLimitError()
-        self.assertIn("限流",fetch_us_quotes(["AAPL"])["error"])
-        self.assertIn("冷卻",fetch_us_quotes(["AAPL"])["error"])
-        self.assertEqual(ticker.return_value._data.get_raw_json.call_count,1)
+    def test_ambiguous_sessions_rejected(self):
+        with self.assertRaisesRegex(ValueError, "多個盤別"):
+            q.select_quote(self.row(pre_market={"price": 105}, after_market={"price": 110}))
 
-    @patch("quote_backend.yf.Ticker")
-    def test_retry_alternate_host(self,ticker):
-        row={"symbol":"AAPL","currency":"USD","regularMarketPrice":123.45,
-             "regularMarketTime":datetime.now(timezone.utc).timestamp()}
-        response={"quoteResponse":{"result":[row]}}
-        ticker.return_value._data.get_raw_json.side_effect=[RuntimeError("offline"),response,response]
-        self.assertIn("AAPL",fetch_us_quotes(["AAPL"])["quotes"])
+    def test_invalid_prices(self):
+        for value in (0, -1, None, True, float("nan"), float("inf")):
+            with self.assertRaises(ValueError):
+                q.select_quote(self.row(last_price=value))
 
-    @patch("quote_backend.yf.Ticker")
-    def test_invalid_input_never_requests(self,ticker):
-        for symbols in [[], ["http://bad"], ["AAPL"]*51, None, [[]]]:
-            with self.assertRaises(ValueError): fetch_us_quotes(symbols)
-        ticker.assert_not_called()
+    def test_invalid_timestamp(self):
+        for value in (0, None, True, time.time()*1000+120000, time.time()*1000-8*86400000):
+            with self.assertRaises(ValueError):
+                q.select_quote(self.row(data_time=value))
 
-    @patch("quote_backend.yf.Ticker")
-    def test_incomplete_request_preserves_price(self,ticker):
-        ticker.return_value._data.get_raw_json.side_effect=RuntimeError("offline")
-        self.assertFalse(fetch_us_quotes(["AAPL"])["quotes"])
+    def test_partial_result(self):
+        with patch.object(q, "request_json", return_value=self.response([self.row()])):
+            result = q.fetch_us_quotes(["SOXL", "BITU"], self.config)
+        self.assertIn("SOXL", result["quotes"])
+        self.assertIn("BITU", result["errors"])
 
-if __name__ == "__main__": unittest.main()
+    def test_no_credentials_no_network(self):
+        with patch.object(q, "request_json") as request:
+            with self.assertRaisesRegex(ValueError, "尚未設定富途"):
+                q.fetch_us_quotes(["SOXL"])
+            request.assert_not_called()
+
+    def test_invalid_symbols_no_network(self):
+        for symbols in ([], ["AAPL"]*51, ["US/AAPL"], ["AAPL\r\n"], [None]):
+            with patch.object(q, "request_json") as request:
+                with self.assertRaises(ValueError):
+                    q.fetch_us_quotes(symbols, self.config)
+                request.assert_not_called()
+
+    def test_permission_error_no_fallback_or_retry(self):
+        with patch.object(q, "request_json", return_value={"ret_code": -100, "ret_msg": "SECRET"}) as request:
+            with self.assertRaisesRegex(ValueError, "代碼 -100") as error:
+                q.fetch_us_quotes(["SOXL"], self.config)
+        request.assert_called_once()
+        self.assertNotIn("SECRET", str(error.exception))
+
+    def test_clock_correction_only_once(self):
+        replies = [{"ret_code": -12006}, {"server_time_ms": str(int(time.time()*1000))},
+                   self.response([self.row()])]
+        with patch.object(q, "request_json", side_effect=replies) as request:
+            self.assertIn("SOXL", q.fetch_us_quotes(["SOXL"], self.config)["quotes"])
+        self.assertEqual(request.call_count, 3)
+
+    def test_wrong_password(self):
+        with self.assertRaisesRegex(ValueError, "私鑰或解密密碼"):
+            q.fetch_us_quotes(["SOXL"], {**self.config, "private_key_password": "wrong"})
+
+    def test_http_errors_sanitized(self):
+        for code in (401, 403, 429, 500):
+            with patch.object(q, "build_opener") as opener:
+                opener.return_value.open.side_effect = HTTPError(q.HOST, code, "SECRET", {}, None)
+                with self.assertRaises(ValueError) as error:
+                    q.request_json(q.QUOTE_PATH, b"{}", {})
+            self.assertNotIn("SECRET", str(error.exception))
+
+    def test_no_trade_or_redirect(self):
+        with self.assertRaises(ValueError):
+            q.request_json("/api/v1.0/trade/place-order", b"{}", {})
+        self.assertIsNone(q.NoRedirect().redirect_request(None,None,302,"",{},"https://example.com"))
+
+    def test_source_removed_yahoo(self):
+        from pathlib import Path
+        source = Path(q.__file__).read_text()
+        self.assertNotIn("import yfinance", source)
+        self.assertNotIn("yahoo.com", source)
+
+if __name__ == "__main__":
+    unittest.main()

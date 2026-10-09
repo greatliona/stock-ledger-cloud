@@ -16,10 +16,11 @@ function run(extra, session = "夜盤") {
   return {price:vm.runInContext("state.usHoldings[0].currentPrice",context),text:status.textContent};
 }
 assert.equal(run({}).price,165.4);
+assert.equal(run({quoteProtocol:"overnight-v1"}).price,165.4);
 assert(run({}).text.includes("舊版"));
-assert.equal(run({quoteProtocol:"overnight-v1"}).price,163.92);
-assert(run({quoteProtocol:"overnight-v1"}).text.includes("SOXL 夜盤"));
-assert.equal(run({quoteProtocol:"overnight-v1"}, undefined).price,163.92);
-assert.equal(run({quoteProtocol:"overnight-v1"}, "").price,165.4);
+assert.equal(run({quoteProtocol:"futu-v1"}).price,163.92);
+assert(run({quoteProtocol:"futu-v1"}).text.includes("SOXL 夜盤"));
+assert.equal(run({quoteProtocol:"futu-v1"}, undefined).price,163.92);
+assert.equal(run({quoteProtocol:"futu-v1"}, "").price,165.4);
 assert.equal(run({error:"查價失敗"}).price,165.4);
 console.log("PASS: old protocol blocked, valid quote applied, session required, errors preserve price");

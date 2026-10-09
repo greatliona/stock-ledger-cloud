@@ -1,2 +1,2 @@
 streamlit>=1.45
-yfinance==1.0
+cryptography>=46.0.5,<47
