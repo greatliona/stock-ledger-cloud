@@ -25,14 +25,16 @@ class FutuTests(unittest.TestCase):
 
     def test_seven_symbols_and_get_signature(self):
         symbols = ["BITU", "EPP", "IVV", "SEMI", "SOXL", "SOXX", "VOO"]
-        with patch.object(q, "request_json", side_effect=[self.response(s) for s in symbols]) as request, patch.object(q.time, "sleep"):
+        replies = [self.response(s, [self.tick(period_type=p)]) for s in symbols for p in q.PERIODS]
+        with patch.object(q, "request_json", side_effect=replies) as request, patch.object(q.time, "sleep"):
             result = q.fetch_us_quotes(symbols+["SOXL"], self.config)
         self.assertEqual(len(result["quotes"]), 7)
-        self.assertEqual(result["quoteProtocol"], "futu-tick-v2")
-        self.assertEqual(request.call_count, 7)
-        for call, symbol in zip(request.call_args_list, symbols):
+        self.assertEqual(result["quoteProtocol"], "futu-session-v3")
+        self.assertEqual(request.call_count, 28)
+        expected = [(s,p) for s in symbols for p in q.PERIODS]
+        for call, (symbol,period) in zip(request.call_args_list, expected):
             path = call.args[0]
-            self.assertEqual(path, "/api/v1.0/quote/US."+symbol+"/rt-ticker?num=20")
+            self.assertEqual(path, "/api/v1.0/quote/US."+symbol+"/rt-ticker?num=20&period="+period)
             headers = call.kwargs["headers"]
             route, query = path.split("?")
             payload = "\n".join((headers["X-Timestamp"], "GET", route, query, ""))
@@ -49,6 +51,40 @@ class FutuTests(unittest.TestCase):
         self.assertAlmostEqual(__import__("datetime").datetime.fromisoformat(result["time"]).timestamp(), (now-1000)/1000)
         rows.append(self.tick(time=now, price=103, period_type="OVERNIGHT"))
         self.assertEqual(q.select_quote(rows)["session"],"夜盤")
+
+    def test_explicit_afterhours_is_newer_than_regular_close(self):
+        now = int(time.time()*1000)
+        replies = [self.response(rows=[self.tick(time=now-4*3600000, price=100, period_type="NORMAL")]),
+                   self.response(rows=[]),
+                   self.response(rows=[self.tick(time=now-1000, price=105, period_type="AFTER")]),
+                   self.response(rows=[])]
+        with patch.object(q,"request_json",side_effect=replies) as request, patch.object(q.time,"sleep"):
+            result = q.fetch_us_quotes(["SOXL"],self.config)
+        self.assertEqual(result["quotes"]["SOXL"]["price"],105)
+        self.assertEqual(result["quotes"]["SOXL"]["session"],"盤後")
+        self.assertEqual(len(result["quotes"]["SOXL"]["checkedPeriods"]),4)
+        self.assertFalse(result["warnings"])
+        self.assertEqual(request.call_count,4)
+
+    def test_semi_15_minute_old_trade_is_not_asserted_realtime(self):
+        replies = [self.response("SEMI",[self.tick(time=int(time.time()*1000)-895000,period_type="NORMAL")])] + [self.response("SEMI",[]) for _ in range(3)]
+        with patch.object(q,"request_json",side_effect=replies), patch.object(q.time,"sleep"):
+            result=q.fetch_us_quotes(["SEMI"],self.config)
+        self.assertGreaterEqual(result["quotes"]["SEMI"]["ageSeconds"],895)
+        self.assertIn("14 分鐘",result["warnings"]["SEMI"])
+        self.assertIn("未證實",result["warnings"]["SEMI"])
+
+    def test_ignored_session_filter_does_not_masquerade_as_afterhours(self):
+        with patch.object(q,"request_json",return_value=self.response(rows=[self.tick(period_type="NORMAL")])), patch.object(q.time,"sleep"):
+            result=q.fetch_us_quotes(["SOXL"],self.config)
+        self.assertEqual(result["quotes"]["SOXL"]["session"],"正常盤")
+        self.assertIn("盤後：回傳盤別不符",result["warnings"]["SOXL"])
+
+    def test_budget_expired_stops_network(self):
+        with patch.object(q.time,"monotonic",side_effect=[0,121]), patch.object(q,"request_json") as request:
+            result=q.fetch_us_quotes(["SOXL"],self.config)
+        request.assert_not_called()
+        self.assertIn("逾時",result["errors"]["SOXL"])
 
     def test_new_regular_session_beats_old_afterhours(self):
         now = int(time.time()*1000)
@@ -74,18 +110,19 @@ class FutuTests(unittest.TestCase):
             self.assertIn("SOXL",result["errors"])
 
     def test_partial_success_and_rate_limit_stops_remaining(self):
-        with patch.object(q,"request_json",side_effect=[self.response(),q.QuoteRateLimited("限流")]) as req, patch.object(q.time,"sleep"):
+        with patch.object(q,"request_json",side_effect=[self.response(rows=[self.tick(period_type="NORMAL")]),q.QuoteRateLimited("限流")]) as req, patch.object(q.time,"sleep"):
             result=q.fetch_us_quotes(["SOXL","IVV","VOO"],self.config)
         self.assertEqual(req.call_count,2)
         self.assertIn("SOXL",result["quotes"])
+        self.assertIn("未查全",result["warnings"]["SOXL"])
         self.assertEqual(set(result["errors"]),{"IVV","VOO"})
 
     def test_clock_correction(self):
-        replies=[{"ret_code":-12006},{"server_time_ms":str(int(time.time()*1000))},self.response()]
-        with patch.object(q,"request_json",side_effect=replies) as request:
+        replies=[{"ret_code":-12006},{"server_time_ms":str(int(time.time()*1000))}]+[self.response(rows=[self.tick(period_type=p)]) for p in q.PERIODS]
+        with patch.object(q,"request_json",side_effect=replies) as request, patch.object(q.time,"sleep"):
             result=q.fetch_us_quotes(["SOXL"],self.config)
         self.assertIn("SOXL",result["quotes"])
-        self.assertEqual(request.call_count,3)
+        self.assertEqual(request.call_count,6)
 
     def test_permission_error_redacted(self):
         with patch.object(q,"request_json",return_value={"ret_code":123,"ret_msg":"SECRET"}):
@@ -131,7 +168,7 @@ class FutuTests(unittest.TestCase):
             with patch.object(q,"build_opener") as opener:
                 opener.return_value.open.side_effect=HTTPError(q.HOST,code,"SECRET",{},None)
                 with self.assertRaises(ValueError) as error:
-                    q.request_json("/api/v1.0/quote/US.SOXL/rt-ticker?num=20")
+                    q.request_json("/api/v1.0/quote/US.SOXL/rt-ticker?num=20&period=AFTER")
             self.assertNotIn("SECRET",str(error.exception))
 
     def test_only_readonly_endpoints(self):
@@ -140,7 +177,7 @@ class FutuTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 q.request_json(path)
         with self.assertRaises(ValueError):
-            q.request_json("/api/v1.0/quote/US.SOXL/rt-ticker?num=20",b"{}")
+            q.request_json("/api/v1.0/quote/US.SOXL/rt-ticker?num=20&period=AFTER",b"{}")
         self.assertIsNone(q.NoRedirect().redirect_request(None,None,302,"",{},"https://example.com"))
 
 if __name__=="__main__":

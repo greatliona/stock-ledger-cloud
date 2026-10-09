@@ -19,7 +19,7 @@ function refreshUsPrices() {
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
   button.setAttribute("aria-busy", "true");
-  status.textContent = "正在取得富途最新成交價（含盤前、盤後、夜盤）…";
+  status.textContent = "正在分別查詢正常盤、盤前、盤後、夜盤成交…";
   const timer = setTimeout(() => {
     if (pendingUsQuoteRequest?.id !== id) return;
     pendingUsQuoteRequest = null;
@@ -44,27 +44,34 @@ window.addEventListener("message", event => {
     document.querySelector("#usQuoteStatus").textContent = event.data.error;
     return;
   }
-  if (event.data.quoteProtocol !== "futu-tick-v2") {
+  if (event.data.quoteProtocol !== "futu-session-v3") {
     document.querySelector("#usQuoteStatus").textContent = "報價服務仍是舊版，未更新任何價格。請重新啟動 Streamlit 服務後重整頁面。";
     return;
   }
   let updated = 0;
   const failed = [];
   const times = [];
+  const warnings = [];
   pending.holdings.forEach(original => {
     const holding = state.usHoldings.find(h => h.id === original.id);
     const quote = event.data.quotes?.[original.symbol];
     if (!holding || holding.symbol !== original.symbol || holding.currentPrice !== original.price || editingUsHoldingId === holding.id) return;
-    if (!quote || quote.timeKind !== "trade" || !["正常盤", "盤前", "盤後", "夜盤"].includes(quote.session) || quote.currency !== "USD" || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(Date.parse(quote.time))) { failed.push(original.symbol); return; }
+    if (!quote || quote.timeKind !== "trade" || !["正常盤", "盤前", "盤後", "夜盤"].includes(quote.session) || quote.currency !== "USD" || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(Date.parse(quote.time)) || !Number.isFinite(quote.ageSeconds) || quote.ageSeconds < 0 || !Array.isArray(quote.checkedPeriods)) { failed.push(original.symbol); return; }
+    const previousTime = /^Futu (?:正常盤|盤前|盤後|夜盤) (.+)$/.exec(holding.lastUpdated || "");
+    if (previousTime && Date.parse(previousTime[1]) > Date.parse(quote.time)) {
+      warnings.push(original.symbol + "：回傳成交比已存報價舊，保留原價");
+      return;
+    }
     holding.currentPrice = quote.price;
     holding.lastUpdated = "Futu " + (quote.session || "") + " " + quote.time;
     times.push(original.symbol + " " + (quote.session || "") + " " + new Date(quote.time).toLocaleString("zh-TW", {hour12:false}));
+    if (event.data.warnings?.[original.symbol]) warnings.push(original.symbol + "：" + event.data.warnings[original.symbol]);
     updated++;
   });
   if (updated) saveAndRender("已更新美股現價與損益。");
   const details = times.length ? " · " + times.join("；") : "";
   const errors = [...new Set(failed)].map(symbol => symbol + "：" + (event.data.errors?.[symbol] || "未取得報價，保留原價"));
-  document.querySelector("#usQuoteStatus").textContent = event.data.error || ("已更新 " + updated + " 筆" + details + (errors.length ? " · " + errors.join("；") : "") + " · 富途行情（依帳戶權限）");
+  document.querySelector("#usQuoteStatus").textContent = "已取得並套用 " + updated + " 筆成交價" + details + (errors.length ? " · " + errors.join("；") : "") + (warnings.length ? " · 注意：" + [...new Set(warnings)].join("；") : "") + " · 富途行情（成交時間不等於查詢時間）";
 });
 
 const state = loadState();

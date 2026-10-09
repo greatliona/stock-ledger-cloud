@@ -14,7 +14,7 @@ from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 HOST = "https://webapi.futunn.com"
-PROTOCOL = "futu-tick-v2"
+PROTOCOL = "futu-session-v3"
 PERIODS = {"NORMAL": "正常盤", "BEFORE": "盤前", "AFTER": "盤後", "OVERNIGHT": "夜盤"}
 
 class QuoteRateLimited(ValueError):
@@ -26,7 +26,7 @@ class NoRedirect(HTTPRedirectHandler):
 
 def request_json(path, body=None, headers=None):
     if not (path == "/api/v1.0/server-time" or
-            re.fullmatch(r"/api/v1\.0/quote/US\.[A-Z][A-Z0-9.\-]{0,19}/rt-ticker\?num=20", path)):
+            re.fullmatch(r"/api/v1\.0/quote/US\.[A-Z][A-Z0-9.\-]{0,19}/rt-ticker\?num=20&period=(NORMAL|BEFORE|AFTER|OVERNIGHT)", path)):
         raise ValueError("僅允許富途唯讀報價端點。")
     if body is not None:
         raise ValueError("逐筆查價僅允許 GET 請求。")
@@ -134,38 +134,69 @@ def fetch_us_quotes(symbols, config=None):
         raise ValueError("股票代號格式不正確。")
     symbols = list(dict.fromkeys(symbols))
     app_key, key = load_credentials(config or {})
-    quotes, errors = {}, {}
+    quotes, errors, warnings = {}, {}, {}
     deadline = time.monotonic() + 120
     clock_offset = 0
     stop_reason = None
-    for index, symbol in enumerate(symbols):
+    request_count = 0
+    for symbol in symbols:
         if stop_reason or time.monotonic() >= deadline:
             errors[symbol] = stop_reason or "本次查價逾時，保留原價"
             continue
-        if index:
-            time.sleep(0.3)  # Sequential requests, no concurrent burst or retry storm.
-        path = "/api/v1.0/quote/US." + symbol + "/rt-ticker?num=20"
+        rows, session_errors, checked = [], [], []
+        # Explicit independent sessions: a default response containing only regular
+        # prints must not prevent an after-hours/overnight request being made.
+        for period, label in PERIODS.items():
+            if stop_reason or time.monotonic() >= deadline:
+                session_errors.append(label + "：" + (stop_reason or "查價逾時"))
+                continue
+            if request_count:
+                time.sleep(0.3)
+            request_count += 1
+            path = "/api/v1.0/quote/US." + symbol + "/rt-ticker?num=20&period=" + period
+            try:
+                timestamp = int(time.time() * 1000) + clock_offset
+                result = request_json(path, headers=signed_headers(app_key, key, path, timestamp))
+                if result.get("ret_code") == -12006:
+                    server = request_json("/api/v1.0/server-time")
+                    stamp = positive_number(server.get("server_time_ms"))
+                    if stamp is None:
+                        raise ValueError("無法校正富途簽章時間")
+                    clock_offset = int(stamp) - int(time.time() * 1000)
+                    result = request_json(path, headers=signed_headers(app_key, key, path, int(stamp)))
+                if result.get("ret_code") != 0:
+                    code = result.get("ret_code")
+                    safe_code = str(code) if isinstance(code, int) else "UNKNOWN"
+                    raise ValueError("行情請求失敗（代碼 " + safe_code + "）")
+                data = result.get("data")
+                if not isinstance(data, dict) or data.get("code") != "US." + symbol:
+                    raise ValueError("報價代號不符")
+                ticks = data.get("ticker_list")
+                if not isinstance(ticks, list):
+                    raise ValueError("缺少逐筆資料")
+                # Do not relabel regular prints as after-hours if the server ignores
+                # a filter. Report the mismatch instead of silently accepting it.
+                if any(not isinstance(t, dict) or t.get("period_type") != period for t in ticks):
+                    raise ValueError("回傳盤別不符")
+                checked.append(period)
+                rows.extend(ticks)
+            except QuoteRateLimited as error:
+                stop_reason = str(error)
+                session_errors.append(label + "：" + stop_reason)
+            except ValueError as error:
+                session_errors.append(label + "：" + str(error))
         try:
-            timestamp = int(time.time() * 1000) + clock_offset
-            result = request_json(path, headers=signed_headers(app_key, key, path, timestamp))
-            if result.get("ret_code") == -12006:
-                server = request_json("/api/v1.0/server-time")
-                stamp = positive_number(server.get("server_time_ms"))
-                if stamp is None:
-                    raise ValueError("無法校正富途簽章時間；原價不變。")
-                clock_offset = int(stamp) - int(time.time() * 1000)
-                result = request_json(path, headers=signed_headers(app_key, key, path, int(stamp)))
-            if result.get("ret_code") != 0:
-                code = result.get("ret_code")
-                safe_code = str(code) if isinstance(code, int) else "UNKNOWN"
-                raise ValueError("富途逐筆行情未授權或請求失敗（代碼 " + safe_code + "）；不會自動購買行情")
-            data = result.get("data")
-            if not isinstance(data, dict) or data.get("code") != "US." + symbol:
-                raise ValueError("富途逐筆報價代號不符，保留原價")
-            quotes[symbol] = select_quote(data.get("ticker_list"))
-        except QuoteRateLimited as error:
-            stop_reason = str(error)
-            errors[symbol] = stop_reason
+            quote = select_quote(rows, now=time.time() + clock_offset / 1000)
+            age = max(0, int(time.time() + clock_offset / 1000 - datetime.fromisoformat(quote["time"]).timestamp()))
+            quote.update(ageSeconds=age, checkedPeriods=checked)
+            notes = []
+            if age >= 300:
+                notes.append("最新回傳成交距查詢已 " + str(age // 60) + " 分鐘；未證實即時或延遲原因")
+            if session_errors:
+                notes.append("部分盤別未查全（" + "；".join(session_errors) + "），不能確認全盤最新")
+            if notes:
+                warnings[symbol] = "；".join(notes)
+            quotes[symbol] = quote
         except ValueError as error:
-            errors[symbol] = str(error)
-    return {"quotes": quotes, "errors": errors, "quoteProtocol": PROTOCOL}
+            errors[symbol] = "；".join(session_errors) or str(error)
+    return {"quotes": quotes, "errors": errors, "warnings": warnings, "quoteProtocol": PROTOCOL}
