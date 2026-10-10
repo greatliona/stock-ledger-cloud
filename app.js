@@ -85,44 +85,79 @@ const openFundCards = new Set();
 let editingCryptoId = "";
 const refreshingCryptoIds = new Set();
 const cryptoRefreshMessages = new Map();
+let refreshingAllCrypto = false;
 
-async function fetchBinanceContractPrice(symbol) {
-  if (!/^[A-Z0-9]+USDT$/.test(symbol)) throw new Error("請使用完整 USDT 合約代號，例如 BTCUSDT。");
+async function fetchBinanceContractPrices(symbols) {
+  const wanted = new Set(symbols);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
-    const response = await fetch("https://fapi.binance.com/fapi/v2/ticker/price?symbol=" + encodeURIComponent(symbol), {
+    const response = await fetch("https://fapi.binance.com/fapi/v2/ticker/price", {
       signal: controller.signal, credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer"
     });
     if (!response.ok) throw new Error(response.status === 429 || response.status === 418
-      ? "行情請求受限，請稍後再試。" : "無法取得合約行情，請確認代號或網路／地區限制。");
+      ? "行情請求受限，請稍後再試。" : "無法取得合約行情，請確認網路／地區限制。");
     const data = await response.json();
-    const price = Number(data.price);
-    if (data.symbol !== symbol || !Number.isFinite(price) || price <= 0) throw new Error("行情資料無效，未更新現價。");
-    return price;
+    if (!Array.isArray(data)) throw new Error("行情資料無效，未更新現價。");
+    const quotes = new Map();
+    data.forEach(row => {
+      if (!row || !wanted.has(row.symbol)) return;
+      const price = Number(row.price), time = Number(row.time);
+      if (!["string", "number"].includes(typeof row.price) || !Number.isFinite(price) || price <= 0 || !Number.isSafeInteger(row.time) || time <= 0 || time > Date.now() + 60000) return;
+      if (!quotes.has(row.symbol) || quotes.get(row.symbol).time < time) quotes.set(row.symbol, {price, time});
+    });
+    return quotes;
   } finally { clearTimeout(timer); }
 }
 
-async function refreshCryptoPrice(id) {
-  const contract = findCryptoContract(id);
-  if (!contract || refreshingCryptoIds.has(id) || editingCryptoId) return;
-  const symbol = normalizeSymbol(contract.name);
-  refreshingCryptoIds.add(id);
-  cryptoRefreshMessages.set(id, "正在取得幣安合約現價…");
+async function refreshAllCryptoPrices() {
+  const status = document.querySelector("#cryptoQuoteStatus");
+  if (refreshingAllCrypto) return;
+  if (editingCryptoId) { status.textContent = "請先儲存或取消合約修改。"; return; }
+  const originals = state.cryptoContracts.map(contract => ({contract, symbol:normalizeSymbol(contract.name), price:contract.currentPrice}));
+  if (!originals.length) { status.textContent = "目前沒有加密合約。"; return; }
+  const valid = originals.filter(item => /^[A-Z0-9]+USDT$/.test(item.symbol));
+  const invalid = originals.filter(item => !valid.includes(item));
+  invalid.forEach(({contract}) => cryptoRefreshMessages.set(contract.id, "請使用完整 USDT 合約代號，例如 BTCUSDT。"));
+  if (!valid.length) { status.textContent = "沒有可查詢的 USDT 合約，保留原價。"; renderCryptoContracts(); return; }
+  const button = document.querySelector("#reloadCryptoPrices");
+  refreshingAllCrypto = true;
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  valid.forEach(({contract}) => { refreshingCryptoIds.add(contract.id); cryptoRefreshMessages.set(contract.id, "正在取得最新成交價…"); });
+  status.textContent = "正在取得全部合約最新成交價…";
   renderCryptoContracts();
   try {
-    const price = await fetchBinanceContractPrice(symbol);
-    if (findCryptoContract(id) !== contract || normalizeSymbol(contract.name) !== symbol) return;
-    contract.currentPrice = price;
-    cryptoRefreshMessages.set(id, "已更新 · " + new Date().toLocaleTimeString("zh-TW", { hour12: false }));
-    saveAndRender("已更新 " + symbol + " 現價與損益。");
+    const quotes = await fetchBinanceContractPrices(valid.map(item => item.symbol));
+    let updated = 0, skipped = 0;
+    const failed = invalid.map(item => item.symbol || "未命名合約");
+    valid.forEach(({contract, symbol, price}) => {
+      if (findCryptoContract(contract.id) !== contract || normalizeSymbol(contract.name) !== symbol || contract.currentPrice !== price || editingCryptoId === contract.id) {
+        skipped++;
+        cryptoRefreshMessages.set(contract.id, "資料已變更，未覆寫現價。");
+        return;
+      }
+      const quote = quotes.get(symbol);
+      if (!quote) { failed.push(symbol); cryptoRefreshMessages.set(contract.id, "未取得有效成交價，保留原價。"); return; }
+      contract.currentPrice = quote.price;
+      cryptoRefreshMessages.set(contract.id, "成交時間 · " + new Date(quote.time).toLocaleString("zh-TW", {hour12:false}));
+      updated++;
+    });
+    if (updated) saveAndRender("已更新加密合約現價與損益。");
+    status.textContent = "已更新 " + updated + " 筆合約" + (skipped ? " · " + skipped + " 筆資料已變更，未覆寫" : "") + (failed.length ? " · " + [...new Set(failed)].join("、") + " 未更新，保留原價" : "") + " · 幣安最新成交價";
   } catch (error) {
-    cryptoRefreshMessages.set(id, error.name === "AbortError" ? "連線逾時，保留原現價。" : (error instanceof TypeError ? "行情連線失敗，保留原現價；請檢查網路或地區限制。" : error.message));
+    const message = error.name === "AbortError" ? "連線逾時，保留原現價。" : (error instanceof TypeError ? "行情連線失敗，保留原現價；請檢查網路或地區限制。" : error.message);
+    status.textContent = message;
+    valid.forEach(({contract}) => cryptoRefreshMessages.set(contract.id, message));
   } finally {
-    refreshingCryptoIds.delete(id);
+    valid.forEach(({contract}) => refreshingCryptoIds.delete(contract.id));
+    refreshingAllCrypto = false;
+    button.disabled = false;
+    button.removeAttribute("aria-busy");
     renderCryptoContracts();
   }
 }
+
 let editingHoldingId = "";
 let editingUsHoldingId = "";
 let editingFundId = "";
@@ -303,6 +338,8 @@ els.form.addEventListener("submit", (event) => {
 
 document.querySelector("#reloadUsPrices").innerHTML = RELOAD_ICON;
 document.querySelector("#reloadUsPrices").addEventListener("click", refreshUsPrices);
+document.querySelector("#reloadCryptoPrices").innerHTML = RELOAD_ICON;
+document.querySelector("#reloadCryptoPrices").addEventListener("click", refreshAllCryptoPrices);
 
 els.usForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -355,8 +392,6 @@ els.cryptoForm.addEventListener("submit", (event) => {
 });
 
 els.cryptoList.addEventListener("click", (event) => {
-  const reload = event.target.closest("[data-refresh-crypto]");
-  if (reload) { void refreshCryptoPrice(reload.dataset.refreshCrypto); return; }
   const edit = event.target.closest("[data-edit-crypto]");
   if (edit) { editingCryptoId = edit.dataset.editCrypto; renderCryptoContracts(); return; }
   if (event.target.closest("[data-cancel-crypto]")) { editingCryptoId = ""; renderCryptoContracts(); return; }
@@ -1228,18 +1263,7 @@ function renderCryptoContracts() {
       ? '<button type="button" class="secondary-btn" data-save-crypto="' + escapeHTML(contract.id) + '">儲存</button><button type="button" class="secondary-btn" data-cancel-crypto>取消</button>'
       : '<button type="button" class="secondary-btn" data-edit-crypto="' + escapeHTML(contract.id) + '">修改</button>' + actions.innerHTML;
     actions.classList.add("card-edit-actions");
-    if (!editing) {
-      const reload = document.createElement("button");
-      reload.type = "button";
-      reload.className = "mini-btn crypto-reload";
-      reload.dataset.refreshCrypto = contract.id;
-      reload.innerHTML = RELOAD_ICON;
-      reload.title = "取得幣安 USDT 合約最新成交價";
-      reload.setAttribute("aria-label", "更新 " + contract.name + " 現價");
-      reload.disabled = refreshingCryptoIds.has(contract.id) || Boolean(editingCryptoId);
-      actions.insertBefore(reload, actions.children[1]);
-    }
-    if (refreshingCryptoIds.has(contract.id)) actions.querySelectorAll("button").forEach(button => { button.disabled = true; });
+    if (refreshingAllCrypto || refreshingCryptoIds.has(contract.id)) actions.querySelectorAll("button").forEach(button => { button.disabled = true; });
     const message = cryptoRefreshMessages.get(contract.id);
     if (message) {
       const status = document.createElement("small");

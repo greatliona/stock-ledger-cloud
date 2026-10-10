@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stock Ledger!</title>
-    <link rel="stylesheet" href="styles.css?v=20261009-02" />
+    <link rel="stylesheet" href="styles.css?v=20261010-30" />
   </head>
   <body>
     <main class="app-shell">
@@ -13,7 +13,7 @@
           <p class="eyebrow">Portfolio Ledger！</p>
           <div class="title-line">
             <h1>Stock Ledger!</h1>
-            <span class="app-version">L1.5.29</span>
+            <span class="app-version">L1.5.30</span>
           </div>
         </div>
       </header>
@@ -245,8 +245,9 @@
               目前價
               <input id="cryptoCurrentPriceInput" type="number" min="0" step="0.01" placeholder="67000" required />
             </label>
-            <div class="add-controls"><select id="cryptoSideInput" aria-label="合約方向" title="交易方向"><option value="long">多</option><option value="short">空</option></select><button type="submit" class="primary-btn add-button" aria-label="新增合約" title="新增合約">+</button></div>
+            <div class="add-controls"><select id="cryptoSideInput" aria-label="合約方向" title="交易方向"><option value="long">多</option><option value="short">空</option></select><button type="submit" class="primary-btn add-button" aria-label="新增合約" title="新增合約">+</button><button id="reloadCryptoPrices" type="button" class="secondary-btn reload-button" aria-label="更新全部加密合約現價" title="取得幣安全部庫存合約最新成交價"></button></div>
           </form>
+          <p id="cryptoQuoteStatus" class="quote-status" role="status"></p>
           <div id="cryptoList" class="crypto-list"></div>
         </div>
 
@@ -467,6 +468,6 @@
     </template>
 
     <script src="xlsx.mini.min.js?v=0.20.3"></script>
-    <script src="app.js?v=20261009-02"></script>
+    <script src="app.js?v=20261010-30"></script>
   </body>
 </html>
