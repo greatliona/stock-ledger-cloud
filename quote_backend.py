@@ -16,7 +16,7 @@ from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 HOST = "https://webapi.futunn.com"
-PROTOCOL = "futu-smart-v4"
+PROTOCOL = "futu-snapshot-v5"
 PERIODS = {"NORMAL": "正常盤", "BEFORE": "盤前", "AFTER": "盤後", "OVERNIGHT": "夜盤"}
 
 class QuoteRateLimited(ValueError):
@@ -27,7 +27,7 @@ class NoRedirect(HTTPRedirectHandler):
         return None  # Never forward credentials to a redirected host.
 
 def request_json(path, body=None, headers=None):
-    post_paths = {"/api/v1.0/quote/stock-quote", "/api/v1.0/quote/market-state", "/api/v1.0/quote/order-book"}
+    post_paths = {"/api/v1.0/quote/stock-quote", "/api/v1.0/quote/market-state", "/api/v1.0/quote/order-book", "/api/v1.0/quote/snapshot"}
     is_get = (path == "/api/v1.0/server-time" or
         re.fullmatch(r"/api/v1\.0/quote/US\.[A-Z][A-Z0-9.\-]{0,19}/rt-ticker\?num=20&period=(NORMAL|BEFORE|AFTER|OVERNIGHT)", path) or
         re.fullmatch(r"/api/v1\.0/quote/US\.[A-Z][A-Z0-9.\-]{0,19}/rt-data\?request_section=(NORMAL|FULL|PREMARKET|AFTERHOURS|OVERNIGHT)", path))
@@ -182,6 +182,22 @@ def regular_snapshot(row, now):
     return quote
 
 
+def extended_snapshot(row, period, now):
+    if not isinstance(row, dict) or row.get("index_valid") is True:
+        return None
+    fields = {"BEFORE": "pre_price", "AFTER": "after_price", "OVERNIGHT": "overnight_price"}
+    field = fields.get(period)
+    price = positive_number(row.get(field)) if field else None
+    if price is None:
+        return None
+    # The snapshot has no independent session trade timestamp. Never borrow
+    # update_time/data_time from the regular quote or manufacture a trade time.
+    return {"price": price, "time": None, "ageSeconds": None, "currency": "USD",
+            "session": PERIODS[period], "source": "Futu", "timeKind": "sessionSnapshot",
+            "priceField": field, "checkedPeriods": [period],
+            "fetchedAt": datetime.fromtimestamp(now, timezone.utc).isoformat()}
+
+
 def fetch_us_quotes(symbols, config=None):
     if not isinstance(symbols, list) or not 1 <= len(symbols) <= 50:
         raise ValueError("一次最多更新 50 個代號。")
@@ -245,10 +261,35 @@ def fetch_us_quotes(symbols, config=None):
         except ValueError:
             pass  # Per-symbol read-only fallback below; a 429 remains latched.
 
+    extended = [c for c in codes if c not in regular]
+    session_snapshots = {}
+    if extended:
+        try:
+            data = call("/api/v1.0/quote/snapshot", {"code_list": extended})
+            if isinstance(data, dict) and isinstance(data.get("snapshot_list"), list):
+                session_snapshots = {r["code"]: r for r in data["snapshot_list"]
+                                     if isinstance(r, dict) and r.get("code") in extended}
+        except ValueError:
+            pass
+
     for symbol in symbols:
         code = "US." + symbol
         period = MARKET_PERIOD.get(states.get(code))
         candidate, issues = None, []
+        if code in extended:
+            snapshot_period = period
+            if snapshot_period is None:
+                # Some providers report CLOSED while 24h overnight is active.
+                # Use NY timezone (including DST), only inside the overnight window.
+                local = datetime.fromtimestamp(now(), ZoneInfo("America/New_York"))
+                if (local.hour >= 20 and local.weekday() in (6, 0, 1, 2, 3)) or (local.hour < 4 and local.weekday() < 5):
+                    snapshot_period = "OVERNIGHT"
+            candidate = extended_snapshot(session_snapshots.get(code), snapshot_period, now())
+            if candidate:
+                quotes[symbol] = candidate
+                if period is None:
+                    warnings[symbol] = "夜盤欄位依美東時段選取；供應商未確認盤別或成交時間"
+                continue
         try:
             if code in regular:
                 try:

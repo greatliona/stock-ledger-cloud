@@ -155,14 +155,14 @@ class FutuTests(unittest.TestCase):
         self.assertNotIn("999",str(result))
 
     def test_afterhours_queries_only_current_period(self):
-        with patch.object(q,"request_json",side_effect=[self.market(["SOXL"],"AFTER_HOURS_BEGIN"),self.response()]) as req:
+        with patch.object(q,"request_json",side_effect=[self.market(["SOXL"],"AFTER_HOURS_BEGIN"),{"ret_code":0,"data":{"snapshot_list":[]}},self.response()]) as req:
             result=q.fetch_us_quotes(["SOXL"],self.config)
-        self.assertEqual(req.call_count,2)
+        self.assertEqual(req.call_count,3)
         self.assertEqual(result["quotes"]["SOXL"]["session"],"盤後")
-        self.assertTrue(req.call_args_list[1].args[0].endswith("period=AFTER"))
+        self.assertTrue(req.call_args_list[2].args[0].endswith("period=AFTER"))
 
     def test_empty_afterhours_uses_afterhours_minute_not_regular_close(self):
-        with patch.object(q,"request_json",side_effect=[self.market(["SOXL"],"AFTER_HOURS_BEGIN"),self.response(rows=[]),self.minute("SOXL",section="US_AFTERHOURS")]):
+        with patch.object(q,"request_json",side_effect=[self.market(["SOXL"],"AFTER_HOURS_BEGIN"),{"ret_code":0,"data":{"snapshot_list":[]}},self.response(rows=[]),self.minute("SOXL",section="US_AFTERHOURS")]):
             result=q.fetch_us_quotes(["SOXL"],self.config)
         self.assertEqual(result["quotes"]["SOXL"]["session"],"盤後")
         self.assertEqual(result["quotes"]["SOXL"]["timeKind"],"minute")
@@ -202,10 +202,35 @@ class FutuTests(unittest.TestCase):
         self.assertFalse(result["quotes"])
 
     def test_unsupported_state_uses_full_and_overnight_minute(self):
-        with patch.object(q,"request_json",side_effect=[self.market(["SOXL"],"CLOSED"),self.minute("SOXL",age=60,section="US_AFTERHOURS"),self.minute("SOXL",section="US_OVERNIGHT")]) as req:
+        with patch.object(q,"request_json",side_effect=[self.market(["SOXL"],"CLOSED"),{"ret_code":0,"data":{"snapshot_list":[]}},self.minute("SOXL",age=60,section="US_AFTERHOURS"),self.minute("SOXL",section="US_OVERNIGHT")]) as req:
             result=q.fetch_us_quotes(["SOXL"],self.config)
-        self.assertEqual(req.call_count,3)
+        self.assertEqual(req.call_count,4)
         self.assertEqual(result["quotes"]["SOXL"]["session"],"夜盤")
+
+    def test_24h_snapshot_uses_overnight_not_regular_price(self):
+        data={"ret_code":0,"data":{"snapshot_list":[
+            {"code":"US.SOXX","last_price":559.4,"overnight_price":562.09,"update_time":1},
+            {"code":"US.SOXL","last_price":139.76,"overnight_price":141.17,"update_time":1}]}}
+        with patch.object(q,"request_json",side_effect=[self.market(["SOXX","SOXL"],"NIGHT_OPEN"),data]) as req:
+            result=q.fetch_us_quotes(["SOXX","SOXL"],self.config)
+        self.assertEqual(req.call_count,2)
+        self.assertEqual(result["quotes"]["SOXX"]["price"],562.09)
+        self.assertEqual(result["quotes"]["SOXL"]["price"],141.17)
+        self.assertIsNone(result["quotes"]["SOXL"]["time"])
+        self.assertEqual(result["quotes"]["SOXL"]["priceField"],"overnight_price")
+        self.assertEqual(req.call_args_list[-1].args[0],"/api/v1.0/quote/snapshot")
+
+    def test_invalid_overnight_snapshot_never_uses_last_price(self):
+        for price in [0,-1,None,True,float("nan")]:
+            self.assertIsNone(q.extended_snapshot({"last_price":100,"overnight_price":price},"OVERNIGHT",time.time()))
+        self.assertIsNone(q.extended_snapshot({"index_valid":True,"overnight_price":100},"OVERNIGHT",time.time()))
+
+    def test_closed_during_ny_overnight_reads_24h_field(self):
+        stamp=q.datetime(2026,10,12,2,tzinfo=q.timezone.utc).timestamp()
+        data={"ret_code":0,"data":{"snapshot_list":[{"code":"US.SOXL","overnight_price":141.17,"after_price":139}]}}
+        with patch.object(q.time,"time",return_value=stamp),patch.object(q,"request_json",side_effect=[self.market(["SOXL"],"CLOSED"),data]):
+            result=q.fetch_us_quotes(["SOXL"],self.config)
+        self.assertEqual(result["quotes"]["SOXL"]["price"],141.17)
 
 if __name__=="__main__":
     unittest.main()

@@ -44,7 +44,7 @@ window.addEventListener("message", event => {
     document.querySelector("#usQuoteStatus").textContent = event.data.error;
     return;
   }
-  if (event.data.quoteProtocol !== "futu-smart-v4") {
+  if (event.data.quoteProtocol !== "futu-snapshot-v5") {
     document.querySelector("#usQuoteStatus").textContent = "報價服務仍是舊版，未更新任何價格。請重新啟動 Streamlit 服務後重整頁面。";
     return;
   }
@@ -56,16 +56,21 @@ window.addEventListener("message", event => {
     const holding = state.usHoldings.find(h => h.id === original.id);
     const quote = event.data.quotes?.[original.symbol];
     if (!holding || holding.symbol !== original.symbol || holding.currentPrice !== original.price || editingUsHoldingId === holding.id) return;
-    if (!quote || !["trade", "quote", "minute"].includes(quote.timeKind) || !["正常盤", "盤前", "盤後", "夜盤"].includes(quote.session) || quote.currency !== "USD" || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(Date.parse(quote.time)) || !Number.isFinite(quote.ageSeconds) || quote.ageSeconds < 0 || !Array.isArray(quote.checkedPeriods)) { failed.push(original.symbol); return; }
+    const snapshot = quote?.timeKind === "sessionSnapshot";
+    const snapshotFields = {"盤前":"pre_price", "盤後":"after_price", "夜盤":"overnight_price"};
+    const validTime = snapshot
+      ? Boolean(snapshotFields[quote.session]) && quote.time === null && quote.ageSeconds === null && quote.priceField === snapshotFields[quote.session] && Number.isFinite(Date.parse(quote.fetchedAt))
+      : quote && ["trade", "quote", "minute"].includes(quote.timeKind) && Number.isFinite(Date.parse(quote.time)) && Number.isFinite(quote.ageSeconds) && quote.ageSeconds >= 0;
+    if (!quote || !validTime || !["正常盤", "盤前", "盤後", "夜盤"].includes(quote.session) || quote.currency !== "USD" || !Number.isFinite(quote.price) || quote.price <= 0 || !Array.isArray(quote.checkedPeriods)) { failed.push(original.symbol); return; }
     const previousTime = /^Futu (?:正常盤|盤前|盤後|夜盤)(?: (?:報價|分時|成交))? (.+)$/.exec(holding.lastUpdated || "");
-    if (previousTime && Date.parse(previousTime[1]) > Date.parse(quote.time)) {
+    if (!snapshot && previousTime && Date.parse(previousTime[1]) > Date.parse(quote.time)) {
       warnings.push(original.symbol + "：回傳成交比已存報價舊，保留原價");
       return;
     }
     holding.currentPrice = quote.price;
-    const kind = {trade:"成交", quote:"報價", minute:"分時"}[quote.timeKind];
-    holding.lastUpdated = "Futu " + quote.session + " " + kind + " " + quote.time;
-    times.push(original.symbol + " " + quote.session + " " + kind + " " + new Date(quote.time).toLocaleString("zh-TW", {hour12:false}));
+    const kind = {trade:"成交", quote:"報價", minute:"分時", sessionSnapshot:"快照"}[quote.timeKind];
+    holding.lastUpdated = "Futu " + quote.session + " " + kind + " " + (snapshot ? "查詢 " + quote.fetchedAt : quote.time);
+    times.push(original.symbol + " " + quote.session + (snapshot ? "快照（成交時間未提供）" : " " + kind + " " + new Date(quote.time).toLocaleString("zh-TW", {hour12:false})));
     if (event.data.warnings?.[original.symbol]) warnings.push(original.symbol + "：" + event.data.warnings[original.symbol]);
     updated++;
   });
