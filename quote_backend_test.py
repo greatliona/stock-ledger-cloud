@@ -220,6 +220,22 @@ class FutuTests(unittest.TestCase):
         self.assertEqual(result["quotes"]["SOXL"]["priceField"],"overnight_price")
         self.assertEqual(req.call_args_list[-1].args[0],"/api/v1.0/quote/snapshot")
 
+    def test_ended_afterhours_does_not_mask_overnight(self):
+        stamp=q.datetime(2026,10,12,2,tzinfo=q.timezone.utc).timestamp()
+        data={"ret_code":0,"data":{"snapshot_list":[{"code":"US.SOXL","overnight_price":141.17,"after_price":139}]}}
+        with patch.object(q.time,"time",return_value=stamp),patch.object(q,"request_json",side_effect=[self.market(["SOXL"],"AFTER_HOURS_END"),data]) as req:
+            result=q.fetch_us_quotes(["SOXL"],self.config)
+        self.assertEqual(result["quotes"]["SOXL"]["price"],141.17)
+        self.assertEqual(result["quotes"]["SOXL"]["session"],"夜盤")
+        self.assertEqual(req.call_count,2)
+
+    def test_ended_afterhours_outside_night_window_keeps_afterhours(self):
+        stamp=q.datetime(2026,10,10,12,tzinfo=q.timezone.utc).timestamp()
+        data={"ret_code":0,"data":{"snapshot_list":[{"code":"US.SOXL","overnight_price":141.17,"after_price":139}]}}
+        with patch.object(q.time,"time",return_value=stamp),patch.object(q,"request_json",side_effect=[self.market(["SOXL"],"AFTER_HOURS_END"),data]):
+            result=q.fetch_us_quotes(["SOXL"],self.config)
+        self.assertEqual(result["quotes"]["SOXL"]["price"],139)
+
     def test_invalid_overnight_snapshot_never_uses_last_price(self):
         for price in [0,-1,None,True,float("nan")]:
             self.assertIsNone(q.extended_snapshot({"last_price":100,"overnight_price":price},"OVERNIGHT",time.time()))

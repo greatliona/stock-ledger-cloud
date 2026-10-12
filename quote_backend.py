@@ -278,16 +278,20 @@ def fetch_us_quotes(symbols, config=None):
         candidate, issues = None, []
         if code in extended:
             snapshot_period = period
-            if snapshot_period is None:
+            if snapshot_period is None or states.get(code) in ("AFTER_HOURS_END", "PRE_MARKET_END", "NIGHT_END"):
                 # Some providers report CLOSED while 24h overnight is active.
                 # Use NY timezone (including DST), only inside the overnight window.
                 local = datetime.fromtimestamp(now(), ZoneInfo("America/New_York"))
                 if (local.hour >= 20 and local.weekday() in (6, 0, 1, 2, 3)) or (local.hour < 4 and local.weekday() < 5):
                     snapshot_period = "OVERNIGHT"
+            inferred = snapshot_period != period
+            # An ended after-hours state must not force after_price or AFTER
+            # fallback while the overnight window is active.
+            period = snapshot_period
             candidate = extended_snapshot(session_snapshots.get(code), snapshot_period, now())
             if candidate:
                 quotes[symbol] = candidate
-                if period is None:
+                if inferred:
                     warnings[symbol] = "夜盤欄位依美東時段選取；供應商未確認盤別或成交時間"
                 continue
         try:
