@@ -50,6 +50,8 @@ window.addEventListener("message", event => {
   }
   let updated = 0;
   const failed = [];
+  const updatedSymbols = new Set();
+  const failureReasons = {};
   const times = [];
   const warnings = [];
   const sessions = new Set();
@@ -57,7 +59,9 @@ window.addEventListener("message", event => {
   pending.holdings.forEach(original => {
     const holding = state.usHoldings.find(h => h.id === original.id);
     const quote = event.data.quotes?.[original.symbol];
-    if (!holding || holding.symbol !== original.symbol || holding.currentPrice !== original.price || editingUsHoldingId === holding.id) return;
+    if (!holding || holding.symbol !== original.symbol || holding.currentPrice !== original.price || editingUsHoldingId === holding.id) {
+      failed.push(original.symbol); failureReasons[original.symbol] = "資料已變更或正在編輯"; return;
+    }
     const snapshot = quote?.timeKind === "sessionSnapshot";
     const snapshotFields = {"盤前":"pre_price", "盤後":"after_price", "夜盤":"overnight_price"};
     const validTime = snapshot
@@ -67,9 +71,11 @@ window.addEventListener("message", event => {
     const previousTime = /^Futu (?:正常盤|盤前|盤後|夜盤)(?: (?:報價|分時|成交))? (.+)$/.exec(holding.lastUpdated || "");
     if (!snapshot && previousTime && Date.parse(previousTime[1]) > Date.parse(quote.time)) {
       warnings.push(original.symbol + "：回傳成交比已存報價舊，保留原價");
+      failed.push(original.symbol); failureReasons[original.symbol] = "回傳價格時間比已存報價舊";
       return;
     }
     holding.currentPrice = quote.price;
+    updatedSymbols.add(original.symbol);
     sessions.add(quote.session);
     hasSnapshot ||= snapshot;
     const kind = {trade:"成交", quote:"報價", minute:"分時", sessionSnapshot:"快照"}[quote.timeKind];
@@ -80,12 +86,12 @@ window.addEventListener("message", event => {
   });
   if (updated) saveAndRender("已更新美股現價與損益。");
   const details = times.length ? " · " + times.join("；") : "";
-  const errors = [...new Set(failed)].map(symbol => symbol + "：" + (event.data.errors?.[symbol] || "未取得報價，保留原價"));
+  const errors = [...new Set(failed)].map(symbol => symbol + " 未更新：" + (failureReasons[symbol] || event.data.errors?.[symbol] || "報價缺漏或格式無效").replace(/[，；]?保留原價/g, "").replace(/[；，]+$/, ""));
   const status = document.querySelector("#usQuoteStatus");
-  status.textContent = "已更新 " + updated + " 筆" + (sessions.size ? " · " + [...sessions].join("／") : "")
-    + (failed.length ? " · " + [...new Set(failed)].join("、") + " 未更新，保留原價" : "")
+  status.textContent = (updatedSymbols.size ? [...updatedSymbols].join("、") + " 已更新" : "未更新任何價格") + (sessions.size ? " · " + [...sessions].join("／") : "")
     + (hasSnapshot ? " · 成交時間未提供" : "")
-    + (warnings.length ? " · 部分行情待確認" : "");
+    + (warnings.length ? " · 部分行情待確認" : "")
+    + (errors.length ? "\n" + errors.join("\n") + "\n未更新項目保留原價。" : "");
   // Keep diagnostics available on hover without filling the page with repeated text.
   status.title = (details + (errors.length ? " · " + errors.join("；") : "") + (warnings.length ? " · " + [...new Set(warnings)].join("；") : "")).replace(/^ · /, "");
 });

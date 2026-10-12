@@ -13,7 +13,7 @@
           <p class="eyebrow">Portfolio Ledger！</p>
           <div class="title-line">
             <h1>Stock Ledger!</h1>
-            <span class="app-version">L1.5.33</span>
+            <span class="app-version">L1.5.34</span>
           </div>
         </div>
       </header>
@@ -173,7 +173,6 @@
             <label>現價 USD<input id="usPriceInput" type="number" min="0" step="0.01" placeholder="可空白" /></label>
             <div class="add-controls"><select id="usHoldingSideInput" aria-label="美股方向" title="交易方向"><option value="long">多</option><option value="short">空</option></select><button type="submit" class="primary-btn add-button" aria-label="新增美股" title="新增美股">+</button><button id="reloadUsPrices" type="button" class="secondary-btn reload-button" aria-label="更新全部美股現價" title="取得富途最新可用報價"></button></div>
           </form>
-          <p id="usQuoteStatus" class="quote-status" role="status"></p>
 
           <div class="table-wrap">
             <table>
@@ -181,6 +180,7 @@
               <tbody id="usHoldingsBody"></tbody>
             </table>
           </div>
+          <p id="usQuoteStatus" class="quote-status" role="status"></p>
         </div>
         </div>
 
@@ -468,6 +468,6 @@
     </template>
 
     <script src="xlsx.mini.min.js?v=0.20.3"></script>
-    <script src="app.js?v=20261012-33"></script>
+    <script src="app.js?v=20261012-34"></script>
   </body>
 </html>

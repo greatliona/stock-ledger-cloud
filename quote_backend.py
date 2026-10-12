@@ -263,14 +263,15 @@ def fetch_us_quotes(symbols, config=None):
 
     extended = [c for c in codes if c not in regular]
     session_snapshots = {}
+    snapshot_error = None
     if extended:
         try:
             data = call("/api/v1.0/quote/snapshot", {"code_list": extended})
             if isinstance(data, dict) and isinstance(data.get("snapshot_list"), list):
                 session_snapshots = {r["code"]: r for r in data["snapshot_list"]
                                      if isinstance(r, dict) and r.get("code") in extended}
-        except ValueError:
-            pass
+        except ValueError as error:
+            snapshot_error = str(error)
 
     for symbol in symbols:
         code = "US." + symbol
@@ -294,6 +295,16 @@ def fetch_us_quotes(symbols, config=None):
                 if inferred:
                     warnings[symbol] = "夜盤欄位依美東時段選取；供應商未確認盤別或成交時間"
                 continue
+            field = {"BEFORE":"pre_price", "AFTER":"after_price", "OVERNIGHT":"overnight_price"}.get(period)
+            row = session_snapshots.get(code)
+            if snapshot_error:
+                issues.append("快照：" + snapshot_error)
+            elif row is None:
+                issues.append("快照未回傳此代號")
+            elif field:
+                value = row.get(field)
+                reason = "缺漏" if value is None else "為零" if value == 0 else "無效"
+                issues.append(PERIODS[period] + "價格欄位" + reason)
         try:
             if code in regular:
                 try:
@@ -344,5 +355,5 @@ def fetch_us_quotes(symbols, config=None):
             elif not period:
                 warnings[symbol] = "市場狀態不明，採最新可用分時價"
         else:
-            errors[symbol] = stopped or (issues[-1] if issues else state_error or "無有效報價") + "；保留原價"
+            errors[symbol] = stopped or "；".join(dict.fromkeys(issues)) or state_error or "無有效報價"
     return {"quotes": quotes, "errors": errors, "warnings": warnings, "quoteProtocol": PROTOCOL}
