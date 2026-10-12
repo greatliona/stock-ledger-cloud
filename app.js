@@ -6,6 +6,10 @@ const LEGACY_PURCHASE_DATE = "2026-09-05";
 const RELOAD_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.3 8.5A9 9 0 1 0 21 12"/><path d="M20.3 3.5v5h-5"/></svg>';
 let pendingUsQuoteRequest = null;
 
+function reloadTimeLabel() {
+  return " · 最近查詢時間 " + new Date().toLocaleString("sv-SE", {timeZone:"Asia/Taipei", hour12:false}).replace(/-/g, "/") + "（台灣）";
+}
+
 function refreshUsPrices() {
   if (pendingUsQuoteRequest) return;
   const status = document.querySelector("#usQuoteStatus");
@@ -25,7 +29,7 @@ function refreshUsPrices() {
     pendingUsQuoteRequest = null;
     button.disabled = false;
     button.removeAttribute("aria-busy");
-    status.textContent = "查價逾時，保留原價。";
+    status.textContent = "查價逾時，保留原價。" + reloadTimeLabel();
   }, 180000);
   pendingUsQuoteRequest = {id, holdings, timer};
   window.parent.postMessage({type:"ledger-us-quotes-request", id, symbols}, "*");
@@ -41,11 +45,11 @@ window.addEventListener("message", event => {
   button.disabled = false;
   button.removeAttribute("aria-busy");
   if (event.data.error) {
-    document.querySelector("#usQuoteStatus").textContent = event.data.error;
+    document.querySelector("#usQuoteStatus").textContent = event.data.error + reloadTimeLabel();
     return;
   }
   if (event.data.quoteProtocol !== "futu-snapshot-v5") {
-    document.querySelector("#usQuoteStatus").textContent = "報價服務仍是舊版，未更新任何價格。請重新啟動 Streamlit 服務後重整頁面。";
+    document.querySelector("#usQuoteStatus").textContent = "報價服務仍是舊版，未更新任何價格。請重新啟動 Streamlit 服務後重整頁面。" + reloadTimeLabel();
     return;
   }
   let updated = 0;
@@ -91,7 +95,7 @@ window.addEventListener("message", event => {
   status.textContent = (updatedSymbols.size ? [...updatedSymbols].join("、") + " 已更新" : "未更新任何價格") + (sessions.size ? " · " + [...sessions].join("／") : "")
     + (hasSnapshot ? " · 成交時間未提供" : "")
     + (warnings.length ? " · 部分行情待確認" : "")
-    + (errors.length ? "\n" + errors.join("\n") + "\n未更新項目保留原價。" : "");
+    + (errors.length ? "\n" + errors.join("\n") + "\n未更新項目保留原價。" : "") + reloadTimeLabel();
   // Keep diagnostics available on hover without filling the page with repeated text.
   status.title = (details + (errors.length ? " · " + errors.join("；") : "") + (warnings.length ? " · " + [...new Set(warnings)].join("；") : "")).replace(/^ · /, "");
 });
@@ -172,6 +176,7 @@ async function refreshAllCryptoPrices() {
     valid.forEach(({contract}) => cryptoRefreshMessages.set(contract.id, message));
   } finally {
     valid.forEach(({contract}) => refreshingCryptoIds.delete(contract.id));
+    status.textContent += reloadTimeLabel();
     refreshingAllCrypto = false;
     button.disabled = false;
     button.removeAttribute("aria-busy");

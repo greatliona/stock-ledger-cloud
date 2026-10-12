@@ -1,6 +1,6 @@
 const fs = require('node:fs'), vm = require('node:vm'), assert = require('node:assert/strict');
 const source = fs.readFileSync(__dirname + '/app.js', 'utf8');
-const code = source.slice(source.indexOf('async function fetchBinanceContractPrices('), source.indexOf('let editingHoldingId'));
+const code = source.slice(source.indexOf('function reloadTimeLabel('), source.indexOf('function refreshUsPrices(')) + source.slice(source.indexOf('async function fetchBinanceContractPrices('), source.indexOf('let editingHoldingId'));
 const pnl = source.slice(source.indexOf('function calculateCryptoPosition('), source.indexOf('function stockDisplaySymbol('));
 const now = Date.now();
 const row = (symbol,price,time=now) => ({symbol,price:String(price),time});
