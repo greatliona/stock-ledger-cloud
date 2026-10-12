@@ -2442,7 +2442,7 @@ button:disabled {
 .reload-button svg { display: block; width: 26px; height: 26px; }
 .quote-status { margin: -8px 0 10px; font-size: .7rem; color: var(--muted); overflow-wrap: anywhere; }
 .quote-status:empty { display: none; }
-#usQuoteStatus { margin: 8px 0 0; white-space: pre-line; }
+#usQuoteStatus, #cryptoQuoteStatus { margin: 8px 0 0; white-space: pre-line; }
 .us-holding-form { grid-template-columns: minmax(70px,.55fr) minmax(0,.75fr) minmax(0,1fr) minmax(0,1fr) auto; }
 .reload-button:disabled { opacity: .5; cursor: wait; }
 .crypto-form .add-controls .add-button,
