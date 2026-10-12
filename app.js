@@ -7,7 +7,7 @@ const RELOAD_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" str
 let pendingUsQuoteRequest = null;
 
 function reloadTimeLabel() {
-  return " · 最近查詢時間 " + new Date().toLocaleString("sv-SE", {timeZone:"Asia/Taipei", hour12:false}).replace(/-/g, "/") + "（台灣）";
+  return "\n最近查詢時間 " + new Date().toLocaleString("sv-SE", {timeZone:"Asia/Taipei", hour12:false}).replace(/-/g, "/") + "（台灣）";
 }
 
 function refreshUsPrices() {
@@ -95,7 +95,7 @@ window.addEventListener("message", event => {
   status.textContent = (updatedSymbols.size ? [...updatedSymbols].join("、") + " 已更新" : "未更新任何價格") + (sessions.size ? " · " + [...sessions].join("／") : "")
     + (hasSnapshot ? " · 成交時間未提供" : "")
     + (warnings.length ? " · 部分行情待確認" : "")
-    + (errors.length ? "\n" + errors.join("\n") + "\n未更新項目保留原價。" : "") + reloadTimeLabel();
+    + (errors.length ? "\n" + errors.join("\n") : "") + reloadTimeLabel();
   // Keep diagnostics available on hover without filling the page with repeated text.
   status.title = (details + (errors.length ? " · " + errors.join("；") : "") + (warnings.length ? " · " + [...new Set(warnings)].join("；") : "")).replace(/^ · /, "");
 });

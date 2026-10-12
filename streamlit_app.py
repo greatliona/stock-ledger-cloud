@@ -86,7 +86,8 @@ def check_password() -> bool:
 
 st.set_page_config(page_title="Stock Ledger!", page_icon="💰", layout="wide")
 
-if check_password():
+@st.fragment
+def render_ledger():
     ledger = st.components.v1.declare_component("ledger_quote_bridge", path=str(ROOT / "quote_bridge"))
     request = ledger(html=build_page(), reply=st.session_state.get("quote_reply"), key="ledger")
     if isinstance(request, dict) and isinstance(request.get("id"), str) and request["id"] != st.session_state.get("quote_request_id"):
@@ -100,4 +101,16 @@ if check_password():
         except ValueError as error:
             result = {"quotes": {}, "errors": {}, "error": str(error)}
         st.session_state["quote_reply"] = {"id": request["id"], **result}
-        st.rerun()
+        st.rerun(scope="fragment")
+
+
+if check_password():
+    # Keep the mounted ledger visible while its read-only quote request runs.
+    # Streamlit normally dims stale components during a rerun.
+    st.markdown("""<style>
+    [data-testid="stCustomComponentV1"] { opacity: 1 !important; }
+    [data-testid="stElementContainer"]:has([data-testid="stCustomComponentV1"]) {
+      opacity: 1 !important;
+    }
+    </style>""", unsafe_allow_html=True)
+    render_ledger()
