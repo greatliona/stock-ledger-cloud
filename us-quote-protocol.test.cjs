@@ -22,16 +22,16 @@ assert.equal(run({quoteProtocol:"overnight-v1"}).price,165.4);
 assert(run({}).text.includes("舊版"));
 assert.equal(run({quoteProtocol:"futu-tick-v2"}).price,165.4);
 assert.equal(run({quoteProtocol:"futu-snapshot-v5"}).price,163.92);
-assert(run({quoteProtocol:"futu-snapshot-v5"}).text.includes("SOXL 夜盤"));
+assert.equal(run({quoteProtocol:"futu-snapshot-v5"}).text,"已更新 1 筆 · 夜盤");
 assert.equal(run({quoteProtocol:"futu-snapshot-v5"}, undefined).price,163.92);
 assert.equal(run({quoteProtocol:"futu-snapshot-v5"}, "").price,165.4);
 assert.equal(run({quoteProtocol:"futu-snapshot-v5"}, "夜盤", "Futu 正常盤 2026-10-07T02:05:49Z").price,165.4);
-assert(run({quoteProtocol:"futu-snapshot-v5",warnings:{SOXL:"最新回傳成交距查詢已 14 分鐘；未證實即時或延遲原因"}}).text.includes("14 分鐘"));
+assert(run({quoteProtocol:"futu-snapshot-v5",warnings:{SOXL:"最新回傳成交距查詢已 14 分鐘；未證實即時或延遲原因"}}).text.includes("部分行情待確認"));
 assert.equal(run({quoteProtocol:"futu-session-v3"}).price,165.4);
 for (const kind of ["quote", "minute"]) {
   const result = run({quoteProtocol:"futu-snapshot-v5", quotes:{SOXL:{price:163.92,currency:"USD",time:"2026-10-06T02:05:49Z",timeKind:kind,ageSeconds:2,checkedPeriods:["NORMAL"],session:"正常盤"}}});
   assert.equal(result.price,163.92);
-  assert(result.text.includes(kind === "quote" ? "報價" : "分時"));
+  assert.equal(result.text,"已更新 1 筆 · 正常盤");
 }
 assert.equal(run({quoteProtocol:"futu-snapshot-v5"}, "正常盤", "Futu 正常盤 報價 2026-10-07T02:05:49Z").price,165.4);
 assert.equal(run({error:"查價失敗"}).price,165.4);

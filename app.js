@@ -52,6 +52,8 @@ window.addEventListener("message", event => {
   const failed = [];
   const times = [];
   const warnings = [];
+  const sessions = new Set();
+  let hasSnapshot = false;
   pending.holdings.forEach(original => {
     const holding = state.usHoldings.find(h => h.id === original.id);
     const quote = event.data.quotes?.[original.symbol];
@@ -68,6 +70,8 @@ window.addEventListener("message", event => {
       return;
     }
     holding.currentPrice = quote.price;
+    sessions.add(quote.session);
+    hasSnapshot ||= snapshot;
     const kind = {trade:"成交", quote:"報價", minute:"分時", sessionSnapshot:"快照"}[quote.timeKind];
     holding.lastUpdated = "Futu " + quote.session + " " + kind + " " + (snapshot ? "查詢 " + quote.fetchedAt : quote.time);
     times.push(original.symbol + " " + quote.session + (snapshot ? "快照（成交時間未提供）" : " " + kind + " " + new Date(quote.time).toLocaleString("zh-TW", {hour12:false})));
@@ -77,7 +81,13 @@ window.addEventListener("message", event => {
   if (updated) saveAndRender("已更新美股現價與損益。");
   const details = times.length ? " · " + times.join("；") : "";
   const errors = [...new Set(failed)].map(symbol => symbol + "：" + (event.data.errors?.[symbol] || "未取得報價，保留原價"));
-  document.querySelector("#usQuoteStatus").textContent = "已更新 " + updated + " 筆" + details + (errors.length ? " · " + errors.join("；") : "") + (warnings.length ? " · 注意：" + [...new Set(warnings)].join("；") : "") + " · 富途行情（顯示資料時間）";
+  const status = document.querySelector("#usQuoteStatus");
+  status.textContent = "已更新 " + updated + " 筆" + (sessions.size ? " · " + [...sessions].join("／") : "")
+    + (failed.length ? " · " + [...new Set(failed)].join("、") + " 未更新，保留原價" : "")
+    + (hasSnapshot ? " · 成交時間未提供" : "")
+    + (warnings.length ? " · 部分行情待確認" : "");
+  // Keep diagnostics available on hover without filling the page with repeated text.
+  status.title = (details + (errors.length ? " · " + errors.join("；") : "") + (warnings.length ? " · " + [...new Set(warnings)].join("；") : "")).replace(/^ · /, "");
 });
 
 const state = loadState();
