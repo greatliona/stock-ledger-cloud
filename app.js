@@ -812,9 +812,10 @@ els.tradeDecisionForm.addEventListener("submit", (event) => {
 
 els.skipTradeBtn.addEventListener("click", () => {
   if (!pendingHoldingSale) return;
-  removePendingHolding();
+  const error = reducePendingHolding(toNumber(els.tradeShares.value));
+  if (error) { els.tradeDecisionError.textContent = error; return; }
   closeTradeDecision();
-  saveAndRender("已刪除持股，未建立交易紀錄。", true);
+  saveAndRender("已扣除指定股數，未建立交易紀錄。", true);
 });
 
 els.cancelTradeBtn.addEventListener("click", closeTradeDecision);
@@ -1441,6 +1442,8 @@ function openTradeDecision(market, holding) {
   els.tradeBuyDate.value = tradeDate(holding.purchaseDate || LEGACY_PURCHASE_DATE);
   els.tradeSellDate.value = tradeDate(todayISO());
   els.tradeShares.value = String(holding.shares || "");
+  els.tradeShares.max = String(holding.shares);
+  els.tradeShares.title = "目前持有 " + holding.shares + " 股；填入本次賣出股數，剩餘持股會保留。";
   els.tradeAverageCost.value = String(holding.avgCost ?? "");
   els.tradeSellPrice.value = String(holding.currentPrice ?? holding.avgCost ?? "");
   els.tradeFxRate.value = String(isUs ? (state.usdTwdRate || "") : 1);
@@ -1501,17 +1504,33 @@ function recordPendingHoldingSale() {
     return;
   }
 
+  if (!Number.isFinite(values.shares) || values.shares > holding.shares) {
+    els.tradeDecisionError.textContent = "賣出股數不可超過目前持有的 " + holding.shares + " 股。";
+    return;
+  }
+
   const trade = createTradeRecord({
     market: pendingHoldingSale.market,
     symbol: holding.symbol,
     name: holding.name || "",
     ...values,
   });
+  const reductionError = reducePendingHolding(values.shares);
+  if (reductionError) { els.tradeDecisionError.textContent = reductionError; return; }
   state.tradeHistory.push(trade);
-  removePendingHolding();
   closeTradeDecision();
   els.tradeHistoryDetails.open = true;
-  saveAndRender("已建立交易紀錄並刪除持股。", true);
+  saveAndRender("已建立賣出紀錄，剩餘持股已保留；全數賣出則移除持股。", true);
+}
+
+function reducePendingHolding(shares) {
+  if (!pendingHoldingSale) return "沒有待處理的持股。";
+  const holding = pendingHoldingSale.market === "us" ? findUsHolding(pendingHoldingSale.holdingId) : findHolding(pendingHoldingSale.holdingId);
+  if (!holding) return "找不到這筆持股，請關閉後重試。";
+  if (!Number.isFinite(shares) || shares <= 0 || shares > holding.shares) return "股數必須大於 0，且不可超過目前持有的 " + holding.shares + " 股。";
+  if (shares === holding.shares) removePendingHolding();
+  else holding.shares = Number((holding.shares - shares).toPrecision(15));
+  return "";
 }
 
 function removePendingHolding() {

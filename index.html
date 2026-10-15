@@ -13,7 +13,7 @@
           <p class="eyebrow">Portfolio Ledger！</p>
           <div class="title-line">
             <h1>Stock Ledger!</h1>
-            <span class="app-version">L1.5.37</span>
+            <span class="app-version">L1.5.38</span>
           </div>
         </div>
       </header>
@@ -426,7 +426,7 @@
         <div class="trade-dialog-fields">
           <label>買入日期<input id="tradeBuyDateInput" type="text" placeholder="YYYY/MM/DD" required /></label>
           <label>賣出日期<input id="tradeSellDateInput" type="text" placeholder="YYYY/MM/DD" required /></label>
-          <label>股數<input id="tradeSharesInput" type="number" min="0.000001" step="any" required /></label>
+          <label>本次賣出股數<input id="tradeSharesInput" type="number" min="0.000001" step="any" required /></label>
           <label><span id="tradeAverageCostLabel">平均成本</span><input id="tradeAverageCostInput" type="number" min="0" step="0.01" required /></label>
           <label><span id="tradeSellPriceLabel">賣出價格</span><input id="tradeSellPriceInput" type="number" min="0" step="0.01" required /></label>
           <label id="tradeFxRateField">賣出匯率<input id="tradeFxRateInput" type="number" min="0.001" step="0.001" required /></label>
@@ -440,7 +440,7 @@
         <p id="tradeDecisionError" class="trade-dialog-error" role="alert"></p>
         <div class="trade-dialog-actions">
           <button id="recordTradeBtn" class="primary-btn" type="submit">是，紀錄</button>
-          <button id="skipTradeBtn" class="secondary-btn" type="button">否，直接刪除</button>
+          <button id="skipTradeBtn" class="secondary-btn" type="button">否，只扣除股數</button>
           <button id="cancelTradeBtn" class="secondary-btn" type="button">取消</button>
         </div>
       </form>
