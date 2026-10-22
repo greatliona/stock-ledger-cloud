@@ -1,12 +1,13 @@
 """Futu REST quotes only. No trading, subscriptions, or Yahoo fallback."""
 import base64
+import calendar
 import hashlib
 import json
 import math
 import re
 import secrets
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, build_opener, HTTPRedirectHandler
@@ -29,7 +30,7 @@ class NoRedirect(HTTPRedirectHandler):
         return None  # Never forward credentials to a redirected host.
 
 def request_json(path, body=None, headers=None, timeout=REQUEST_TIMEOUT_SECONDS):
-    post_paths = {"/api/v1.0/quote/stock-quote", "/api/v1.0/quote/market-state", "/api/v1.0/quote/snapshot"}
+    post_paths = {"/api/v1.0/quote/stock-quote", "/api/v1.0/quote/snapshot"}
     is_get = (path == "/api/v1.0/server-time" or
         re.fullmatch(r"/api/v1\.0/quote/US\.[A-Z][A-Z0-9.\-]{0,19}/rt-ticker\?num=20&period=(NORMAL|BEFORE|AFTER|OVERNIGHT)", path) or
         re.fullmatch(r"/api/v1\.0/quote/US\.[A-Z][A-Z0-9.\-]{0,19}/rt-data\?request_section=(NORMAL|FULL|PREMARKET|AFTERHOURS|OVERNIGHT)", path))
@@ -135,15 +136,76 @@ def select_quote(rows, now=None):
             "currency": "USD", "session": session, "source": "Futu", "timeKind": "trade"}
 
 
-MARKET_PERIOD = {
-    "MORNING": "NORMAL", "AFTERNOON": "NORMAL",
-    "PRE_MARKET_BEGIN": "BEFORE", "AFTER_HOURS_BEGIN": "AFTER",
-    "NIGHT_OPEN": "OVERNIGHT",
-    "PRE_MARKET_END": "BEFORE", "AFTER_HOURS_END": "AFTER", "NIGHT_END": "OVERNIGHT",
-}
 SECTIONS = {"NORMAL": "NORMAL", "BEFORE": "PREMARKET", "AFTER": "AFTERHOURS", "OVERNIGHT": "OVERNIGHT"}
 SECTION_PERIOD = {"US_REGULAR": "NORMAL", "REGULAR": "NORMAL", "US_PREMARKET": "BEFORE",
                   "US_AFTERHOURS": "AFTER", "US_OVERNIGHT": "OVERNIGHT"}
+
+
+def nth_weekday(year, month, weekday, index):
+    first = date(year, month, 1)
+    return first + timedelta(days=(weekday - first.weekday()) % 7 + 7 * (index - 1))
+
+
+def observed_holiday(day, saturday_observed=True):
+    if day.weekday() == 5 and saturday_observed:
+        return day - timedelta(days=1)
+    return day + timedelta(days=1) if day.weekday() == 6 else day
+
+
+def easter_sunday(year):
+    # Gregorian computus; Good Friday is an NYSE holiday.
+    a, b, c = year % 19, year // 100, year % 100
+    d, e = b // 4, b % 4
+    f, g = (b + 8) // 25, (b - (b + 8) // 25 + 1) // 3
+    h = (19 * a + b - d - g + 15) % 30
+    i, k = c // 4, c % 4
+    l = (32 + 2 * e + 2 * i - h - k) % 7
+    m = (a + 11 * h + 22 * l) // 451
+    month = (h + l - 7 * m + 114) // 31
+    return date(year, month, (h + l - 7 * m + 114) % 31 + 1)
+
+
+def nyse_holiday(day):
+    year = day.year
+    fixed = [observed_holiday(date(year, 1, 1), False),
+             observed_holiday(date(year + 1, 1, 1), False),
+             observed_holiday(date(year, 6, 19)), observed_holiday(date(year, 7, 4)),
+             observed_holiday(date(year, 12, 25))]
+    memorial = date(year, 5, calendar.monthrange(year, 5)[1])
+    return day in {*fixed,
+                   nth_weekday(year, 1, 0, 3), nth_weekday(year, 2, 0, 3),
+                   easter_sunday(year) - timedelta(days=2),
+                   memorial - timedelta(days=(memorial.weekday() - 0) % 7),
+                   nth_weekday(year, 9, 0, 1), nth_weekday(year, 11, 3, 4)}
+
+
+def nyse_early_close(day):
+    thanksgiving = nth_weekday(day.year, 11, 3, 4)
+    return day == thanksgiving + timedelta(days=1) or (
+        day in (date(day.year, 7, 3), date(day.year, 12, 24))
+        and day.weekday() < 5 and not nyse_holiday(day))
+
+
+def us_market_period(timestamp):
+    """Expected U.S. equity session from New York wall time, including DST."""
+    local = datetime.fromtimestamp(timestamp, ZoneInfo("America/New_York"))
+    day, minute = local.date(), local.hour * 60 + local.minute
+    if 0 <= minute < 240 and day.weekday() < 5 and not nyse_holiday(day):
+        return "OVERNIGHT"
+    if minute >= 1200 and day.weekday() in (6, 0, 1, 2, 3):
+        next_day = day + timedelta(days=1)
+        return "OVERNIGHT" if not nyse_holiday(next_day) else None
+    if day.weekday() >= 5 or nyse_holiday(day):
+        return None
+    if 240 <= minute < 570:
+        return "BEFORE"
+    early = nyse_early_close(day)
+    close = 780 if early else 960
+    if 570 <= minute < close:
+        return "NORMAL"
+    if close <= minute < (1020 if early else 1200):
+        return "AFTER"
+    return None
 
 
 def minute_quote(data, symbol, section, now):
@@ -175,7 +237,7 @@ def regular_snapshot(row, now):
     ny = ZoneInfo("America/New_York")
     dt = datetime.fromtimestamp(stamp / 1000, ny)
     current = datetime.fromtimestamp(now, ny)
-    # Use last_price only while market-state says regular, and only for this
+    # Use last_price only while the New York clock says regular, and only for this
     # regular trading date. Never attach this timestamp to extended subobjects.
     if dt.date() != current.date() or not 570 <= dt.hour * 60 + dt.minute <= 960:
         raise ValueError("不是當日正常盤報價")
@@ -247,18 +309,9 @@ def fetch_us_quotes(symbols, config=None):
         return result.get("data")
 
     codes = ["US." + s for s in symbols]
-    states, snapshots = {}, {}
-    state_error = None
-    try:
-        data = call("/api/v1.0/quote/market-state", {"code_list": codes})
-        if not isinstance(data, dict) or not isinstance(data.get("market_state_list"), list):
-            raise ValueError("市場狀態缺漏")
-        states = {r["code"]: r.get("market_state") for r in data["market_state_list"]
-                  if isinstance(r, dict) and r.get("code") in codes}
-    except ValueError as error:
-        state_error = str(error)
-
-    regular = [c for c in codes if states.get(c) in ("MORNING", "AFTERNOON")]
+    period = us_market_period(now())
+    regular = codes if period == "NORMAL" else []
+    snapshots = {}
     if regular:
         try:
             data = call("/api/v1.0/quote/stock-quote", {"code_list": regular})
@@ -268,7 +321,7 @@ def fetch_us_quotes(symbols, config=None):
         except ValueError:
             pass  # Per-symbol read-only fallback below; a 429 remains latched.
 
-    extended = [c for c in codes if c not in regular]
+    extended = [] if regular else codes
     session_snapshots = {}
     snapshot_error = None
     if extended:
@@ -282,25 +335,11 @@ def fetch_us_quotes(symbols, config=None):
 
     for symbol in symbols:
         code = "US." + symbol
-        period = MARKET_PERIOD.get(states.get(code))
         candidate, issues = None, []
         if code in extended:
-            snapshot_period = period
-            if snapshot_period is None or states.get(code) in ("AFTER_HOURS_END", "PRE_MARKET_END", "NIGHT_END"):
-                # Some providers report CLOSED while 24h overnight is active.
-                # Use NY timezone (including DST), only inside the overnight window.
-                local = datetime.fromtimestamp(now(), ZoneInfo("America/New_York"))
-                if (local.hour >= 20 and local.weekday() in (6, 0, 1, 2, 3)) or (local.hour < 4 and local.weekday() < 5):
-                    snapshot_period = "OVERNIGHT"
-            inferred = snapshot_period != period
-            # An ended after-hours state must not force after_price or AFTER
-            # fallback while the overnight window is active.
-            period = snapshot_period
-            candidate = extended_snapshot(session_snapshots.get(code), snapshot_period, now())
+            candidate = extended_snapshot(session_snapshots.get(code), period, now())
             if candidate:
                 quotes[symbol] = candidate
-                if inferred:
-                    warnings[symbol] = "夜盤欄位依美東時段選取；供應商未確認盤別或成交時間"
                 continue
             field = {"BEFORE":"pre_price", "AFTER":"after_price", "OVERNIGHT":"overnight_price"}.get(period)
             row = session_snapshots.get(code)
@@ -348,7 +387,7 @@ def fetch_us_quotes(symbols, config=None):
             if age >= 300:
                 warnings[symbol] = "供應商最新可用價已距今 " + str(age // 60) + " 分鐘；尚不能判定延遲原因"
             elif not period:
-                warnings[symbol] = "市場狀態不明，採最新可用分時價"
+                warnings[symbol] = "非一般交易時段，採最新可用分時價"
         else:
-            errors[symbol] = stopped or "；".join(dict.fromkeys(issues)) or state_error or "無有效報價"
+            errors[symbol] = stopped or "；".join(dict.fromkeys(issues)) or "無有效報價"
     return {"quotes": quotes, "errors": errors, "warnings": warnings, "quoteProtocol": PROTOCOL}
