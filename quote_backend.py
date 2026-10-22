@@ -18,6 +18,8 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 HOST = "https://webapi.futunn.com"
 PROTOCOL = "futu-snapshot-v5"
 PERIODS = {"NORMAL": "正常盤", "BEFORE": "盤前", "AFTER": "盤後", "OVERNIGHT": "夜盤"}
+REQUEST_TIMEOUT_SECONDS = 6
+QUOTE_BUDGET_SECONDS = 25
 
 class QuoteRateLimited(ValueError):
     pass
@@ -26,8 +28,8 @@ class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None  # Never forward credentials to a redirected host.
 
-def request_json(path, body=None, headers=None):
-    post_paths = {"/api/v1.0/quote/stock-quote", "/api/v1.0/quote/market-state", "/api/v1.0/quote/order-book", "/api/v1.0/quote/snapshot"}
+def request_json(path, body=None, headers=None, timeout=REQUEST_TIMEOUT_SECONDS):
+    post_paths = {"/api/v1.0/quote/stock-quote", "/api/v1.0/quote/market-state", "/api/v1.0/quote/snapshot"}
     is_get = (path == "/api/v1.0/server-time" or
         re.fullmatch(r"/api/v1\.0/quote/US\.[A-Z][A-Z0-9.\-]{0,19}/rt-ticker\?num=20&period=(NORMAL|BEFORE|AFTER|OVERNIGHT)", path) or
         re.fullmatch(r"/api/v1\.0/quote/US\.[A-Z][A-Z0-9.\-]{0,19}/rt-data\?request_section=(NORMAL|FULL|PREMARKET|AFTERHOURS|OVERNIGHT)", path))
@@ -38,7 +40,7 @@ def request_json(path, body=None, headers=None):
     request = Request(HOST + path, data=body, headers=headers or {},
                       method="POST" if body is not None else "GET")
     try:
-        with build_opener(NoRedirect()).open(request, timeout=15) as response:
+        with build_opener(NoRedirect()).open(request, timeout=timeout) as response:
             result = json.loads(response.read(2_000_000))
     except HTTPError as error:
         if error.code == 429:
@@ -206,7 +208,7 @@ def fetch_us_quotes(symbols, config=None):
     symbols = list(dict.fromkeys(symbols))
     app_key, key = load_credentials(config or {})
     quotes, errors, warnings = {}, {}, {}
-    deadline = time.monotonic() + 120
+    deadline = time.monotonic() + QUOTE_BUDGET_SECONDS
     clock_offset, count, stopped = 0, 0, None
 
     def now():
@@ -219,18 +221,23 @@ def fetch_us_quotes(symbols, config=None):
         if time.monotonic() >= deadline:
             raise ValueError("本次查價逾時")
         if count:
-            time.sleep(0.3)
+            time.sleep(min(0.3, max(0, deadline - time.monotonic())))
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise ValueError("本次查價逾時")
         count += 1
         body = json.dumps(payload, separators=(",", ":")).encode() if payload is not None else None
         try:
-            result = request_json(path, body=body, headers=signed_headers(app_key, key, path, int(now()*1000), body))
+            result = request_json(path, body=body, headers=signed_headers(app_key, key, path, int(now()*1000), body),
+                                  timeout=min(REQUEST_TIMEOUT_SECONDS, remaining))
             if result.get("ret_code") == -12006:
-                server = request_json("/api/v1.0/server-time")
+                server = request_json("/api/v1.0/server-time", timeout=min(REQUEST_TIMEOUT_SECONDS, max(0.1, deadline-time.monotonic())))
                 stamp = positive_number(server.get("server_time_ms"))
                 if not stamp:
                     raise ValueError("無法校正富途簽章時間")
                 clock_offset = int(stamp) - int(time.time()*1000)
-                result = request_json(path, body=body, headers=signed_headers(app_key, key, path, int(stamp), body))
+                result = request_json(path, body=body, headers=signed_headers(app_key, key, path, int(stamp), body),
+                                      timeout=min(REQUEST_TIMEOUT_SECONDS, max(0.1, deadline-time.monotonic())))
         except QuoteRateLimited as error:
             stopped = str(error)
             raise
@@ -339,19 +346,7 @@ def fetch_us_quotes(symbols, config=None):
             candidate.update(ageSeconds=age, checkedPeriods=[period] if period else [p for p, label in PERIODS.items() if label == candidate["session"]])
             quotes[symbol] = candidate
             if age >= 300:
-                # A diagnostic only: never use bid/ask or dispatch time as last price.
-                detail = "供應商最新可用價已距今 " + str(age // 60) + " 分鐘"
-                try:
-                    book_data = call("/api/v1.0/quote/order-book", {"code": code, "num": 1})
-                    stamps = [positive_number(b.get("exchange_data_time_ms")) for r in (book_data if isinstance(book_data, list) else [])
-                              if isinstance(r, dict) and r.get("code") == code for b in (r.get("books") or []) if isinstance(b, dict)]
-                    stamps = [s for s in stamps if s and -60 <= now()-s/1000 <= 7*86400]
-                    if stamps:
-                        book_age = max(0, int(now()-max(stamps)/1000))
-                        detail += "；買賣報價距今 " + str(book_age) + " 秒（未當成交價套用）"
-                except ValueError:
-                    pass
-                warnings[symbol] = detail + "；尚不能判定延遲原因"
+                warnings[symbol] = "供應商最新可用價已距今 " + str(age // 60) + " 分鐘；尚不能判定延遲原因"
             elif not period:
                 warnings[symbol] = "市場狀態不明，採最新可用分時價"
         else:

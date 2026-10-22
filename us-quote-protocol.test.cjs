@@ -9,7 +9,7 @@ function run(extra, session = "夜盤", lastUpdated = "") {
     document:{querySelector:s=>s==="#usQuoteStatus"?status:{removeAttribute(){}}},clearTimeout(){},Date};
   vm.createContext(context);
   vm.runInContext(source + `const state={usHoldings:[{id:"1",symbol:"SOXL",currentPrice:165.4,lastUpdated:${JSON.stringify(lastUpdated)}}]};
-    let editingUsHoldingId="";function saveAndRender(){};
+    let editingUsHoldingId="";function saveAndRenderUsQuotePrices(){};
     pendingUsQuoteRequest={id:"test",holdings:[{id:"1",symbol:"SOXL",price:165.4}]};`,context);
   handler({source:context.window.parent,data:{type:"ledger-us-quotes-result",id:"test",
     quotes:{SOXL:{price:163.92,currency:"USD",time:"2026-10-06T02:05:49Z",timeKind:"trade",ageSeconds:1,checkedPeriods:["NORMAL","BEFORE","AFTER","OVERNIGHT"],session}},...extra}});
@@ -42,6 +42,22 @@ assert(night.text.includes("成交時間未提供"));
 assert.equal(run({quoteProtocol:"futu-snapshot-v5",quotes:{SOXL:{...snapshot,priceField:"last_price"}}}).price,165.4);
 assert.equal(run({quoteProtocol:"futu-smart-v4"}).price,165.4);
 console.log("PASS: old protocol blocked, valid quote applied, session required, errors preserve price");
+const wholeApp = fs.readFileSync(__dirname + "/app.js", "utf8");
+const renderSource = wholeApp.slice(wholeApp.indexOf("function saveAndRenderUsQuotePrices("), wholeApp.indexOf("function setStatus(", wholeApp.indexOf("function saveAndRenderUsQuotePrices(")));
+const renderCalls = [];
+const renderContext = {
+  els: {usHoldingsBody: {querySelector: () => null}},
+  persistLocalState: () => renderCalls.push("persist"),
+  renderSummary: () => renderCalls.push("summary"),
+  renderUsHoldings: () => renderCalls.push("us-holdings"),
+  renderSettlementRows: () => renderCalls.push("settlement"),
+  queueCloudSave: () => renderCalls.push("cloud"),
+  setStatus: () => renderCalls.push("status"),
+  drawCharts: () => renderCalls.push("charts"),
+  window: {requestAnimationFrame: callback => {renderCalls.push("frame");callback();}},
+};
+vm.runInNewContext(renderSource + "saveAndRenderUsQuotePrices();", renderContext);
+assert.deepEqual(renderCalls,["persist","summary","us-holdings","settlement","cloud","status","frame","charts"]);
 const failure=run({quoteProtocol:"futu-snapshot-v5",quotes:{},errors:{SOXL:"夜盤價格欄位缺漏；保留原價；保留原價"}});
 assert(failure.text.includes("SOXL 未更新：夜盤價格欄位缺漏"));
 assert.equal((failure.text.match(/保留原價/g)||[]).length,0);

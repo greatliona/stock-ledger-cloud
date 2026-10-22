@@ -6,6 +6,7 @@ html,body { margin:0; padding:0; } iframe { display:block; width:100%; height:1p
 <script>
 const frame = document.getElementById("ledger");
 let mounted = false, reply = null, loaded = false;
+let activeRequestId = null, pollTimer = 0, pollNumber = 0;
 let resizeObserver, pendingResize = 0, lastHeight = 0;
 function send(type, fields = {}) { parent.postMessage({isStreamlitMessage:true, type, ...fields}, "*"); }
 function syncHeight() {
@@ -22,7 +23,21 @@ function syncHeight() {
 function scheduleResize() {
   if (!pendingResize) pendingResize = requestAnimationFrame(syncHeight);
 }
-function deliver() { if (loaded && reply) frame.contentWindow.postMessage({type:"ledger-us-quotes-result", ...reply}, "*"); }
+function deliver() {
+  if (!loaded || !reply || reply.id !== activeRequestId) return;
+  clearTimeout(pollTimer);
+  frame.contentWindow.postMessage({type:"ledger-us-quotes-result", ...reply}, "*");
+  activeRequestId = null;
+}
+function schedulePoll() {
+  clearTimeout(pollTimer);
+  if (!activeRequestId) return;
+  pollTimer = setTimeout(() => {
+    if (!activeRequestId) return;
+    send("streamlit:setComponentValue", {value:{id:activeRequestId, poll:++pollNumber}, dataType:"json"});
+    schedulePoll();
+  }, 1500);
+}
 frame.addEventListener("load", () => {
   loaded = true;
   resizeObserver?.disconnect();
@@ -46,8 +61,11 @@ window.addEventListener("message", event => {
     scheduleResize();
   } else if (event.source === frame.contentWindow && event.data?.type === "ledger-us-quotes-request") {
     const {id, symbols} = event.data;
-    if (typeof id === "string" && Array.isArray(symbols) && symbols.length <= 50)
+    if (typeof id === "string" && Array.isArray(symbols) && symbols.length <= 50) {
+      activeRequestId = id;
       send("streamlit:setComponentValue", {value:{id, symbols}, dataType:"json"});
+      schedulePoll();
+    }
   }
 });
 send("streamlit:componentReady", {apiVersion:1});

@@ -30,7 +30,7 @@ function refreshUsPrices() {
     button.disabled = false;
     button.removeAttribute("aria-busy");
     status.textContent = "查價逾時，保留原價。" + reloadTimeLabel();
-  }, 180000);
+  }, 35000);
   pendingUsQuoteRequest = {id, holdings, timer};
   window.parent.postMessage({type:"ledger-us-quotes-request", id, symbols}, "*");
 }
@@ -88,7 +88,7 @@ window.addEventListener("message", event => {
     if (event.data.warnings?.[original.symbol]) warnings.push(original.symbol + "：" + event.data.warnings[original.symbol]);
     updated++;
   });
-  if (updated) saveAndRender("已更新美股現價與損益。");
+  if (updated) saveAndRenderUsQuotePrices();
   const details = times.length ? " · " + times.join("；") : "";
   const errors = [...new Set(failed)].map(symbol => symbol + " 未更新：" + (failureReasons[symbol] || event.data.errors?.[symbol] || "報價缺漏或格式無效").replace(/[，；]?保留原價/g, "").replace(/[；，]+$/, ""));
   const status = document.querySelector("#usQuoteStatus");
@@ -3756,6 +3756,26 @@ function saveAndRender(message = "", syncImmediately = false) {
   }
   queueCloudSave();
   if (message) setStatus(message);
+}
+
+function saveAndRenderUsQuotePrices() {
+  const editRow = els.usHoldingsBody.querySelector("[data-edit-us-row]");
+  const draft = editRow ? [...editRow.querySelectorAll("[data-edit-us-field]")]
+    .map(input => [input.dataset.editUsField, input.value]) : [];
+  persistLocalState();
+  renderSummary();
+  renderUsHoldings();
+  if (draft.length) {
+    const nextEditRow = els.usHoldingsBody.querySelector("[data-edit-us-row]");
+    for (const [field, value] of draft) {
+      const input = nextEditRow?.querySelector(`[data-edit-us-field="${field}"]`);
+      if (input) input.value = value;
+    }
+  }
+  renderSettlementRows();
+  queueCloudSave();
+  setStatus("已更新美股現價與損益。");
+  window.requestAnimationFrame(drawCharts);
 }
 
 function setStatus(message) {

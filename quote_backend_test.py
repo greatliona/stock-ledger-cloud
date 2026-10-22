@@ -145,14 +145,40 @@ class FutuTests(unittest.TestCase):
         self.assertEqual(result["quotes"]["SEMI"]["timeKind"],"minute")
         self.assertFalse(result["warnings"])
 
-    def test_stale_both_sources_compare_book_without_using_bid_price(self):
-        book={"ret_code":0,"data":[{"code":"US.SEMI","books":[{"exchange_data_time_ms":int(time.time()*1000)-1000,"bid_list":[{"price":999}]}]}]}
-        with patch.object(q,"request_json",side_effect=[self.market(["SEMI"]),self.snapshots(["SEMI"],900),self.minute("SEMI",age=890),book]) as req:
+    def test_stale_sources_do_not_call_order_book(self):
+        with patch.object(q,"request_json",side_effect=[self.market(["SEMI"]),self.snapshots(["SEMI"],900),self.minute("SEMI",age=890)]) as req:
             result=q.fetch_us_quotes(["SEMI"],self.config)
-        self.assertEqual(req.call_count,4)
+        self.assertEqual(req.call_count,3)
         self.assertEqual(result["quotes"]["SEMI"]["price"],103)
-        self.assertIn("買賣報價距今 1 秒",result["warnings"]["SEMI"])
-        self.assertNotIn("999",str(result))
+        self.assertIn("距今",result["warnings"]["SEMI"])
+
+    def test_http_timeout_and_quote_budget_are_bounded(self):
+        with patch.object(q,"request_json",side_effect=[self.market(["SOXL"]),self.snapshots(["SOXL"])]) as req:
+            q.fetch_us_quotes(["SOXL"],self.config)
+        self.assertTrue(all(call.kwargs["timeout"] <= q.REQUEST_TIMEOUT_SECONDS for call in req.call_args_list))
+        self.assertLessEqual(q.QUOTE_BUDGET_SECONDS,30)
+
+    def test_slow_missing_symbols_stop_at_budget_and_keep_valid_batch_prices(self):
+        symbols=["SOXX","EPP","SEMI","IVV"]
+        elapsed=[0.0]
+        def response(path, **kwargs):
+            elapsed[0]+=kwargs["timeout"]
+            if path.endswith("market-state"):
+                return self.market(symbols,"NIGHT_OPEN")
+            if path.endswith("snapshot"):
+                return {"ret_code":0,"data":{"snapshot_list":[
+                    {"code":"US."+symbol,"overnight_price":100 if symbol in ("SOXX","IVV") else 0}
+                    for symbol in symbols]}}
+            if "rt-ticker" in path:
+                symbol=path.split("/")[4]
+                return {"ret_code":0,"data":{"code":symbol,"ticker_list":[]}}
+            return {"ret_code":0,"data":{"section_list":[]}}
+        with patch.object(q.time,"monotonic",side_effect=lambda:elapsed[0]),patch.object(q,"request_json",side_effect=response) as req:
+            result=q.fetch_us_quotes(symbols,self.config)
+        self.assertLessEqual(elapsed[0],q.QUOTE_BUDGET_SECONDS)
+        self.assertLessEqual(req.call_count,5)
+        self.assertEqual(set(result["quotes"]),{"SOXX","IVV"})
+        self.assertEqual(set(result["errors"]),{"EPP","SEMI"})
 
     def test_afterhours_queries_only_current_period(self):
         with patch.object(q,"request_json",side_effect=[self.market(["SOXL"],"AFTER_HOURS_BEGIN"),{"ret_code":0,"data":{"snapshot_list":[]}},self.response()]) as req:
