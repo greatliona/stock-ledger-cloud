@@ -1,7 +1,6 @@
 import json
 import hmac
 import re
-import time
 import importlib
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -96,14 +95,16 @@ def quote_executor():
 def render_ledger():
     future = st.session_state.get("quote_future")
     if future is not None and future.done():
-        try:
-            result = future.result()
-        except ValueError as error:
-            result = {"quotes": {}, "errors": {}, "error": str(error)}
-        except Exception:
-            result = {"quotes": {}, "errors": {}, "error": "報價服務暫時無法完成，請稍後重試。"}
-        st.session_state["quote_reply"] = {"id": st.session_state["quote_request_id"], **result}
+        if st.session_state.get("quote_future_request_id") == st.session_state.get("quote_request_id"):
+            try:
+                result = future.result()
+            except ValueError as error:
+                result = {"quotes": {}, "errors": {}, "error": str(error)}
+            except Exception:
+                result = {"quotes": {}, "errors": {}, "error": "報價服務暫時無法完成，請稍後重試。"}
+            st.session_state["quote_reply"] = {"id": st.session_state["quote_request_id"], **result}
         st.session_state["quote_future"] = None
+        st.session_state["quote_future_request_id"] = None
 
     ledger = st.components.v1.declare_component("ledger_quote_bridge", path=str(ROOT / "quote_bridge"))
     request = ledger(html=build_page(), reply=st.session_state.get("quote_reply"), key="ledger")
@@ -111,13 +112,12 @@ def render_ledger():
         st.session_state["quote_request_id"] = request["id"]
         st.session_state["quote_reply"] = None
         try:
-            now = time.monotonic()
-            if now - st.session_state.get("last_quote_request", -60) < 15:
-                raise ValueError("請間隔 15 秒再更新，避免重複查價。")
-            st.session_state["last_quote_request"] = now
+            if st.session_state.get("quote_future") is not None:
+                raise ValueError("上一筆查價仍在進行，請等完成後再更新。")
             # Only the worker waits on Futu; the ledger component remains interactive.
             st.session_state["quote_future"] = quote_executor().submit(
                 quote_backend.fetch_us_quotes, request.get("symbols"), dict(st.secrets.get("futu", {})))
+            st.session_state["quote_future_request_id"] = request["id"]
         except ValueError as error:
             st.session_state["quote_reply"] = {"id": request["id"], "quotes": {}, "errors": {}, "error": str(error)}
             st.rerun(scope="fragment")

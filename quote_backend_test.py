@@ -213,6 +213,15 @@ class FutuTests(unittest.TestCase):
         self.assertFalse(result["quotes"])
         self.assertEqual(set(result["errors"]),{"SOXL","IVV"})
 
+    def test_api_rate_limit_code_stops_all_fallback_calls(self):
+        for response in ({"ret_code":-12011,"error":{"code":"rate_limited"}},
+                         {"ret_code":-11,"error":{"code":"rate_limited"}}):
+            with self.subTest(response=response["ret_code"]), patch.object(q,"request_json",return_value=response) as req:
+                result=q.fetch_us_quotes(["SOXL","IVV"],self.config)
+            self.assertEqual(req.call_count,1)
+            self.assertFalse(result["quotes"])
+            self.assertEqual(set(result["errors"]),{"SOXL","IVV"})
+
     def test_clock_correction_for_post_preserves_body(self):
         with patch.object(q,"request_json",side_effect=[{"ret_code":-12006},{"server_time_ms":int(time.time()*1000)},self.snapshots(["SOXL"])]) as req:
             result=q.fetch_us_quotes(["SOXL"],self.config)

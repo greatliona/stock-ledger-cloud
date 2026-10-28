@@ -303,6 +303,10 @@ def fetch_us_quotes(symbols, config=None):
         except QuoteRateLimited as error:
             stopped = str(error)
             raise
+        error_code = result.get("error") if isinstance(result.get("error"), dict) else {}
+        if str(result.get("ret_code")) in ("-12011", "-11") or error_code.get("code") == "rate_limited":
+            stopped = "富途暫時限流，已停止本次剩餘請求；未取得報價的原價不變。"
+            raise QuoteRateLimited(stopped)
         if result.get("ret_code") != 0:
             code = result.get("ret_code")
             raise ValueError("富途請求失敗（代碼 " + (str(code) if isinstance(code, int) else "UNKNOWN") + "）")
