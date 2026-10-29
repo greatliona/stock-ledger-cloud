@@ -26,14 +26,12 @@ handlers.message({source: parent, data: {type: 'streamlit:render', args: {html: 
 handlers['frame:load']();
 handlers.message({source: frameWindow, data: {type: 'ledger-us-quotes-request', id: 'one', symbols: ['SOXL']}});
 assert(messages.some(message => message.type === 'streamlit:setComponentValue' && message.value.id === 'one' && message.value.symbols));
-assert.equal(timers.size, 1);
-let callback = [...timers.values()][0];
-callback();
-assert(messages.some(message => message.value?.id === 'one' && message.value.poll === 1));
+assert.equal(timers.size, 0);
+assert.equal(messages.filter(message => message.type === 'streamlit:setComponentValue').length, 1);
 handlers.message({source: parent, data: {type: 'streamlit:render', args: {html: '<p>ledger</p>', reply: {id: 'old'}}}});
 assert.equal(delivered.length, 0);
 handlers.message({source: parent, data: {type: 'streamlit:render', args: {html: '<p>ledger</p>', reply: {id: 'one', quotes: {SOXL: {price: 100}}}}}});
 assert.equal(delivered.length, 1);
 assert.equal(delivered[0].id, 'one');
 assert.equal(timers.size, 0);
-console.log('PASS: quote bridge polls while pending and delivers only the matching reply');
+console.log('PASS: quote bridge sends once without polling and delivers only the matching reply');

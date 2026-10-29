@@ -1,104 +1,44 @@
-"""Exercise the Streamlit quote fragment without using credentials or network."""
+"""Quote delivery tests without credentials or network."""
 import ast
-import pathlib
-import types
+from pathlib import Path
+from types import SimpleNamespace as NS
 import unittest
 
+class RerunRequested(Exception): pass
 
-class RerunRequested(Exception):
-    pass
-
-
-class FakeFuture:
-    completed = False
-
-    def done(self):
-        return self.completed
-
-    def result(self):
-        return {"quoteProtocol": "futu-snapshot-v5", "quotes": {"SOXL": {"price": 100}}, "errors": {}}
-
-
-class QuoteBackgroundTests(unittest.TestCase):
-    def test_request_returns_before_network_and_poll_delivers_once(self):
-        source = pathlib.Path(__file__).with_name("streamlit_app.py").read_text(encoding="utf-8")
-        method = next(item for item in ast.parse(source).body if isinstance(item, ast.FunctionDef) and item.name == "render_ledger")
+class QuoteDeliveryTests(unittest.TestCase):
+    def test_direct_delivery_deduplication_and_errors(self):
+        method = next(n for n in ast.parse(Path(__file__).with_name('streamlit_app.py').read_text()).body if isinstance(n, ast.FunctionDef) and n.name == 'render_ledger')
         method.decorator_list = []
-        responses = [
-            {"id": "first", "symbols": ["SOXL"]},
-            {"id": "first", "poll": 1},
-            {"id": "first", "poll": 2},
-            {"id": "second", "symbols": ["SOXL"]},
-        ]
-        rendered_replies = []
-        submitted = []
-        future = FakeFuture()
-
-        def component(**kwargs):
-            rendered_replies.append(kwargs["reply"])
-            return responses.pop(0)
-
-        def submit(*args):
-            submitted.append(args)
-            return future
-
-        st = types.SimpleNamespace(
-            session_state={}, secrets={"futu": {"app_key": "test-only"}},
-            components=types.SimpleNamespace(v1=types.SimpleNamespace(declare_component=lambda *args, **kwargs: component)),
-            rerun=lambda **kwargs: (_ for _ in ()).throw(RerunRequested()),
-        )
-        namespace = {"st": st, "ROOT": pathlib.Path(__file__).parent,
-                     "build_page": lambda: "<p>ledger</p>",
-                     "quote_executor": lambda: types.SimpleNamespace(submit=submit),
-                     "quote_backend": types.SimpleNamespace(fetch_us_quotes=lambda *args: self.fail("network called on Streamlit thread")),
-                     }
-        exec(compile(ast.Module(body=[method], type_ignores=[]), "streamlit_app.py", "exec"), namespace)
-        run = namespace["render_ledger"]
-        run()
-        self.assertEqual(len(submitted), 1)
-        self.assertEqual(submitted[0][1], ["SOXL"])
-        self.assertIsNone(rendered_replies[-1])
-        run()
-        self.assertEqual(len(submitted), 1)
-        future.completed = True
-        run()
-        self.assertEqual(rendered_replies[-1]["id"], "first")
-        self.assertEqual(rendered_replies[-1]["quotes"]["SOXL"]["price"], 100)
-        run()
-        self.assertEqual(len(submitted), 2)
-        self.assertEqual(st.session_state["quote_request_id"], "second")
-        self.assertEqual(st.session_state["quote_future_request_id"], "second")
-
-    def test_overlapping_request_is_rejected_without_relabeling_old_result(self):
-        source = pathlib.Path(__file__).with_name("streamlit_app.py").read_text(encoding="utf-8")
-        method = next(item for item in ast.parse(source).body if isinstance(item, ast.FunctionDef) and item.name == "render_ledger")
-        method.decorator_list = []
-        requests = [{"id": "first", "symbols": ["SOXL"]}, {"id": "second", "symbols": ["SOXL"]},
-                    {"id": "second", "poll": 1}]
-        future = FakeFuture()
-        submitted = []
-        st = types.SimpleNamespace(
-            session_state={}, secrets={"futu": {}},
-            components=types.SimpleNamespace(v1=types.SimpleNamespace(
-                declare_component=lambda *args, **kwargs: lambda **kwargs: requests.pop(0))),
-            rerun=lambda **kwargs: (_ for _ in ()).throw(RerunRequested()),
-        )
-        namespace = {"st": st, "ROOT": pathlib.Path(__file__).parent,
-                     "build_page": lambda: "<p>ledger</p>",
-                     "quote_executor": lambda: types.SimpleNamespace(submit=lambda *args: submitted.append(args) or future),
-                     "quote_backend": types.SimpleNamespace(fetch_us_quotes=lambda *args: None)}
-        exec(compile(ast.Module(body=[method], type_ignores=[]), "streamlit_app.py", "exec"), namespace)
-        run = namespace["render_ledger"]
-        run()
-        with self.assertRaises(RerunRequested):
+        request = {'id': 'one', 'symbols': ['SOXL']}
+        calls, replies = [], []
+        def component(**kw):
+            replies.append(kw['reply'])
+            return request
+        def fetch(symbols, config):
+            calls.append(symbols)
+            if symbols == ['ERROR']: raise ValueError('test error')
+            return {'quotes': {'SOXL': {'price': 100}}}
+        def rerun(**kw):
+            self.assertEqual(kw, {'scope': 'fragment'})
+            raise RerunRequested()
+        st = NS(session_state={}, secrets={}, rerun=rerun, components=NS(v1=NS(declare_component=lambda *a, **kw: component)))
+        ns = dict(st=st, ROOT=Path(__file__).parent, build_page=lambda: '', quote_backend=NS(fetch_us_quotes=fetch))
+        exec(compile(ast.Module(body=[method], type_ignores=[]), 'fragment', 'exec'), ns)
+        run = ns['render_ledger']
+        for identifier in ['one', 'two']:
+            request = {'id': identifier, 'symbols': ['SOXL']}
+            with self.assertRaises(RerunRequested): run()
             run()
-        self.assertEqual(len(submitted), 1)
-        self.assertIn("仍在進行", st.session_state["quote_reply"]["error"])
-        future.completed = True
+            self.assertEqual(replies[-1]['id'], identifier)
+            self.assertEqual(replies[-1]['quotes']['SOXL']['price'], 100)
+        self.assertEqual(len(calls), 2)
+        request = {'id': 'old', 'poll': 1}
         run()
-        self.assertEqual(st.session_state["quote_reply"]["id"], "second")
-        self.assertIn("仍在進行", st.session_state["quote_reply"]["error"])
+        self.assertEqual(len(calls), 2)
+        request = {'id': 'error', 'symbols': ['ERROR']}
+        with self.assertRaises(RerunRequested): run()
+        run()
+        self.assertEqual(replies[-1]['error'], 'test error')
 
-
-if __name__ == "__main__":
-    unittest.main()
+if __name__ == '__main__': unittest.main()
