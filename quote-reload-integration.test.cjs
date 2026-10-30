@@ -16,6 +16,30 @@ const {chromium} = require('playwright');
   for (const name of ['streamlit_app.py','index.html','app.js','styles.css','xlsx.mini.min.js'])
     fs.copyFileSync(path.join(__dirname,name),path.join(root,name));
   fs.cpSync(path.join(__dirname,'quote_bridge'),path.join(root,'quote_bridge'),{recursive:true});
+  if (process.env.LEDGER_MANUAL_BROWSER === '1') {
+    fs.appendFileSync(path.join(root,'app.js'), `
+const testPanel = document.createElement('section');
+testPanel.style = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:white;border:2px solid blue;padding:10px';
+testPanel.innerHTML = '<b>隔離假報價測試（不連正式帳本）</b> <button id="testSlow">測試五秒七檔</button> <button id="testFast">測試立即再查</button> <button id="testError">測試失敗</button> <output id="testResult">尚未測試</output>';
+document.body.append(testPanel);
+let testStart = 0, testResponses = 0;
+function testRun(mode) {
+  state.usHoldings=(mode==='ERROR'?['ERROR']:[mode,'TESTB','TESTC','TESTD','TESTE','TESTF','TESTG']).map((symbol,i)=>({id:'test-'+i,symbol,shares:10,avgCost:100,currentPrice:1,side:'long'}));
+  renderUsHoldings();
+  testStart=performance.now();
+  document.querySelector('#testResult').textContent='等待回應';
+  refreshUsPrices(); refreshUsPrices();
+}
+document.querySelector('#testSlow').onclick=()=>testRun('SLOW');
+document.querySelector('#testFast').onclick=()=>testRun('FAST');
+document.querySelector('#testError').onclick=()=>testRun('ERROR');
+window.addEventListener('message',event=>{
+  if(event.source!==parent || event.data?.type!=='ledger-us-quotes-result')return;
+  testResponses++;
+  document.querySelector('#testResult').textContent='回應 '+testResponses+' 次；耗時 '+Math.round(performance.now()-testStart)+' ms；價格 '+state.usHoldings.map(h=>h.currentPrice).join(',')+'；'+document.querySelector('#usQuoteStatus').textContent;
+});
+`);
+  }
   fs.mkdirSync(path.join(root,'.streamlit'));
   fs.writeFileSync(path.join(root,'.streamlit','secrets.toml'),'[app]\npassword="test-only"\n');
   fs.writeFileSync(path.join(root,'quote_backend.py'), `
@@ -48,6 +72,12 @@ def fetch_us_quotes(symbols, config=None):
       await new Promise(r=>setTimeout(r,100));
     }
     assert(ready,'test Streamlit failed to start: '+logs);
+    if (process.env.LEDGER_MANUAL_BROWSER === '1') {
+      console.log('ISOLATED_TEST_URL='+origin);
+      console.log('ISOLATED_TEST_ROOT='+root);
+      await new Promise(resolve=>process.once('SIGINT',resolve));
+      return;
+    }
     browser=await chromium.launch({headless:true,channel:'chrome'});
     const context=await browser.newContext({viewport:{width:1280,height:900}});
     await context.route('**/*',route=>route.request().url().startsWith(origin)?route.continue():route.abort());
@@ -59,7 +89,7 @@ def fetch_us_quotes(symbols, config=None):
     await ledger.locator('#reloadUsPrices').waitFor();
     const seed=async symbol=>ledger.locator('body').evaluate((_,symbol)=>{
       window.__quoteTestMount ||= 'same-document';
-      state.usHoldings=[{id:'fixture',symbol,shares:1,cost:1,currentPrice:1,side:'long'}];
+      state.usHoldings=[{id:'fixture',symbol,shares:1,avgCost:1,currentPrice:1,side:'long'}];
     },symbol);
     await seed('SLOW');
     const start=Date.now();

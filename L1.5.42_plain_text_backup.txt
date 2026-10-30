@@ -1,5 +1,5 @@
-Stock Ledger L1.5.42 source backup — 2026/10/29
-Local changes; not deployed. No secrets or ledger data.
+Stock Ledger L1.5.42 source backup — 2026/10/30
+Includes isolated browser verification. No secrets or ledger data.
 
 ===== BEGIN FILE: AGENTS.md =====
 # 改版交付慣例
@@ -9029,6 +9029,30 @@ const {chromium} = require('playwright');
   for (const name of ['streamlit_app.py','index.html','app.js','styles.css','xlsx.mini.min.js'])
     fs.copyFileSync(path.join(__dirname,name),path.join(root,name));
   fs.cpSync(path.join(__dirname,'quote_bridge'),path.join(root,'quote_bridge'),{recursive:true});
+  if (process.env.LEDGER_MANUAL_BROWSER === '1') {
+    fs.appendFileSync(path.join(root,'app.js'), `
+const testPanel = document.createElement('section');
+testPanel.style = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:white;border:2px solid blue;padding:10px';
+testPanel.innerHTML = '<b>隔離假報價測試（不連正式帳本）</b> <button id="testSlow">測試五秒七檔</button> <button id="testFast">測試立即再查</button> <button id="testError">測試失敗</button> <output id="testResult">尚未測試</output>';
+document.body.append(testPanel);
+let testStart = 0, testResponses = 0;
+function testRun(mode) {
+  state.usHoldings=(mode==='ERROR'?['ERROR']:[mode,'TESTB','TESTC','TESTD','TESTE','TESTF','TESTG']).map((symbol,i)=>({id:'test-'+i,symbol,shares:10,avgCost:100,currentPrice:1,side:'long'}));
+  renderUsHoldings();
+  testStart=performance.now();
+  document.querySelector('#testResult').textContent='等待回應';
+  refreshUsPrices(); refreshUsPrices();
+}
+document.querySelector('#testSlow').onclick=()=>testRun('SLOW');
+document.querySelector('#testFast').onclick=()=>testRun('FAST');
+document.querySelector('#testError').onclick=()=>testRun('ERROR');
+window.addEventListener('message',event=>{
+  if(event.source!==parent || event.data?.type!=='ledger-us-quotes-result')return;
+  testResponses++;
+  document.querySelector('#testResult').textContent='回應 '+testResponses+' 次；耗時 '+Math.round(performance.now()-testStart)+' ms；價格 '+state.usHoldings.map(h=>h.currentPrice).join(',')+'；'+document.querySelector('#usQuoteStatus').textContent;
+});
+`);
+  }
   fs.mkdirSync(path.join(root,'.streamlit'));
   fs.writeFileSync(path.join(root,'.streamlit','secrets.toml'),'[app]\npassword="test-only"\n');
   fs.writeFileSync(path.join(root,'quote_backend.py'), `
@@ -9061,6 +9085,12 @@ def fetch_us_quotes(symbols, config=None):
       await new Promise(r=>setTimeout(r,100));
     }
     assert(ready,'test Streamlit failed to start: '+logs);
+    if (process.env.LEDGER_MANUAL_BROWSER === '1') {
+      console.log('ISOLATED_TEST_URL='+origin);
+      console.log('ISOLATED_TEST_ROOT='+root);
+      await new Promise(resolve=>process.once('SIGINT',resolve));
+      return;
+    }
     browser=await chromium.launch({headless:true,channel:'chrome'});
     const context=await browser.newContext({viewport:{width:1280,height:900}});
     await context.route('**/*',route=>route.request().url().startsWith(origin)?route.continue():route.abort());
@@ -9072,7 +9102,7 @@ def fetch_us_quotes(symbols, config=None):
     await ledger.locator('#reloadUsPrices').waitFor();
     const seed=async symbol=>ledger.locator('body').evaluate((_,symbol)=>{
       window.__quoteTestMount ||= 'same-document';
-      state.usHoldings=[{id:'fixture',symbol,shares:1,cost:1,currentPrice:1,side:'long'}];
+      state.usHoldings=[{id:'fixture',symbol,shares:1,avgCost:1,currentPrice:1,side:'long'}];
     },symbol);
     await seed('SLOW');
     const start=Date.now();
@@ -9104,3 +9134,32 @@ def fetch_us_quotes(symbols, config=None):
 })().catch(error=>{console.error(error);process.exitCode=1;});
 
 ===== END FILE: quote-reload-integration.test.cjs =====
+
+===== BEGIN FILE: L1.5.42_TEST_RESULTS.md =====
+# L1.5.42 瀏覽器驗證 — 2026/10/30
+
+環境：本機 Streamlit、Codex 內建瀏覽器、隔離暫存目錄。
+完全使用虛構持倉與假報價；未讀取正式私鑰、未呼叫富途、未操作正式帳本。
+
+| 情境 | 實測 | 結果 |
+| --- | --- | --- |
+| 7 檔、供應商模擬延遲 5 秒 | 5464 ms | 全部現價更新為 123.45 |
+| 下一次快速批次查詢（模擬延遲 0.2 秒） | 271 ms | 7 檔全部更新 |
+| 模擬供應商失敗 | 259 ms | 顯示錯誤，原價 1 不變，reload 恢復可用 |
+| 失敗後再次查詢 | 268 ms | 7 檔全部更新，reload 恢復可用 |
+
+每個情境連續呼叫兩次 refreshUsPrices；後端 calls.jsonl 僅記錄以下 4 次，沒有重複查詢：
+
+```
+["SLOW", "TESTB", "TESTC", "TESTD", "TESTE", "TESTF", "TESTG"]
+["FAST", "TESTB", "TESTC", "TESTD", "TESTE", "TESTF", "TESTG"]
+["ERROR"]
+["FAST", "TESTB", "TESTC", "TESTD", "TESTE", "TESTF", "TESTG"]
+```
+
+同一頁的測試回應計數依次為 1、2、3、4，未重新掛載帳本。瀏覽器未記錄 JavaScript error。
+
+這證實本機完整回傳流程可正常完成，不代表已驗證正式富途網路耗時，亦不保證線上永遠五秒內回覆。
+測試控制面板只由 quote-reload-integration.test.cjs 的 LEDGER_MANUAL_BROWSER 模式加入暫存副本，不會出現在正式帳本。
+
+===== END FILE: L1.5.42_TEST_RESULTS.md =====
