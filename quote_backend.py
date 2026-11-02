@@ -355,6 +355,12 @@ def fetch_us_quotes(symbols, config=None):
                 value = row.get(field)
                 reason = "缺漏" if value is None else "為零" if value == 0 else "無效"
                 issues.append(PERIODS[period] + "價格欄位" + reason)
+            if period == "OVERNIGHT":
+                # The 24h snapshot is the requested source. Missing night prices
+                # must not fan out into two sequential calls per symbol and hold
+                # already valid quotes until the entire batch times out.
+                errors[symbol] = stopped or "；".join(dict.fromkeys(issues)) or "未提供夜盤價格"
+                continue
         try:
             if code in regular:
                 try:

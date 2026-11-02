@@ -173,9 +173,45 @@ class FutuTests(unittest.TestCase):
         with patch.object(q.time,"time",return_value=night),patch.object(q.time,"monotonic",side_effect=lambda:elapsed[0]),patch.object(q,"request_json",side_effect=response) as req:
             result=q.fetch_us_quotes(symbols,self.config)
         self.assertLessEqual(elapsed[0],q.QUOTE_BUDGET_SECONDS)
-        self.assertLessEqual(req.call_count,5)
+        self.assertEqual(req.call_count,1)
         self.assertEqual(set(result["quotes"]),{"SOXX","IVV"})
         self.assertEqual(set(result["errors"]),{"EPP","SEMI"})
+
+    def test_night_missing_seven_symbols_never_fan_out(self):
+        symbols=["BITU","EPP","IVV","SEMI","VOO","SOXX","SOXL"]
+        # Force the session so this tests request fan-out independently of calendars.
+        for data in ({"snapshot_list": []}, {"snapshot_list": [
+                {"code":"US."+s,"overnight_price":0,"last_price":999} for s in symbols]}):
+            with patch.object(q,"us_market_period",return_value="OVERNIGHT"),patch.object(q,"request_json",return_value={"ret_code":0,"data":data}) as req:
+                result=q.fetch_us_quotes(symbols,self.config)
+            self.assertEqual(req.call_count,1)
+            self.assertEqual(result["quotes"],{})
+            self.assertEqual(set(result["errors"]),set(symbols))
+
+    def test_night_transport_failure_returns_without_per_symbol_retry(self):
+        with patch.object(q,"us_market_period",return_value="OVERNIGHT"),patch.object(q,"request_json",side_effect=ValueError("模擬連線逾時")) as req:
+            result=q.fetch_us_quotes(["SOXX","EPP","SEMI"],self.config)
+        self.assertEqual(req.call_count,1)
+        self.assertFalse(result["quotes"])
+        self.assertTrue(all("模擬連線逾時" in e for e in result["errors"].values()))
+
+    def test_night_slow_batch_preserves_five_prices_without_extra_wait(self):
+        symbols=["BITU","EPP","IVV","SEMI","VOO","SOXX","SOXL"]
+        def response(path, **kwargs):
+            self.assertTrue(path.endswith('/snapshot'))
+            # Use Event.wait: setUp mocks time.sleep for unrelated throttling tests.
+            import threading
+            threading.Event().wait(0.2)
+            return {"ret_code":0,"data":{"snapshot_list":[
+                {"code":"US."+s,"overnight_price":0 if s in ('EPP','SEMI') else 123.45}
+                for s in symbols]}}
+        start=time.monotonic()
+        with patch.object(q,"us_market_period",return_value="OVERNIGHT"),patch.object(q,"request_json",side_effect=response) as req:
+            result=q.fetch_us_quotes(symbols,self.config)
+        self.assertEqual(req.call_count,1)
+        self.assertLess(time.monotonic()-start,2)
+        self.assertEqual(len(result['quotes']),5)
+        self.assertEqual(set(result['errors']),{'EPP','SEMI'})
 
     def test_afterhours_queries_only_current_period(self):
         after=q.datetime(2026,10,9,21,tzinfo=q.timezone.utc).timestamp()
