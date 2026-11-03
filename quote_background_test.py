@@ -3,6 +3,8 @@ import ast
 from pathlib import Path
 from types import SimpleNamespace as NS
 import unittest
+import time
+import logging
 
 class RerunRequested(Exception): pass
 
@@ -23,11 +25,13 @@ class QuoteDeliveryTests(unittest.TestCase):
             self.assertEqual(kw, {'scope': 'fragment'})
             raise RerunRequested()
         st = NS(session_state={}, secrets={}, rerun=rerun, components=NS(v1=NS(declare_component=lambda *a, **kw: component)))
-        ns = dict(st=st, ROOT=Path(__file__).parent, build_page=lambda: '', quote_backend=NS(fetch_us_quotes=fetch))
+        ns = dict(st=st, ROOT=Path(__file__).parent, build_page=lambda: '', quote_backend=NS(fetch_us_quotes=fetch),time=time,logging=logging)
         exec(compile(ast.Module(body=[method], type_ignores=[]), 'fragment', 'exec'), ns)
         run = ns['render_ledger']
         for identifier in ['one', 'two']:
             request = {'id': identifier, 'symbols': ['SOXL']}
+            with self.assertRaises(RerunRequested): run()
+            self.assertEqual(st.session_state['quote_reply']['phase'],'accepted')
             with self.assertRaises(RerunRequested): run()
             run()
             self.assertEqual(replies[-1]['id'], identifier)
@@ -37,6 +41,7 @@ class QuoteDeliveryTests(unittest.TestCase):
         run()
         self.assertEqual(len(calls), 2)
         request = {'id': 'error', 'symbols': ['ERROR']}
+        with self.assertRaises(RerunRequested): run()
         with self.assertRaises(RerunRequested): run()
         run()
         self.assertEqual(replies[-1]['error'], 'test error')

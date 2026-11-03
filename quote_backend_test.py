@@ -8,6 +8,19 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 import quote_backend as q
 
 class FutuTests(unittest.TestCase):
+    def test_transport_diagnostics_do_not_expose_error_payload(self):
+        from urllib.error import URLError
+        for reason, label in [(q.socket.gaierror('secret'), 'DNS解析失敗'),
+                              (q.ssl.SSLError('secret'), 'TLS憑證'),
+                              (TimeoutError('secret'), '連線或讀取逾時'),
+                              (OSError('secret'), '網路連線失敗')]:
+            with patch.object(q, 'build_opener') as opener:
+                opener.return_value.open.side_effect = URLError(reason)
+                with self.assertRaises(ValueError) as raised:
+                    q.request_json('/api/v1.0/server-time')
+            self.assertIn(label, str(raised.exception))
+            self.assertNotIn('secret', str(raised.exception))
+
     @classmethod
     def setUpClass(cls):
         cls.key = Ed25519PrivateKey.generate()

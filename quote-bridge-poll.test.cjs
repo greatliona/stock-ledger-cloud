@@ -29,9 +29,13 @@ assert(messages.some(message => message.type === 'streamlit:setComponentValue' &
 assert.equal(timers.size, 0);
 assert.equal(messages.filter(message => message.type === 'streamlit:setComponentValue').length, 1);
 handlers.message({source: parent, data: {type: 'streamlit:render', args: {html: '<p>ledger</p>', reply: {id: 'old'}}}});
-assert.equal(delivered.length, 0);
-handlers.message({source: parent, data: {type: 'streamlit:render', args: {html: '<p>ledger</p>', reply: {id: 'one', quotes: {SOXL: {price: 100}}}}}});
 assert.equal(delivered.length, 1);
-assert.equal(delivered[0].id, 'one');
+assert.equal(delivered[0].phase, 'bridge');
+handlers.message({source: parent, data: {type: 'streamlit:render', args: {reply: {id:'one',phase:'accepted'}}}});
+assert.equal(delivered[1].phase, 'accepted');
+handlers.message({source: parent, data: {type: 'streamlit:render', args: {html: '<p>ledger</p>', reply: {id: 'one', quotes: {SOXL: {price: 100}}}}}});
+assert.equal(delivered.length, 3);
+assert.equal(delivered[2].id, 'one');
+assert.equal(delivered[2].type, 'ledger-us-quotes-result');
 assert.equal(timers.size, 0);
 console.log('PASS: quote bridge sends once without polling and delivers only the matching reply');

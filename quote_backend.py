@@ -7,6 +7,9 @@ import math
 import re
 import secrets
 import time
+import logging
+import socket
+import ssl
 from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from urllib.error import HTTPError, URLError
@@ -40,6 +43,9 @@ def request_json(path, body=None, headers=None, timeout=REQUEST_TIMEOUT_SECONDS)
         raise ValueError("報價端點請求方法不符。")
     request = Request(HOST + path, data=body, headers=headers or {},
                       method="POST" if body is not None else "GET")
+    started = time.monotonic()
+    operation = path.split('?')[0].rsplit('/', 1)[-1]
+    logging.getLogger('ledger.quote').warning('futu_start operation=%s timeout=%s', operation, round(timeout,2))
     try:
         with build_opener(NoRedirect()).open(request, timeout=timeout) as response:
             result = json.loads(response.read(2_000_000))
@@ -50,10 +56,16 @@ def request_json(path, body=None, headers=None, timeout=REQUEST_TIMEOUT_SECONDS)
                     403: "富途未授予行情權限；不會自動購買服務。",
                     429: "富途請求額度暫時受限；原價不變。"}
         raise ValueError(messages.get(error.code, f"富途服務回應 HTTP {error.code}；原價不變。")) from None
-    except (URLError, TimeoutError, OSError):
-        raise ValueError("無法連線富途報價服務；原價不變。") from None
+    except (URLError, TimeoutError, OSError) as error:
+        reason = error.reason if isinstance(error, URLError) else error
+        category = ('DNS解析失敗' if isinstance(reason, socket.gaierror) else
+                    'TLS憑證或加密連線失敗' if isinstance(reason, ssl.SSLError) else
+                    '連線或讀取逾時' if isinstance(reason, TimeoutError) else '網路連線失敗')
+        raise ValueError('富途' + category + '（' + operation + '）') from None
     except (ValueError, UnicodeError):
         raise ValueError("富途回傳格式無效；原價不變。") from None
+    finally:
+        logging.getLogger('ledger.quote').warning('futu_end operation=%s seconds=%.2f', operation, time.monotonic()-started)
     if not isinstance(result, dict):
         raise ValueError("富途回傳格式無效；原價不變。")
     return result

@@ -29,13 +29,20 @@ function refreshUsPrices() {
     pendingUsQuoteRequest = null;
     button.disabled = false;
     button.removeAttribute("aria-busy");
-    status.textContent = "查價逾時，保留原價。" + reloadTimeLabel();
+    const phase = pendingUsQuoteRequestPhase;
+    status.textContent = "查價逾時 · " + ({sent:"未收到頁面橋接確認",bridge:"已送出，但未收到後端確認（連線或服務狀態待查）",accepted:"後端已接收，但未收到完成回覆（需對照服務紀錄）"}[phase] || "階段未知") + " · 診斷 " + id.slice(0,8) + reloadTimeLabel();
   }, 35000);
   pendingUsQuoteRequest = {id, holdings, timer};
+  pendingUsQuoteRequestPhase = "sent";
   window.parent.postMessage({type:"ledger-us-quotes-request", id, symbols}, "*");
 }
 
+let pendingUsQuoteRequestPhase = "sent";
 window.addEventListener("message", event => {
+  if (event.source === window.parent && event.data?.type === "ledger-us-quotes-progress" && pendingUsQuoteRequest?.id === event.data.id) {
+    if (event.data.phase === "accepted" || (event.data.phase === "bridge" && pendingUsQuoteRequestPhase !== "accepted")) pendingUsQuoteRequestPhase = event.data.phase;
+    return;
+  }
   if (!window.STOCK_LEDGER_QUOTE_BRIDGE || event.source !== window.parent || event.data?.type !== "ledger-us-quotes-result") return;
   const pending = pendingUsQuoteRequest;
   if (!pending || event.data.id !== pending.id) return;
@@ -45,7 +52,7 @@ window.addEventListener("message", event => {
   button.disabled = false;
   button.removeAttribute("aria-busy");
   if (event.data.error) {
-    document.querySelector("#usQuoteStatus").textContent = event.data.error + reloadTimeLabel();
+    document.querySelector("#usQuoteStatus").textContent = event.data.error + " · 診斷 " + pending.id.slice(0,8) + " · 後端 " + (event.data.backendSeconds ?? "?") + " 秒" + reloadTimeLabel();
     return;
   }
   if (event.data.quoteProtocol !== "futu-snapshot-v5") {
@@ -95,7 +102,7 @@ window.addEventListener("message", event => {
   status.textContent = (updatedSymbols.size ? [...updatedSymbols].join("、") + " 已更新" : "未更新任何價格") + (sessions.size ? " · " + [...sessions].join("／") : "")
     + (hasSnapshot ? " · 成交時間未提供" : "")
     + (warnings.length ? " · 部分行情待確認" : "")
-    + (errors.length ? "\n" + errors.join("\n") : "") + reloadTimeLabel();
+    + (errors.length ? "\n" + errors.join("\n") + "\n診斷 " + pending.id.slice(0,8) + " · 後端 " + (event.data.backendSeconds ?? "?") + " 秒" : "") + reloadTimeLabel();
   // Keep diagnostics available on hover without filling the page with repeated text.
   status.title = (details + (errors.length ? " · " + errors.join("；") : "") + (warnings.length ? " · " + [...new Set(warnings)].join("；") : "")).replace(/^ · /, "");
 });

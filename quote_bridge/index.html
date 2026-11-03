@@ -25,6 +25,10 @@ function scheduleResize() {
 }
 function deliver() {
   if (!loaded || !reply || reply.id !== activeRequestId) return;
+  if (reply.phase === "accepted") {
+    frame.contentWindow.postMessage({type:"ledger-us-quotes-progress", id:reply.id, phase:"accepted"}, "*");
+    return;
+  }
   frame.contentWindow.postMessage({type:"ledger-us-quotes-result", ...reply}, "*");
   activeRequestId = null;
 }
@@ -53,6 +57,7 @@ window.addEventListener("message", event => {
     const {id, symbols} = event.data;
     if (typeof id === "string" && Array.isArray(symbols) && symbols.length <= 50) {
       activeRequestId = id;
+      frame.contentWindow.postMessage({type:"ledger-us-quotes-progress", id, phase:"bridge"}, "*");
       send("streamlit:setComponentValue", {value:{id, symbols}, dataType:"json"});
     }
   }

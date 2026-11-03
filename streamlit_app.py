@@ -2,6 +2,8 @@ import json
 import hmac
 import re
 import importlib
+import time
+import logging
 from pathlib import Path
 
 import streamlit as st
@@ -89,18 +91,26 @@ st.set_page_config(page_title="Stock Ledger!", page_icon="💰", layout="wide")
 def render_ledger():
     ledger = st.components.v1.declare_component("ledger_quote_bridge", path=str(ROOT / "quote_bridge"))
     request = ledger(html=build_page(), reply=st.session_state.get("quote_reply"), key="ledger")
-    if isinstance(request, dict) and isinstance(request.get("symbols"), list) and isinstance(request.get("id"), str) and request["id"] != st.session_state.get("quote_request_id"):
-        st.session_state["quote_request_id"] = request["id"]
-        st.session_state["quote_reply"] = None
+    pending = st.session_state.pop("quote_pending", None)
+    if pending:
+        request = pending
+        started = time.monotonic()
+        logging.getLogger("ledger.quote").warning("quote_start id=%s", request["id"][:36])
         try:
-            # Return directly: polling reruns can interrupt delivery and an executor
-            # queue adds unbudgeted waiting before the backend timeout starts.
             result = quote_backend.fetch_us_quotes(request["symbols"], dict(st.secrets.get("futu", {})))
         except ValueError as error:
             result = {"quotes": {}, "errors": {}, "error": str(error)}
-        except Exception:
-            result = {"quotes": {}, "errors": {}, "error": "報價服務暫時無法完成，請稍後重試。"}
-        st.session_state["quote_reply"] = {"id": request["id"], **result}
+        except Exception as error:
+            logging.getLogger("ledger.quote").warning("quote_exception type=%s", type(error).__name__)
+            result = {"quotes": {}, "errors": {}, "error": "報價服務內部錯誤（" + type(error).__name__ + "）"}
+        elapsed = round(time.monotonic() - started, 2)
+        logging.getLogger("ledger.quote").warning("quote_complete id=%s seconds=%s", request["id"][:36], elapsed)
+        st.session_state["quote_reply"] = {**result, "id": request["id"], "backendSeconds": elapsed}
+        st.rerun(scope="fragment")
+    if isinstance(request, dict) and isinstance(request.get("symbols"), list) and isinstance(request.get("id"), str) and request["id"] != st.session_state.get("quote_request_id"):
+        st.session_state["quote_request_id"] = request["id"]
+        st.session_state["quote_pending"] = request
+        st.session_state["quote_reply"] = {"id": request["id"], "phase": "accepted"}
         st.rerun(scope="fragment")
 
 
