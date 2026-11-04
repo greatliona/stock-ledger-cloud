@@ -2,7 +2,7 @@ const fs = require("fs");
 const vm = require("vm");
 const assert = require("assert");
 const source = fs.readFileSync(__dirname + "/app.js", "utf8").split("const state = loadState();")[0];
-function run(extra, session = "夜盤", lastUpdated = "") {
+function run(extra, session = "夜盤", lastUpdated = "", failedSymbols = []) {
   let handler;
   const status = {};
   const context = {window:{STOCK_LEDGER_QUOTE_BRIDGE:true,parent:{},addEventListener:(t,f)=>handler=f},
@@ -11,6 +11,7 @@ function run(extra, session = "夜盤", lastUpdated = "") {
   vm.runInContext(source + `const state={usHoldings:[{id:"1",symbol:"SOXL",currentPrice:165.4,lastUpdated:${JSON.stringify(lastUpdated)}}]};
     let editingUsHoldingId="";function saveAndRenderUsQuotePrices(){};
     pendingUsQuoteRequest={id:"test",holdings:[{id:"1",symbol:"SOXL",price:165.4}]};`,context);
+  for (const symbol of failedSymbols) vm.runInContext(`pendingUsQuoteRequest.holdings.push({id:${JSON.stringify(symbol)},symbol:${JSON.stringify(symbol)},price:1}); state.usHoldings.push({id:${JSON.stringify(symbol)},symbol:${JSON.stringify(symbol)},currentPrice:1});`,context);
   handler({source:context.window.parent,data:{type:"ledger-us-quotes-result",id:"test",
     quotes:{SOXL:{price:163.92,currency:"USD",time:"2026-10-06T02:05:49Z",timeKind:"trade",ageSeconds:1,checkedPeriods:["NORMAL","BEFORE","AFTER","OVERNIGHT"],session}},...extra}});
   return {price:vm.runInContext("state.usHoldings[0].currentPrice",context),text:status.textContent};
@@ -38,7 +39,7 @@ assert.equal(run({error:"查價失敗"}).price,165.4);
 const snapshot={price:141.17,currency:"USD",time:null,ageSeconds:null,timeKind:"sessionSnapshot",session:"夜盤",priceField:"overnight_price",checkedPeriods:["OVERNIGHT"],fetchedAt:"2026-10-12T02:00:00Z"};
 const night=run({quoteProtocol:"futu-snapshot-v5",quotes:{SOXL:snapshot}});
 assert.equal(night.price,141.17);
-assert(night.text.includes("成交時間未提供"));
+assert(!night.text.includes("成交時間未提供"));
 assert.equal(run({quoteProtocol:"futu-snapshot-v5",quotes:{SOXL:{...snapshot,priceField:"last_price"}}}).price,165.4);
 assert.equal(run({quoteProtocol:"futu-smart-v4"}).price,165.4);
 console.log("PASS: old protocol blocked, valid quote applied, session required, errors preserve price");
@@ -61,5 +62,8 @@ assert.deepEqual(renderCalls,["persist","summary","us-holdings","settlement","cl
 const failure=run({quoteProtocol:"futu-snapshot-v5",quotes:{},errors:{SOXL:"夜盤價格欄位缺漏；保留原價；保留原價"}});
 assert(failure.text.includes("SOXL 未更新：夜盤價格欄位缺漏"));
 assert.equal((failure.text.match(/保留原價/g)||[]).length,0);
+const grouped = run({quoteProtocol:"futu-snapshot-v5", errors:{EPP:"盤前價格欄位為零",SEMI:"盤前價格欄位為零",IVV:"連線失敗"}}, "正常盤", "", ["EPP","SEMI","IVV"]);
+assert(grouped.text.includes("EPP、SEMI 未更新：盤前價格欄位為零"));
+assert(grouped.text.includes("IVV 未更新：連線失敗"));
 const html=fs.readFileSync(__dirname+"/index.html","utf8");
 assert(html.indexOf('id="usQuoteStatus"')>html.indexOf('id="usHoldingsBody"'));

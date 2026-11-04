@@ -36,7 +36,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.46", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.47", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -137,10 +137,15 @@ window.addEventListener("message", event => {
   });
   if (updated) saveAndRenderUsQuotePrices();
   const details = times.length ? " · " + times.join("；") : "";
-  const errors = [...new Set(failed)].map(symbol => symbol + " 未更新：" + (failureReasons[symbol] || event.data.errors?.[symbol] || "報價缺漏或格式無效").replace(/[，；]?保留原價/g, "").replace(/[；，]+$/, ""));
+  const failureGroups = new Map();
+  [...new Set(failed)].forEach(symbol => {
+    const reason = (failureReasons[symbol] || event.data.errors?.[symbol] || "報價缺漏或格式無效").replace(/[，；]?保留原價/g, "").replace(/[；，]+$/, "");
+    if (!failureGroups.has(reason)) failureGroups.set(reason, []);
+    failureGroups.get(reason).push(symbol);
+  });
+  const errors = [...failureGroups].map(([reason, symbols]) => symbols.join("、") + " 未更新：" + reason);
   const status = document.querySelector("#usQuoteStatus");
   status.textContent = (updatedSymbols.size ? [...updatedSymbols].join("、") + " 已更新" : "未更新任何價格") + (sessions.size ? " · " + [...sessions].join("／") : "")
-    + (hasSnapshot ? " · 成交時間未提供" : "")
     + (warnings.length ? " · 部分行情待確認" : "")
     + (errors.length ? "\n" + errors.join("\n") + "\n診斷 " + pending.id.slice(0,8) + " · 後端 " + (event.data.backendSeconds ?? "?") + " 秒" : "") + reloadTimeLabel();
   // Keep diagnostics available on hover without filling the page with repeated text.
