@@ -5,6 +5,22 @@ const CLOUD_ROW_ID = CLOUD_CONFIG.rowId || "main";
 const LEGACY_PURCHASE_DATE = "2026-09-05";
 const RELOAD_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.3 8.5A9 9 0 1 0 21 12"/><path d="M20.3 3.5v5h-5"/></svg>';
 let pendingUsQuoteRequest = null;
+let quoteDiagnostic = null;
+function showQuoteDiagnostic() {
+  if (!quoteDiagnostic || !document.createElement) return;
+  let detail = document.getElementById("quoteDiagnostic");
+  if (!detail) {
+    detail = document.createElement("details");
+    detail.id = "quoteDiagnostic";
+    detail.className = "quote-status";
+    const summary = document.createElement("summary");
+    summary.textContent = "查價診斷明細（可選取複製）";
+    detail.append(summary, document.createElement("pre"));
+    document.querySelector("#usQuoteStatus").after(detail);
+  }
+  detail.querySelector("pre").style.whiteSpace = "pre-wrap";
+  detail.querySelector("pre").textContent = JSON.stringify(quoteDiagnostic, null, 2);
+}
 
 function reloadTimeLabel() {
   return "\n最近查詢時間 " + new Date().toLocaleString("sv-SE", {timeZone:"Asia/Taipei", hour12:false}).replace(/-/g, "/") + "（台灣）";
@@ -20,6 +36,8 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
+  quoteDiagnostic = {version:"L1.5.45", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
   button.setAttribute("aria-busy", "true");
@@ -30,6 +48,10 @@ function refreshUsPrices() {
     button.disabled = false;
     button.removeAttribute("aria-busy");
     const phase = pendingUsQuoteRequestPhase;
+    quoteDiagnostic.timedOut = true;
+    quoteDiagnostic.browserOnline = typeof navigator === "undefined" ? null : navigator.onLine;
+    quoteDiagnostic.note = "未收到完成回覆；最後階段只是已知證據，不一定是根因。";
+    showQuoteDiagnostic();
     status.textContent = "查價逾時 · " + ({sent:"未收到頁面橋接確認",bridge:"已送出，但未收到後端確認（連線或服務狀態待查）",accepted:"後端已接收，但未收到完成回覆（需對照服務紀錄）"}[phase] || "階段未知") + " · 診斷 " + id.slice(0,8) + reloadTimeLabel();
   }, 35000);
   pendingUsQuoteRequest = {id, holdings, timer};
@@ -39,6 +61,24 @@ function refreshUsPrices() {
 
 let pendingUsQuoteRequestPhase = "sent";
 window.addEventListener("message", event => {
+  if (event.source === window.parent && event.data?.id === quoteDiagnostic?.id && ["ledger-us-quotes-progress","ledger-us-quotes-result"].includes(event.data?.type)) {
+    quoteDiagnostic.lastReceivedAt = new Date().toISOString();
+    quoteDiagnostic.stage = event.data.type === "ledger-us-quotes-result" ? "result_received" : event.data.phase;
+    if (Array.isArray(event.data.trace)) quoteDiagnostic.trace = event.data.trace.map(item => {
+      const labels = {backend_received:"後端已接收",credentials_check:"檢查富途設定",backend_complete:"後端處理完成",invalid_json:"富途回應不是有效JSON"};
+      const stage = String(item.stage || "");
+      const label = labels[stage] || (stage.startsWith("request_") ? "開始連線／等待富途標頭：" + stage.slice(8) : stage.startsWith("headers_") ? "已收到標頭／讀取資料：" + stage.slice(8) : stage.startsWith("body_") ? "已讀完資料：" + stage.slice(5) : stage.startsWith("http_") ? "富途HTTP錯誤：" + stage.slice(5) : stage);
+      return {seconds:item.seconds, stage:label};
+    });
+    if (event.data.backendSeconds !== undefined) quoteDiagnostic.backendSeconds = event.data.backendSeconds;
+    if (event.data.error) quoteDiagnostic.error = event.data.error;
+    if (event.data.errors) quoteDiagnostic.errors = event.data.errors;
+    if (quoteDiagnostic.timedOut && event.data.type === "ledger-us-quotes-result") {
+      quoteDiagnostic.note = "逾時後收到完成回覆；未套用晚到價格。";
+      document.querySelector("#usQuoteStatus").textContent = "查詢曾逾時，現已收到後端回覆；未套用晚到價格。展開下方診斷明細。 · 診斷 " + quoteDiagnostic.id.slice(0,8) + reloadTimeLabel();
+    }
+    showQuoteDiagnostic();
+  }
   if (event.source === window.parent && event.data?.type === "ledger-us-quotes-progress" && pendingUsQuoteRequest?.id === event.data.id) {
     if (event.data.phase === "accepted" || (event.data.phase === "bridge" && pendingUsQuoteRequestPhase !== "accepted")) pendingUsQuoteRequestPhase = event.data.phase;
     return;

@@ -25,8 +25,8 @@ function scheduleResize() {
 }
 function deliver() {
   if (!loaded || !reply || reply.id !== activeRequestId) return;
-  if (reply.phase === "accepted") {
-    frame.contentWindow.postMessage({type:"ledger-us-quotes-progress", id:reply.id, phase:"accepted"}, "*");
+  if (reply.phase === "accepted" || reply.phase === "running") {
+    frame.contentWindow.postMessage({type:"ledger-us-quotes-progress", ...reply, phase:"accepted"}, "*");
     return;
   }
   frame.contentWindow.postMessage({type:"ledger-us-quotes-result", ...reply}, "*");

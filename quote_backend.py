@@ -7,6 +7,7 @@ import math
 import re
 import secrets
 import time
+from contextvars import ContextVar
 import logging
 import socket
 import ssl
@@ -24,6 +25,12 @@ PROTOCOL = "futu-snapshot-v5"
 PERIODS = {"NORMAL": "正常盤", "BEFORE": "盤前", "AFTER": "盤後", "OVERNIGHT": "夜盤"}
 REQUEST_TIMEOUT_SECONDS = 6
 QUOTE_BUDGET_SECONDS = 25
+QUOTE_PROGRESS = ContextVar("quote_progress", default=None)
+
+def progress(stage):
+    callback = QUOTE_PROGRESS.get()
+    if callback:
+        callback(stage)
 
 class QuoteRateLimited(ValueError):
     pass
@@ -45,11 +52,15 @@ def request_json(path, body=None, headers=None, timeout=REQUEST_TIMEOUT_SECONDS)
                       method="POST" if body is not None else "GET")
     started = time.monotonic()
     operation = path.split('?')[0].rsplit('/', 1)[-1]
+    progress('request_' + operation)
     logging.getLogger('ledger.quote').warning('futu_start operation=%s timeout=%s', operation, round(timeout,2))
     try:
         with build_opener(NoRedirect()).open(request, timeout=timeout) as response:
+            progress('headers_' + operation)
             result = json.loads(response.read(2_000_000))
+            progress('body_' + operation)
     except HTTPError as error:
+        progress('http_' + str(error.code))
         if error.code == 429:
             raise QuoteRateLimited("富途暫時限流，已停止本次剩餘請求；未取得報價的原價不變。") from None
         messages = {401: "富途授權失敗，請檢查 AppKey 與金鑰配對。",
@@ -61,8 +72,10 @@ def request_json(path, body=None, headers=None, timeout=REQUEST_TIMEOUT_SECONDS)
         category = ('DNS解析失敗' if isinstance(reason, socket.gaierror) else
                     'TLS憑證或加密連線失敗' if isinstance(reason, ssl.SSLError) else
                     '連線或讀取逾時' if isinstance(reason, TimeoutError) else '網路連線失敗')
+        progress(category)
         raise ValueError('富途' + category + '（' + operation + '）') from None
     except (ValueError, UnicodeError):
+        progress('invalid_json')
         raise ValueError("富途回傳格式無效；原價不變。") from None
     finally:
         logging.getLogger('ledger.quote').warning('futu_end operation=%s seconds=%.2f', operation, time.monotonic()-started)

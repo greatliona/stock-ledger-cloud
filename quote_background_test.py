@@ -1,49 +1,65 @@
-"""Quote delivery tests without credentials or network."""
 import ast
-from pathlib import Path
-from types import SimpleNamespace as NS
-import unittest
+import threading
 import time
-import logging
+import unittest
+from pathlib import Path
+from contextvars import ContextVar
+from types import SimpleNamespace as NS
+from quote_job import QuoteJob
 
-class RerunRequested(Exception): pass
+class QuoteJobTests(unittest.TestCase):
+    def test_live_progress_then_result(self):
+        gate=threading.Event()
+        context=ContextVar('test',default=None)
+        def fetch(*args):
+            context.get()('request_snapshot')
+            gate.wait(2)
+            context.get()('headers_snapshot')
+            return {'quotes':{'TEST':{'price':1}}}
+        job=QuoteJob('one',fetch,[],{},context)
+        try:
+            for _ in range(100):
+                if any(e['stage']=='request_snapshot' for e in job.snapshot()['trace']): break
+                time.sleep(.005)
+            self.assertEqual(job.snapshot()['phase'],'running')
+            self.assertEqual(job.snapshot()['trace'][-1]['stage'],'request_snapshot')
+        finally: gate.set()
+        for _ in range(100):
+            if 'phase' not in job.snapshot(): break
+            time.sleep(.005)
+        self.assertEqual(job.snapshot()['quotes']['TEST']['price'],1)
+        self.assertEqual(job.snapshot()['trace'][-1]['stage'],'backend_complete')
 
-class QuoteDeliveryTests(unittest.TestCase):
-    def test_direct_delivery_deduplication_and_errors(self):
-        method = next(n for n in ast.parse(Path(__file__).with_name('streamlit_app.py').read_text()).body if isinstance(n, ast.FunctionDef) and n.name == 'render_ledger')
-        method.decorator_list = []
-        request = {'id': 'one', 'symbols': ['SOXL']}
-        calls, replies = [], []
-        def component(**kw):
-            replies.append(kw['reply'])
-            return request
-        def fetch(symbols, config):
-            calls.append(symbols)
-            if symbols == ['ERROR']: raise ValueError('test error')
-            return {'quotes': {'SOXL': {'price': 100}}}
-        def rerun(**kw):
-            self.assertEqual(kw, {'scope': 'fragment'})
-            raise RerunRequested()
-        st = NS(session_state={}, secrets={}, rerun=rerun, components=NS(v1=NS(declare_component=lambda *a, **kw: component)))
-        ns = dict(st=st, ROOT=Path(__file__).parent, build_page=lambda: '', quote_backend=NS(fetch_us_quotes=fetch),time=time,logging=logging)
-        exec(compile(ast.Module(body=[method], type_ignores=[]), 'fragment', 'exec'), ns)
-        run = ns['render_ledger']
-        for identifier in ['one', 'two']:
-            request = {'id': identifier, 'symbols': ['SOXL']}
-            with self.assertRaises(RerunRequested): run()
-            self.assertEqual(st.session_state['quote_reply']['phase'],'accepted')
-            with self.assertRaises(RerunRequested): run()
-            run()
-            self.assertEqual(replies[-1]['id'], identifier)
-            self.assertEqual(replies[-1]['quotes']['SOXL']['price'], 100)
-        self.assertEqual(len(calls), 2)
-        request = {'id': 'old', 'poll': 1}
-        run()
-        self.assertEqual(len(calls), 2)
-        request = {'id': 'error', 'symbols': ['ERROR']}
-        with self.assertRaises(RerunRequested): run()
-        with self.assertRaises(RerunRequested): run()
-        run()
-        self.assertEqual(replies[-1]['error'], 'test error')
+    def test_internal_error_does_not_leak_exception_message(self):
+        context=ContextVar('test',default=None)
+        def fetch(*args): raise RuntimeError('SECRET')
+        job=QuoteJob('two',fetch,[],{},context)
+        for _ in range(100):
+            if 'phase' not in job.snapshot(): break
+            time.sleep(.005)
+        self.assertNotIn('SECRET',str(job.snapshot()))
+        self.assertIn('RuntimeError',job.snapshot()['error'])
 
-if __name__ == '__main__': unittest.main()
+    def test_fragment_deduplicates_and_rejects_overlapping_job(self):
+        method=next(n for n in ast.parse(Path(__file__).with_name('streamlit_app.py').read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='render_ledger')
+        method.decorator_list=[]
+        request={'id':'one','symbols':['TEST']}
+        replies=[]; jobs=[]
+        class FakeJob:
+            def __init__(self,identifier,*args): self.id=identifier; jobs.append(self)
+            def snapshot(self): return {'id':self.id,'phase':'running'}
+        def component(**kw): replies.append(kw['reply']); return request
+        st=NS(session_state={'ledger_html':'test'},secrets={},components=NS(v1=NS(declare_component=lambda *a,**k:component)))
+        ns=dict(st=st,ROOT=Path('.'),QuoteJob=FakeJob,quote_backend=NS(fetch_us_quotes=None,QUOTE_PROGRESS=None))
+        exec(compile(ast.Module(body=[method],type_ignores=[]),'test','exec'),ns)
+        run=ns['render_ledger']
+        run(); run()
+        self.assertEqual(len(jobs),1)
+        self.assertEqual(replies[-1]['phase'],'running')
+        request={'id':'two','symbols':['TEST']}
+        run(); run()
+        self.assertEqual(len(jobs),1)
+        self.assertEqual(replies[-1]['id'],'two')
+        self.assertIn('未重複',replies[-1]['error'])
+
+if __name__=='__main__': unittest.main()

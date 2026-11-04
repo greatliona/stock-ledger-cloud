@@ -13,7 +13,7 @@ const {chromium} = require('playwright');
   await new Promise(resolve => portServer.listen(0, '127.0.0.1', resolve));
   const port = portServer.address().port;
   await new Promise(resolve => portServer.close(resolve));
-  for (const name of ['streamlit_app.py','index.html','app.js','styles.css','xlsx.mini.min.js'])
+  for (const name of ['streamlit_app.py','quote_job.py','index.html','app.js','styles.css','xlsx.mini.min.js'])
     fs.copyFileSync(path.join(__dirname,name),path.join(root,name));
   fs.cpSync(path.join(__dirname,'quote_bridge'),path.join(root,'quote_bridge'),{recursive:true});
   if (process.env.LEDGER_MANUAL_BROWSER === '1') {
@@ -44,12 +44,15 @@ window.addEventListener('message',event=>{
   fs.writeFileSync(path.join(root,'.streamlit','secrets.toml'),'[app]\npassword="test-only"\n');
   fs.writeFileSync(path.join(root,'quote_backend.py'), `
 import time, json
+from contextvars import ContextVar
+QUOTE_PROGRESS = ContextVar("quote_progress", default=None)
 from pathlib import Path
 from datetime import datetime, timezone
 def fetch_us_quotes(symbols, config=None):
+    if QUOTE_PROGRESS.get(): QUOTE_PROGRESS.get()("request_snapshot")
     with Path(__file__).with_name("calls.jsonl").open("a") as f:
         f.write(json.dumps(symbols)+"\\n")
-    time.sleep(5 if "SLOW" in (symbols or []) else 0.2)
+    time.sleep(38 if "SLOW" in (symbols or []) and __import__('os').environ.get('LEDGER_TEST_TIMEOUT') == '1' else 5 if "SLOW" in (symbols or []) else 0.2)
     if symbols == ["ERROR"]:
         raise ValueError("測試服務失敗")
     return {"quoteProtocol":"futu-snapshot-v5","quotes":{
