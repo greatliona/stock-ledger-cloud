@@ -20,10 +20,11 @@ for (const theme of ['dark', 'light']) {
   vm.createContext(scope);
   vm.runInContext(extract('fillStackedArea') + extract('fillStackedBand'), scope);
   vm.runInContext('fillStackedArea(context,[{x:0,y:1}],2,"y","#fff");fillStackedBand(context,[{x:0,top:1,bottom:2}],"top","bottom","#fff")', scope);
-  assert.deepEqual(fills, theme === 'dark' ? [0.26,0.26] : [1,1]);
+  assert.deepEqual(fills, theme === 'dark' ? [0.72,0.72] : [1,1]);
   assert.equal(context.globalAlpha, 1);
 }
 const css = fs.readFileSync(__dirname + '/styles.css', 'utf8');
 assert(css.includes('--chart-marker: #27323c'));
 assert(css.includes('--chart-grid: rgba(219, 228, 233, 0.15)'));
+assert(extract('drawAssetLine').includes('dataset.theme === "light" ? canvasThemeColor("--chart-marker") : color'));
 console.log('PASS: dark chart fill muted, light fill unchanged, opacity restored');

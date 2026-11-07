@@ -3122,7 +3122,7 @@ function compareStockCodes(a = "", b = "") {
 
 function fillStackedArea(context, points, baselineY, key, color) {
   context.save();
-  if (document.documentElement.dataset.theme !== "light") context.globalAlpha = 0.26;
+  if (document.documentElement.dataset.theme !== "light") context.globalAlpha = 0.72;
   context.fillStyle = color;
   context.beginPath();
   points.forEach((point, index) => {
@@ -3139,7 +3139,7 @@ function fillStackedArea(context, points, baselineY, key, color) {
 
 function fillStackedBand(context, points, topKey, bottomKey, color) {
   context.save();
-  if (document.documentElement.dataset.theme !== "light") context.globalAlpha = 0.26;
+  if (document.documentElement.dataset.theme !== "light") context.globalAlpha = 0.72;
   context.fillStyle = color;
   context.beginPath();
   points.forEach((point, index) => {
@@ -3160,7 +3160,7 @@ function drawSingleStackedColumn(context, point, padding, chartWidth, chartHeigh
   const x = point.x - columnWidth / 2;
 
   context.save();
-  if (document.documentElement.dataset.theme !== "light") context.globalAlpha = 0.26;
+  if (document.documentElement.dataset.theme !== "light") context.globalAlpha = 0.72;
   context.fillStyle = assetChartColors.fundFill;
   context.fillRect(x, point.fundY, columnWidth, baselineY - point.fundY);
   context.fillStyle = assetChartColors.cryptoFill;
@@ -3205,7 +3205,7 @@ function drawAssetLine(context, points, key, color, pointRadius, shouldDraw = ()
 
   for (const point of points) {
     if (!shouldDraw(point)) continue;
-    context.fillStyle = canvasThemeColor("--chart-marker");
+    context.fillStyle = document.documentElement.dataset.theme === "light" ? canvasThemeColor("--chart-marker") : color;
     context.strokeStyle = color;
     context.lineWidth = 2;
     context.beginPath();
