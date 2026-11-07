@@ -21,6 +21,7 @@
   --chart-line: rgba(219, 228, 233, 0.42);
   --chart-grid: rgba(219, 228, 233, 0.15);
   --chart-marker: #27323c;
+  --chart-marker-outline: #172129;
 }
 :root[data-theme="light"] {
   color-scheme: light;
@@ -45,6 +46,7 @@
   --chart-line: rgba(23, 33, 28, 0.58);
   --chart-grid: rgba(108, 117, 111, 0.28);
   --chart-marker: #ffffff;
+  --chart-marker-outline: #ffffff;
 }
 
 * {

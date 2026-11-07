@@ -3121,9 +3121,7 @@ function compareStockCodes(a = "", b = "") {
 }
 
 function fillStackedArea(context, points, baselineY, key, color) {
-  context.save();
-  if (document.documentElement.dataset.theme !== "light") context.globalAlpha = 0.72;
-  context.fillStyle = color;
+  context.fillStyle = assetChartAreaColor(color);
   context.beginPath();
   points.forEach((point, index) => {
     if (index === 0) context.moveTo(point.x, baselineY);
@@ -3134,13 +3132,10 @@ function fillStackedArea(context, points, baselineY, key, color) {
   }
   context.closePath();
   context.fill();
-  context.restore();
 }
 
 function fillStackedBand(context, points, topKey, bottomKey, color) {
-  context.save();
-  if (document.documentElement.dataset.theme !== "light") context.globalAlpha = 0.72;
-  context.fillStyle = color;
+  context.fillStyle = assetChartAreaColor(color);
   context.beginPath();
   points.forEach((point, index) => {
     if (index === 0) context.moveTo(point.x, point[bottomKey]);
@@ -3151,7 +3146,18 @@ function fillStackedBand(context, points, topKey, bottomKey, color) {
   }
   context.closePath();
   context.fill();
-  context.restore();
+}
+
+function assetChartAreaColor(color) {
+  if (document.documentElement.dataset.theme === "light") return color;
+  const darkFills = {
+    [assetChartColors.cashFill]: "#79404e",
+    [assetChartColors.stockFill]: "#80512f",
+    [assetChartColors.cryptoFill]: "#72611f",
+    [assetChartColors.fundFill]: "#2e654b",
+    [assetChartColors.usStockFill]: "#355a78",
+  };
+  return darkFills[color] || color;
 }
 
 function drawSingleStackedColumn(context, point, padding, chartWidth, chartHeight) {
@@ -3159,17 +3165,14 @@ function drawSingleStackedColumn(context, point, padding, chartWidth, chartHeigh
   const columnWidth = Math.min(120, Math.max(54, chartWidth * 0.22));
   const x = point.x - columnWidth / 2;
 
-  context.save();
-  if (document.documentElement.dataset.theme !== "light") context.globalAlpha = 0.72;
-  context.fillStyle = assetChartColors.fundFill;
+  context.fillStyle = assetChartAreaColor(assetChartColors.fundFill);
   context.fillRect(x, point.fundY, columnWidth, baselineY - point.fundY);
-  context.fillStyle = assetChartColors.cryptoFill;
+  context.fillStyle = assetChartAreaColor(assetChartColors.cryptoFill);
   context.fillRect(x, point.cryptoY, columnWidth, point.fundY - point.cryptoY);
-  context.fillStyle = assetChartColors.stockFill;
+  context.fillStyle = assetChartAreaColor(assetChartColors.stockFill);
   context.fillRect(x, point.stockY, columnWidth, point.cryptoY - point.stockY);
-  context.fillStyle = assetChartColors.cashFill;
+  context.fillStyle = assetChartAreaColor(assetChartColors.cashFill);
   context.fillRect(x, point.totalY, columnWidth, point.stockY - point.totalY);
-  context.restore();
 
   context.strokeStyle = assetChartColors.fundLine;
   context.lineWidth = 1.5;
@@ -3183,6 +3186,10 @@ function drawSingleStackedColumn(context, point, padding, chartWidth, chartHeigh
 }
 
 function drawAssetLine(context, points, key, color, pointRadius, shouldDraw = () => true) {
+  const dark = document.documentElement.dataset.theme !== "light";
+  const spacing = points.length > 1 ? Math.min(...points.slice(1).map((point, index) => point.x - points[index].x)) : Infinity;
+  const markerStep = dark && spacing < 5 ? Math.ceil(5 / Math.max(spacing, 0.1)) : 1;
+  const radius = dark ? Math.min(2.4, Math.max(0.9, (spacing - 2) / 2)) : pointRadius;
   context.strokeStyle = color;
   context.lineWidth = 2;
   context.beginPath();
@@ -3203,13 +3210,14 @@ function drawAssetLine(context, points, key, color, pointRadius, shouldDraw = ()
   }
   if (hasLine) context.stroke();
 
-  for (const point of points) {
+  for (const [index, point] of points.entries()) {
     if (!shouldDraw(point)) continue;
+    if (dark && index % markerStep !== 0 && index !== points.length - 1) continue;
     context.fillStyle = document.documentElement.dataset.theme === "light" ? canvasThemeColor("--chart-marker") : color;
-    context.strokeStyle = color;
-    context.lineWidth = 2;
+    context.strokeStyle = dark ? canvasThemeColor("--chart-marker-outline") : color;
+    context.lineWidth = dark ? 0.75 : 2;
     context.beginPath();
-    context.arc(point.x, point[key], pointRadius, 0, Math.PI * 2);
+    context.arc(point.x, point[key], radius, 0, Math.PI * 2);
     context.fill();
     context.stroke();
   }
