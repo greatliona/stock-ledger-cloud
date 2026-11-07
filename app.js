@@ -3151,7 +3151,7 @@ function fillStackedBand(context, points, topKey, bottomKey, color) {
 function assetChartAreaColor(color) {
   if (document.documentElement.dataset.theme === "light") return color;
   const darkFills = {
-    [assetChartColors.cashFill]: "#79404e",
+    [assetChartColors.cashFill]: "#632b4a",
     [assetChartColors.stockFill]: "#80512f",
     [assetChartColors.cryptoFill]: "#72611f",
     [assetChartColors.fundFill]: "#2e654b",
@@ -3187,7 +3187,8 @@ function drawSingleStackedColumn(context, point, padding, chartWidth, chartHeigh
 
 function drawAssetLine(context, points, key, color, pointRadius, shouldDraw = () => true) {
   const dark = document.documentElement.dataset.theme !== "light";
-  context.strokeStyle = color;
+  const lineColor = dark && color === assetChartColors.cashLine ? "#ef5b91" : color;
+  context.strokeStyle = lineColor;
   context.lineWidth = 2;
   context.beginPath();
   let hasLine = false;
@@ -3210,7 +3211,7 @@ function drawAssetLine(context, points, key, color, pointRadius, shouldDraw = ()
   for (const point of points) {
     if (!shouldDraw(point)) continue;
     context.fillStyle = dark ? assetChartMarkerColor(color) : canvasThemeColor("--chart-marker");
-    context.strokeStyle = dark ? canvasThemeColor("--chart-marker-outline") : color;
+    context.strokeStyle = dark ? canvasThemeColor("--chart-marker-outline") : lineColor;
     context.lineWidth = dark ? 1.4 : 2;
     context.beginPath();
     context.arc(point.x, point[key], pointRadius, 0, Math.PI * 2);
@@ -3221,7 +3222,7 @@ function drawAssetLine(context, points, key, color, pointRadius, shouldDraw = ()
 
 function assetChartMarkerColor(lineColor) {
   const lighter = {
-    [assetChartColors.cashLine]: "#ffc1c5",
+    [assetChartColors.cashLine]: "#ffb2d0",
     [assetChartColors.stockLine]: "#ffd0a0",
     [assetChartColors.cryptoLine]: "#ffeb9a",
     [assetChartColors.fundLine]: "#b5f3ca",
@@ -3251,7 +3252,7 @@ function drawAssetLegend(context, x, y, mode = "combined") {
   context.textAlign = "left";
   context.textBaseline = "middle";
   for (const item of items) {
-    context.fillStyle = item.color;
+    context.fillStyle = assetChartAreaColor(item.color);
     context.fillRect(x, y - 7, 12, 12);
     context.fillStyle = canvasThemeColor("--muted");
     context.fillText(item.label, x + 18, y);

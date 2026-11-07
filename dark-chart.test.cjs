@@ -19,11 +19,13 @@ for (const theme of ['dark', 'light']) {
   vm.runInContext(extract('fillStackedArea') + extract('fillStackedBand') + extract('assetChartAreaColor'), scope);
   vm.runInContext('fillStackedArea(context,[{x:0,y:1}],2,"y",assetChartColors.stockFill);fillStackedBand(context,[{x:0,top:1,bottom:2}],"top","bottom",assetChartColors.cryptoFill)', scope);
   assert.deepEqual(fills, theme === 'dark' ? ['#80512f','#72611f'] : ['#ffedd5','#fff2b8']);
+  assert.equal(vm.runInContext('assetChartAreaColor(assetChartColors.cashFill)',scope),theme === 'dark' ? '#632b4a' : '#fee2e2');
 }
 const css = fs.readFileSync(__dirname + '/styles.css', 'utf8');
 assert(css.includes('--chart-marker: #27323c'));
 assert(css.includes('--chart-grid: rgba(219, 228, 233, 0.15)'));
 assert(extract('drawAssetLine').includes('assetChartMarkerColor(color)'));
+assert(extract('drawAssetLine').includes('"#ef5b91"'));
 assert(extract('drawAssetLine').includes('canvasThemeColor("--chart-marker-outline")'));
 assert(css.includes('--button-bg: #344453'));
 for (const spacing of [8,3]) {
