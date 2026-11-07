@@ -1,4 +1,26 @@
 const STORAGE_KEY = "stock-ledger-v1";
+const THEME_KEY = "stock-ledger-theme";
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const button = document.getElementById("themeToggle");
+  if (button) {
+    button.textContent = theme === "dark" ? "☀ 淺色模式" : "☾ 深色模式";
+    button.setAttribute("aria-label", theme === "dark" ? "切換淺色模式" : "切換深色模式");
+  }
+  if (typeof drawCharts === "function" && typeof els !== "undefined") drawCharts();
+}
+function canvasThemeColor(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+if (document.documentElement && typeof localStorage !== "undefined") document.documentElement.dataset.theme = localStorage.getItem(THEME_KEY) === "light" ? "light" : "dark";
+document.addEventListener?.("DOMContentLoaded", () => {
+  applyTheme(document.documentElement.dataset.theme);
+  document.getElementById("themeToggle")?.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    localStorage.setItem(THEME_KEY, next);
+    applyTheme(next);
+  });
+});
 const CLOUD_CONFIG = window.STOCK_LEDGER_SUPABASE || {};
 const CLOUD_TABLE = CLOUD_CONFIG.table || "stock_ledger_state";
 const CLOUD_ROW_ID = CLOUD_CONFIG.rowId || "main";
@@ -2249,7 +2271,7 @@ function drawAssetChart(canvas, mode = "combined") {
     drawAssetLine(context, points, "valueY", getSingleAssetChartColor(mode, "line"), 4.5);
   }
 
-  context.fillStyle = "#6c756f";
+  context.fillStyle = canvasThemeColor("--muted");
   context.font = compactChart ? "10px sans-serif" : "12px sans-serif";
   context.textAlign = "center";
   context.textBaseline = "top";
@@ -3174,7 +3196,7 @@ function drawAssetLine(context, points, key, color, pointRadius, shouldDraw = ()
 
   for (const point of points) {
     if (!shouldDraw(point)) continue;
-    context.fillStyle = "#ffffff";
+    context.fillStyle = canvasThemeColor("--panel");
     context.strokeStyle = color;
     context.lineWidth = 2;
     context.beginPath();
@@ -3207,7 +3229,7 @@ function drawAssetLegend(context, x, y, mode = "combined") {
   for (const item of items) {
     context.fillStyle = item.color;
     context.fillRect(x, y - 7, 12, 12);
-    context.fillStyle = "#6c756f";
+    context.fillStyle = canvasThemeColor("--muted");
     context.fillText(item.label, x + 18, y);
     x += 18 + context.measureText(item.label).width + 18;
   }
@@ -3248,7 +3270,7 @@ function drawPieLeaderLine(context, label, centerX, centerY, markerX, markerY, c
   const penetration = radius - closestDistance;
   const needsBend = penetration > (compact ? 4 : 6);
 
-  context.strokeStyle = "rgba(23, 33, 28, 0.58)";
+  context.strokeStyle = canvasThemeColor("--chart-line");
   context.lineWidth = compact ? 0.9 : 1.05;
   context.lineJoin = "round";
   context.beginPath();
@@ -3411,7 +3433,7 @@ function drawMobileOutsidePieLabels(context, labels, centerX, centerY, radius, h
       context.strokeStyle = "rgba(23, 33, 28, 0.25)";
       context.strokeRect(markerX - markerSize / 2, markerY - markerSize / 2, markerSize, markerSize);
 
-      context.fillStyle = "#17211c";
+      context.fillStyle = canvasThemeColor("--chart-label");
       context.textAlign = side === "right" ? "left" : "right";
       context.textBaseline = "middle";
       drawPieLabelLines(context, label.lines, textX, label.y, lineHeight);
@@ -3446,7 +3468,7 @@ function drawOutsidePieLabels(context, labels, centerX, radius, height) {
       context.strokeStyle = "rgba(23, 33, 28, 0.25)";
       context.strokeRect(markerX - markerSize / 2, markerY - markerSize / 2, markerSize, markerSize);
 
-      context.fillStyle = "#17211c";
+      context.fillStyle = canvasThemeColor("--chart-label");
       context.font = "700 11.5px sans-serif";
       context.textAlign = side === "right" ? "left" : "right";
       context.textBaseline = "middle";
@@ -3463,8 +3485,8 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
   const panelWidth = width - 36;
   const panelHeight = summaryHeight - 16;
 
-  context.fillStyle = "rgba(255, 255, 255, 0.88)";
-  context.strokeStyle = "rgba(220, 226, 220, 0.95)";
+  context.fillStyle = canvasThemeColor("--chart-summary");
+  context.strokeStyle = canvasThemeColor("--line");
   context.lineWidth = 1;
   context.fillRect(x, y, panelWidth, panelHeight);
   context.strokeRect(x, y, panelWidth, panelHeight);
@@ -3479,12 +3501,12 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
   const padding = 12;
   let cursorX = x + padding;
   let rowY = y + 18;
-  context.fillStyle = "#6c756f";
+  context.fillStyle = canvasThemeColor("--muted");
   context.font = "700 13px sans-serif";
   context.fillText(title, cursorX, rowY);
   const titleWidth = context.measureText(title).width;
   const summaryTotal = rows.reduce((sum, row) => sum + row.value, 0);
-  context.fillStyle = "#8a928d";
+  context.fillStyle = canvasThemeColor("--muted");
   context.font = "500 10.5px sans-serif";
   context.fillText(`總和：${money(summaryTotal)}`, cursorX + titleWidth + 8, rowY);
   const itemStartX = x + padding;
@@ -3509,7 +3531,7 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
       context.strokeStyle = "rgba(23, 33, 28, 0.25)";
       context.strokeRect(cursorX, rowY - 4, 8, 8);
 
-      context.fillStyle = "#17211c";
+      context.fillStyle = canvasThemeColor("--chart-label");
       context.fillText(labels[index], cursorX + 12, rowY);
       cursorX += itemWidth + 18;
     });
@@ -3528,7 +3550,7 @@ function drawPieGroupSummary(context, rows, width, chartHeight, summaryHeight, c
     context.strokeStyle = "rgba(23, 33, 28, 0.25)";
     context.strokeRect(cursorX, rowY - 4, 8, 8);
 
-    context.fillStyle = "#17211c";
+    context.fillStyle = canvasThemeColor("--chart-label");
     context.fillText(label, cursorX + 12, rowY);
   });
 }
@@ -3538,14 +3560,14 @@ function drawMobilePieGroupSummary(context, rows, x, y, width, title = "中文�
   const rowGap = 20;
   let rowY = y + 18;
 
-  context.fillStyle = "#6c756f";
+  context.fillStyle = canvasThemeColor("--muted");
   context.font = "700 11.5px sans-serif";
   context.textAlign = "left";
   context.textBaseline = "middle";
   context.fillText(title, x + padding, rowY);
   const titleWidth = context.measureText(title).width;
   const summaryTotal = rows.reduce((sum, row) => sum + row.value, 0);
-  context.fillStyle = "#8a928d";
+  context.fillStyle = canvasThemeColor("--muted");
   context.font = "500 9.5px sans-serif";
   context.fillText(`總和：${money(summaryTotal)}`, x + padding + titleWidth + 7, rowY);
 
@@ -3568,7 +3590,7 @@ function drawMobilePieGroupSummary(context, rows, x, y, width, title = "中文�
     context.strokeStyle = "rgba(23, 33, 28, 0.25)";
     context.strokeRect(x + padding, rowY - 4, 8, 8);
 
-    context.fillStyle = "#17211c";
+    context.fillStyle = canvasThemeColor("--chart-label");
     context.fillText(showFullLabels ? label : trimCanvasText(context, label, maxLabelWidth), x + padding + 13, rowY);
     rowY += rowGap;
   }
@@ -3625,7 +3647,7 @@ function drawCompactPieLegend(context, slices, total, x, y, width, columns = 1) 
     context.lineWidth = 0.8;
     context.strokeRect(rowX, rowY - 6, 10, 10);
 
-    context.fillStyle = "#17211c";
+    context.fillStyle = canvasThemeColor("--chart-label");
     context.fillText(trimCanvasText(context, label, columnWidth - 18), rowX + 16, rowY);
   });
 }
@@ -3643,14 +3665,14 @@ function drawGrid(context, padding, chartWidth, chartHeight, max, step = 500000,
   context.lineWidth = 1;
   for (let value = 0; value <= max; value += step) {
     const y = padding.top + chartHeight - (value / max) * chartHeight;
-    context.strokeStyle = value === 0 ? "#17211c" : "rgba(108, 117, 111, 0.28)";
+    context.strokeStyle = value === 0 ? canvasThemeColor("--chart-label") : canvasThemeColor("--line");
     context.beginPath();
     context.moveTo(padding.left, y);
     context.lineTo(padding.left + chartWidth, y);
     context.stroke();
   }
 
-  context.strokeStyle = "#17211c";
+  context.strokeStyle = canvasThemeColor("--chart-label");
   context.beginPath();
   context.moveTo(padding.left, padding.top);
   context.lineTo(padding.left, padding.top + chartHeight);
@@ -3661,7 +3683,7 @@ function drawGrid(context, padding, chartWidth, chartHeight, max, step = 500000,
   }
   context.stroke();
 
-  context.fillStyle = "#6c756f";
+  context.fillStyle = canvasThemeColor("--muted");
   context.font = "12px sans-serif";
   context.textAlign = "right";
   context.textBaseline = "middle";
