@@ -3187,9 +3187,6 @@ function drawSingleStackedColumn(context, point, padding, chartWidth, chartHeigh
 
 function drawAssetLine(context, points, key, color, pointRadius, shouldDraw = () => true) {
   const dark = document.documentElement.dataset.theme !== "light";
-  const spacing = points.length > 1 ? Math.min(...points.slice(1).map((point, index) => point.x - points[index].x)) : Infinity;
-  const markerStep = dark && spacing < 5 ? Math.ceil(5 / Math.max(spacing, 0.1)) : 1;
-  const radius = dark ? Math.min(2.4, Math.max(0.9, (spacing - 2) / 2)) : pointRadius;
   context.strokeStyle = color;
   context.lineWidth = 2;
   context.beginPath();
@@ -3210,17 +3207,27 @@ function drawAssetLine(context, points, key, color, pointRadius, shouldDraw = ()
   }
   if (hasLine) context.stroke();
 
-  for (const [index, point] of points.entries()) {
+  for (const point of points) {
     if (!shouldDraw(point)) continue;
-    if (dark && index % markerStep !== 0 && index !== points.length - 1) continue;
-    context.fillStyle = document.documentElement.dataset.theme === "light" ? canvasThemeColor("--chart-marker") : color;
+    context.fillStyle = dark ? assetChartMarkerColor(color) : canvasThemeColor("--chart-marker");
     context.strokeStyle = dark ? canvasThemeColor("--chart-marker-outline") : color;
-    context.lineWidth = dark ? 0.75 : 2;
+    context.lineWidth = dark ? 1.4 : 2;
     context.beginPath();
-    context.arc(point.x, point[key], radius, 0, Math.PI * 2);
+    context.arc(point.x, point[key], pointRadius, 0, Math.PI * 2);
     context.fill();
     context.stroke();
   }
+}
+
+function assetChartMarkerColor(lineColor) {
+  const lighter = {
+    [assetChartColors.cashLine]: "#ffc1c5",
+    [assetChartColors.stockLine]: "#ffd0a0",
+    [assetChartColors.cryptoLine]: "#ffeb9a",
+    [assetChartColors.fundLine]: "#b5f3ca",
+    [assetChartColors.usStockLine]: "#c2dcff",
+  };
+  return lighter[lineColor] || "#e8edf0";
 }
 
 function drawAssetLegend(context, x, y, mode = "combined") {

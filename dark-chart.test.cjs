@@ -23,19 +23,19 @@ for (const theme of ['dark', 'light']) {
 const css = fs.readFileSync(__dirname + '/styles.css', 'utf8');
 assert(css.includes('--chart-marker: #27323c'));
 assert(css.includes('--chart-grid: rgba(219, 228, 233, 0.15)'));
-assert(extract('drawAssetLine').includes('dataset.theme === "light" ? canvasThemeColor("--chart-marker") : color'));
+assert(extract('drawAssetLine').includes('assetChartMarkerColor(color)'));
 assert(extract('drawAssetLine').includes('canvasThemeColor("--chart-marker-outline")'));
-assert(extract('drawAssetLine').includes('Math.min(2.4'));
-for (const [spacing, expectedCount, expectedRadius] of [[8,5,2.4],[3,3,0.9]]) {
+assert(css.includes('--button-bg: #344453'));
+for (const spacing of [8,3]) {
   const dots = [];
-  const context = {beginPath(){},moveTo(){},lineTo(){},stroke(){},fill(){},arc(x,y,r){dots.push({r,stroke:this.strokeStyle});}};
-  const scope = {document:{documentElement:{dataset:{theme:'dark'}}},context,canvasThemeColor:()=> '#172129'};
+  const context = {beginPath(){},moveTo(){},lineTo(){},stroke(){},fill(){},arc(x,y,r){dots.push({r,stroke:this.strokeStyle,fill:this.fillStyle});}};
+  const scope = {document:{documentElement:{dataset:{theme:'dark'}}},context,canvasThemeColor:()=> '#172129',assetChartColors:{stockLine:'#fb923c'}};
   vm.createContext(scope);
-  vm.runInContext(extract('drawAssetLine'),scope);
+  vm.runInContext(extract('drawAssetLine') + extract('assetChartMarkerColor'),scope);
   const points = Array.from({length:5},(_,i)=>({x:i*spacing,y:4}));
   scope.points=points;
   vm.runInContext('drawAssetLine(context,points,"y","#fb923c",4.5)',scope);
-  assert.equal(dots.length,expectedCount);
-  assert(dots.every(dot=>dot.r===expectedRadius && dot.stroke==='#172129'));
+  assert.equal(dots.length,5);
+  assert(dots.every(dot=>dot.r===4.5 && dot.stroke==='#172129' && dot.fill==='#ffd0a0'));
 }
-console.log('PASS: dark area hues distinct, compact framed markers, light colors unchanged');
+console.log('PASS: dark area hues distinct, full-size light-centered framed markers, light colors unchanged');
