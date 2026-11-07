@@ -327,6 +327,7 @@ const els = {
   exportBtn: document.querySelector("#exportBtn"),
   totalValue: document.querySelector("#totalValue"),
   cashTotal: document.querySelector("#cashTotal"),
+  cryptoCashUsdtTotal: document.querySelector("#cryptoCashUsdtTotal"),
   totalCost: document.querySelector("#totalCost"),
   stockTotal: document.querySelector("#stockTotal"),
   stockCost: document.querySelector("#stockCost"),
@@ -1083,6 +1084,7 @@ function renderSummary() {
   });
   els.totalValue.textContent = money(totals.value);
   els.cashTotal.textContent = money(totals.cash);
+  els.cryptoCashUsdtTotal.textContent = formatNumber(toNumber(state.cryptoCashUsdt));
   els.totalCost.textContent = money(totals.cost);
   els.stockTotal.textContent = money(totals.stockTotal);
   els.stockCost.textContent = money(totals.stockCost);

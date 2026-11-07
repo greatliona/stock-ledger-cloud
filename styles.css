@@ -170,6 +170,9 @@ h2 {
 .summary-grid .top-summary-card {
   grid-column: span 3;
 }
+.cash-summary-values { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.cash-summary-values > div { min-width: 0; }
+.cash-summary-values small { display: block; color: var(--muted); font-size: 0.7rem; margin-bottom: 4px; }
 
 .profit-card {
   min-height: 122px;
