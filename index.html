@@ -13,7 +13,7 @@
           <p class="eyebrow">Portfolio Ledger！</p>
           <div class="title-line">
             <h1>Stock Ledger!</h1>
-            <span class="app-version">L1.5.47 診斷版</span>
+            <span class="app-version">L1.5.48</span>
           </div>
         </div>
       </header>
@@ -35,7 +35,7 @@
           </div>
         </article>
         <article class="summary-card top-summary-card">
-          <span>現金水位</span>
+          <span>閒置台幣</span>
           <strong id="cashTotal">$0</strong>
         </article>
         <article class="summary-card">
@@ -255,12 +255,17 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Cash！</p>
-              <h2>現金水位</h2>
+              <h2>閒置資金</h2>
             </div>
           </div>
           <div class="cash-fields">
             <label class="cash-field">
-              <input id="cashInput" type="number" min="0" step="1" placeholder="現金水位" aria-label="現金水位" />
+              台幣
+              <input id="cashInput" type="number" step="1" placeholder="0" aria-label="閒置台幣" />
+            </label>
+            <label class="cash-field">
+              USDT
+              <input id="cryptoCashUsdtInput" type="number" min="0" step="0.01" placeholder="0" aria-label="閒置 USDT" />
             </label>
             <label class="exchange-rate-field">
               美元／USDT 台幣匯率

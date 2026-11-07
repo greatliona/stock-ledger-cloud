@@ -561,6 +561,9 @@ h2 {
   gap: 10px;
   align-items: end;
 }
+.cash-panel .cash-field { display: grid; gap: 7px; }
+.cash-panel .cash-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cash-panel .exchange-rate-field { grid-column: 1 / -1; }
 
 label {
   display: grid;

@@ -36,7 +36,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.47", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.48", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -312,6 +312,7 @@ const els = {
   cryptoEntryPrice: document.querySelector("#cryptoEntryPriceInput"),
   cryptoCurrentPrice: document.querySelector("#cryptoCurrentPriceInput"),
   cash: document.querySelector("#cashInput"),
+  cryptoCashUsdt: document.querySelector("#cryptoCashUsdtInput"),
   usdTwdRate: document.querySelector("#usdTwdRateInput"),
   holdingsBody: document.querySelector("#holdingsBody"),
   usHoldingsBody: document.querySelector("#usHoldingsBody"),
@@ -390,6 +391,7 @@ els.assetCharts.forEach(setupAssetChartHover);
 
 els.settlementDate.value = formatDateForInput(todayISO());
 els.cash.value = state.cash ? String(state.cash) : "";
+els.cryptoCashUsdt.value = state.cryptoCashUsdt ? String(state.cryptoCashUsdt) : "";
 els.usdTwdRate.value = state.usdTwdRate ? String(state.usdTwdRate) : "";
 els.usCashUsd.value = state.usCashUsd ? String(state.usCashUsd) : "";
 
@@ -606,6 +608,11 @@ els.fundsBody.addEventListener("change", (event) => {
   saveAndRender();
 });
 
+els.cryptoCashUsdt.addEventListener("change", () => {
+  state.cryptoCashUsdt = Math.max(0, toNumber(els.cryptoCashUsdt.value));
+  els.cryptoCashUsdt.value = state.cryptoCashUsdt ? String(state.cryptoCashUsdt) : "";
+  saveAndRender("已更新閒置 USDT。");
+});
 els.cash.addEventListener("change", () => {
   state.cash = toNumber(els.cash.value);
   els.cash.value = state.cash ? String(state.cash) : "";
@@ -674,10 +681,11 @@ els.fundsBody.addEventListener("click", (event) => {
 });
 
 els.settleBtn.addEventListener("click", () => {
+  state.cryptoCashUsdt = Math.max(0, toNumber(els.cryptoCashUsdt.value));
   state.cash = toNumber(els.cash.value);
   state.usdTwdRate = toNumber(els.usdTwdRate.value);
   state.usCashUsd = toNumber(els.usCashUsd.value);
-  if (!state.holdings.length && !state.usHoldings.length && !state.funds.length && !state.cryptoContracts.length && !state.cash && !state.usCashUsd) {
+  if (!state.holdings.length && !state.usHoldings.length && !state.funds.length && !state.cryptoContracts.length && !state.cash && !state.usCashUsd && !state.cryptoCashUsdt) {
     setStatus("請先新增台股、美股、基金、加密貨幣合約或現金水位。");
     return;
   }
@@ -752,6 +760,9 @@ els.settleBtn.addEventListener("click", () => {
   }
 
   state.currentFundTotal = fundTotal;
+  const cryptoCashUsdt = toNumber(state.cryptoCashUsdt);
+  const cryptoCashTwd = cryptoCashUsdt * (state.usdTwdRate || 0);
+  cryptoTotal += cryptoCashTwd;
   const existingIndex = state.history.findIndex((item) => item.date === date);
   const existingRecord = existingIndex >= 0 ? state.history[existingIndex] : null;
   const note = els.settlementNote.value.trim() || existingRecord?.note || "";
@@ -775,7 +786,9 @@ els.settleBtn.addEventListener("click", () => {
     fundCost,
     cryptoCost,
     cost,
-    pnl: stockTotal + usStockMarketValue + fundTotal + cryptoTotal - cost,
+    cryptoCashUsdt,
+    cryptoCashTwd,
+    pnl: stockTotal + usStockMarketValue + fundTotal + cryptoTotal - cryptoCashTwd - cost,
     prices,
     usPrices,
     fundValues,
@@ -841,6 +854,8 @@ els.importFile.addEventListener("change", async () => {
     state.tradeHistory = imported.tradeHistory;
     state.currentFundTotal = imported.currentFundTotal;
     state.cash = imported.cash;
+    state.cryptoCashUsdt = imported.cryptoCashUsdt;
+    els.cryptoCashUsdt.value = state.cryptoCashUsdt ? String(state.cryptoCashUsdt) : "";
     state.usdTwdRate = imported.usdTwdRate;
     state.usCashUsd = imported.usCashUsd;
     els.cash.value = state.cash ? String(state.cash) : "";
@@ -1038,7 +1053,7 @@ els.historyList.addEventListener("click", (event) => {
     record.cryptoCost = cryptoCost;
     record.total = stockTotal + usStockTotal + fundTotal + cryptoTotal + cash;
     record.cost = stockCost + usStockCost + fundCost + cryptoCost;
-    record.pnl = stockTotal + record.usStockMarketValue + fundTotal + cryptoTotal - record.cost;
+    record.pnl = stockTotal + record.usStockMarketValue + fundTotal + cryptoTotal - toNumber(record.cryptoCashTwd) - record.cost;
     record.note = note;
     state.history.sort((a, b) => a.date.localeCompare(b.date));
     editingHistoryDate = "";
@@ -1363,7 +1378,7 @@ function renderCryptoContracts() {
 function renderSettlementRows() {
   els.settlementRows.innerHTML = "";
 
-  if (!state.holdings.length && !state.usHoldings.length && !state.funds.length && !state.cryptoContracts.length && !state.cash && !state.usCashUsd) {
+  if (!state.holdings.length && !state.usHoldings.length && !state.funds.length && !state.cryptoContracts.length && !state.cash && !state.usCashUsd && !state.cryptoCashUsdt) {
     const empty = document.createElement("p");
     empty.className = "status-text";
     empty.textContent = "尚未新增台股、美股、基金、加密貨幣合約或現金水位";
@@ -2754,6 +2769,11 @@ function drawCryptoPieChart() {
       || chineseNameSorter.compare(a.label, b.label)
   );
 
+  const idleUsdtValue = toNumber(state.cryptoCashUsdt) * (state.usdTwdRate || 0);
+  if (idleUsdtValue > 0) {
+    slices.unshift({label: "USDT", group: "USDT", value: idleUsdtValue, isCash: true});
+    groupNames.unshift("USDT");
+  }
   const groupColorFamilies = assignPieColorFamilies(slices);
   const groupCounts = {};
   for (const slice of slices) {
@@ -2784,7 +2804,8 @@ function drawCryptoPieChart() {
   const radius = compactPie ? Math.min(width / 2 - labelRoom, 180) : Math.min((width - labelRoom * 2) / 2, chartHeight * 0.34, 210);
   const centerX = width / 2;
   const centerY = chartHeight / 2;
-  let start = -Math.PI / 2;
+  const cashAngle = slices[0]?.isCash ? (slices[0].value / total) * Math.PI * 2 : 0;
+  let start = cashAngle ? -Math.PI / 2 - cashAngle : -Math.PI / 2;
 
   for (const slice of slices) {
     const angle = (slice.value / total) * Math.PI * 2;
@@ -3713,7 +3734,8 @@ function getPortfolioTotals() {
   const fundTotal = state.funds.reduce((sum, item) => sum + (item.currentValue || 0), 0);
   const fundCost = state.funds.reduce((sum, item) => sum + (item.cost || 0), 0);
   const cryptoPositions = state.cryptoContracts.map(calculateCryptoPosition);
-  const cryptoTotal = cryptoPositions.reduce((sum, item) => sum + item.currentValueTwd, 0);
+  const cryptoCashTwd = toNumber(state.cryptoCashUsdt) * (state.usdTwdRate || 0);
+  const cryptoTotal = cryptoPositions.reduce((sum, item) => sum + item.currentValueTwd, 0) + cryptoCashTwd;
   const cryptoCost = cryptoPositions.reduce((sum, item) => sum + item.costTwd, 0);
   const cash = toNumber(state.cash);
   const cost = stockCost + usStockCost + fundCost + cryptoCost;
@@ -3721,7 +3743,7 @@ function getPortfolioTotals() {
   const stockPnl = stockTotal - stockCost;
   const usStockPnl = usStockMarketValue - usStockCost;
   const fundPnl = fundTotal - fundCost;
-  const cryptoPnl = cryptoTotal - cryptoCost;
+  const cryptoPnl = cryptoTotal - cryptoCashTwd - cryptoCost;
   const pnl = stockPnl + usStockPnl + fundPnl + cryptoPnl;
   const stockPnlPct = stockCost ? (stockPnl / stockCost) * 100 : 0;
   const usStockPnlPct = usStockCost ? (usStockPnl / usStockCost) * 100 : 0;
@@ -3787,7 +3809,7 @@ function backfillHistoryCosts() {
       item.cost = nextCost;
       changed = true;
     }
-    const nextPnl = toNumber(item.stockTotal) + toNumber(item.usStockMarketValue) + toNumber(item.fundTotal) + toNumber(item.cryptoTotal) - nextCost;
+    const nextPnl = toNumber(item.stockTotal) + toNumber(item.usStockMarketValue) + toNumber(item.fundTotal) + toNumber(item.cryptoTotal) - toNumber(item.cryptoCashTwd) - nextCost;
     if (nextCost && item.pnl !== nextPnl) {
       item.pnl = nextPnl;
       changed = true;
@@ -3835,7 +3857,7 @@ function setStatus(message) {
 }
 
 function loadState() {
-  const fallback = { holdings: [], usHoldings: [], funds: [], cryptoContracts: [], history: [], tradeHistory: [], currentFundTotal: 0, cash: 0, usdTwdRate: 0, usCashUsd: 0 };
+  const fallback = { holdings: [], usHoldings: [], funds: [], cryptoContracts: [], history: [], tradeHistory: [], currentFundTotal: 0, cash: 0, cryptoCashUsdt: 0, usdTwdRate: 0, usCashUsd: 0 };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? migrateState(JSON.parse(raw)) : fallback;
@@ -3892,6 +3914,8 @@ function replaceState(nextState) {
   state.tradeHistory = nextState.tradeHistory;
   state.currentFundTotal = nextState.currentFundTotal;
   state.cash = nextState.cash;
+  state.cryptoCashUsdt = nextState.cryptoCashUsdt;
+  els.cryptoCashUsdt.value = state.cryptoCashUsdt ? String(state.cryptoCashUsdt) : "";
   state.usdTwdRate = nextState.usdTwdRate;
   state.usCashUsd = nextState.usCashUsd;
   els.cash.value = state.cash ? String(state.cash) : "";
@@ -4078,7 +4102,9 @@ function migrateState(value) {
         fundCost,
         cryptoCost,
         cost,
-        pnl: stockTotal + usStockMarketValue + fundTotal + cryptoTotal - cost,
+        cryptoCashUsdt: toNumber(item.cryptoCashUsdt),
+        cryptoCashTwd: toNumber(item.cryptoCashTwd),
+        pnl: stockTotal + usStockMarketValue + fundTotal + cryptoTotal - toNumber(item.cryptoCashTwd) - cost,
         prices: item.prices && typeof item.prices === "object" ? item.prices : {},
         usPrices: item.usPrices && typeof item.usPrices === "object" ? item.usPrices : {},
         fundValues: item.fundValues && typeof item.fundValues === "object" ? item.fundValues : {},
@@ -4124,6 +4150,7 @@ function migrateState(value) {
     tradeHistory,
     currentFundTotal: funds.reduce((sum, fund) => sum + fund.currentValue, 0),
     cash: toNumber(value.cash),
+    cryptoCashUsdt: Math.max(0, toNumber(value.cryptoCashUsdt)),
     usdTwdRate,
     usCashUsd: toNumber(value.usCashUsd),
   };
