@@ -3121,6 +3121,8 @@ function compareStockCodes(a = "", b = "") {
 }
 
 function fillStackedArea(context, points, baselineY, key, color) {
+  context.save();
+  if (document.documentElement.dataset.theme !== "light") context.globalAlpha = 0.26;
   context.fillStyle = color;
   context.beginPath();
   points.forEach((point, index) => {
@@ -3132,9 +3134,12 @@ function fillStackedArea(context, points, baselineY, key, color) {
   }
   context.closePath();
   context.fill();
+  context.restore();
 }
 
 function fillStackedBand(context, points, topKey, bottomKey, color) {
+  context.save();
+  if (document.documentElement.dataset.theme !== "light") context.globalAlpha = 0.26;
   context.fillStyle = color;
   context.beginPath();
   points.forEach((point, index) => {
@@ -3146,6 +3151,7 @@ function fillStackedBand(context, points, topKey, bottomKey, color) {
   }
   context.closePath();
   context.fill();
+  context.restore();
 }
 
 function drawSingleStackedColumn(context, point, padding, chartWidth, chartHeight) {
@@ -3153,6 +3159,8 @@ function drawSingleStackedColumn(context, point, padding, chartWidth, chartHeigh
   const columnWidth = Math.min(120, Math.max(54, chartWidth * 0.22));
   const x = point.x - columnWidth / 2;
 
+  context.save();
+  if (document.documentElement.dataset.theme !== "light") context.globalAlpha = 0.26;
   context.fillStyle = assetChartColors.fundFill;
   context.fillRect(x, point.fundY, columnWidth, baselineY - point.fundY);
   context.fillStyle = assetChartColors.cryptoFill;
@@ -3161,6 +3169,7 @@ function drawSingleStackedColumn(context, point, padding, chartWidth, chartHeigh
   context.fillRect(x, point.stockY, columnWidth, point.cryptoY - point.stockY);
   context.fillStyle = assetChartColors.cashFill;
   context.fillRect(x, point.totalY, columnWidth, point.stockY - point.totalY);
+  context.restore();
 
   context.strokeStyle = assetChartColors.fundLine;
   context.lineWidth = 1.5;
@@ -3196,7 +3205,7 @@ function drawAssetLine(context, points, key, color, pointRadius, shouldDraw = ()
 
   for (const point of points) {
     if (!shouldDraw(point)) continue;
-    context.fillStyle = canvasThemeColor("--panel");
+    context.fillStyle = canvasThemeColor("--chart-marker");
     context.strokeStyle = color;
     context.lineWidth = 2;
     context.beginPath();
@@ -3665,7 +3674,7 @@ function drawGrid(context, padding, chartWidth, chartHeight, max, step = 500000,
   context.lineWidth = 1;
   for (let value = 0; value <= max; value += step) {
     const y = padding.top + chartHeight - (value / max) * chartHeight;
-    context.strokeStyle = value === 0 ? canvasThemeColor("--chart-label") : canvasThemeColor("--line");
+    context.strokeStyle = value === 0 ? canvasThemeColor("--chart-line") : canvasThemeColor("--chart-grid");
     context.beginPath();
     context.moveTo(padding.left, y);
     context.lineTo(padding.left + chartWidth, y);
