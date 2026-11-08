@@ -5,6 +5,7 @@ import importlib
 import time
 import logging
 from pathlib import Path
+from PIL import Image
 
 import streamlit as st
 import quote_backend
@@ -86,7 +87,12 @@ def check_password() -> bool:
     return False
 
 
-st.set_page_config(page_title="Stock Ledger!", page_icon="💰", layout="wide")
+favicon_path = Path(__file__).with_name("favicon.png")
+st.set_page_config(
+    page_title="Stock Ledger!",
+    page_icon=Image.open(favicon_path) if favicon_path.is_file() else "💰",
+    layout="wide",
+)
 
 @st.fragment(run_every=1)
 def render_ledger():
