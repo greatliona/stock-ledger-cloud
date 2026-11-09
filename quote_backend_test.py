@@ -278,6 +278,25 @@ class FutuTests(unittest.TestCase):
         self.assertEqual(req.call_count,3)
         self.assertEqual(req.call_args_list[0].kwargs["body"],req.call_args_list[2].kwargs["body"])
 
+    def test_http_401_corrects_clock_once_then_recovers(self):
+        server_ms = int(time.time()*1000) + 20000
+        with patch.object(q,"request_json",side_effect=[q.QuoteAuthFailed("HTTP 401"),
+                 {"server_time_ms":server_ms},self.snapshots(["SOXL"])]) as req:
+            result=q.fetch_us_quotes(["SOXL"],self.config)
+        self.assertIn("SOXL",result["quotes"])
+        self.assertEqual(req.call_count,3)
+        self.assertEqual(req.call_args_list[0].kwargs["body"],req.call_args_list[2].kwargs["body"])
+        self.assertNotEqual(req.call_args_list[0].kwargs["headers"]["X-Timestamp"],
+                            req.call_args_list[2].kwargs["headers"]["X-Timestamp"])
+
+    def test_http_401_after_clock_correction_stops(self):
+        with patch.object(q,"request_json",side_effect=[q.QuoteAuthFailed("HTTP 401"),
+                 {"server_time_ms":int(time.time()*1000)},q.QuoteAuthFailed("HTTP 401")]) as req:
+            result=q.fetch_us_quotes(["SOXL","IVV"],self.config)
+        self.assertEqual(req.call_count,3)
+        self.assertFalse(result["quotes"])
+        self.assertTrue(all("校正伺服器時間後仍未通過" in message for message in result["errors"].values()))
+
     def test_budget_expired_no_network(self):
         with patch.object(q.time,"monotonic",side_effect=[0]+[121]*10),patch.object(q,"request_json") as req:
             result=q.fetch_us_quotes(["SOXL"],self.config)

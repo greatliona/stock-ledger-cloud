@@ -58,7 +58,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.48", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.59", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -87,7 +87,7 @@ window.addEventListener("message", event => {
     quoteDiagnostic.lastReceivedAt = new Date().toISOString();
     quoteDiagnostic.stage = event.data.type === "ledger-us-quotes-result" ? "result_received" : event.data.phase;
     if (Array.isArray(event.data.trace)) quoteDiagnostic.trace = event.data.trace.map(item => {
-      const labels = {backend_received:"後端已接收",credentials_check:"檢查富途設定",backend_complete:"後端處理完成",invalid_json:"富途回應不是有效JSON"};
+      const labels = {backend_received:"後端已接收",credentials_check:"檢查富途設定",backend_complete:"後端處理完成",invalid_json:"富途回應不是有效JSON",auth_clock_check:"檢查富途伺服器時間",auth_clock_retry:"校時後重試簽章",auth_failed_after_clock:"校時後仍為 HTTP 401"};
       const stage = String(item.stage || "");
       const label = labels[stage] || (stage.startsWith("request_") ? "開始連線／等待富途標頭：" + stage.slice(8) : stage.startsWith("headers_") ? "已收到標頭／讀取資料：" + stage.slice(8) : stage.startsWith("body_") ? "已讀完資料：" + stage.slice(5) : stage.startsWith("http_") ? "富途HTTP錯誤：" + stage.slice(5) : stage);
       return {seconds:item.seconds, stage:label};

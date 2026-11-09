@@ -35,6 +35,9 @@ def progress(stage):
 class QuoteRateLimited(ValueError):
     pass
 
+class QuoteAuthFailed(ValueError):
+    pass
+
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None  # Never forward credentials to a redirected host.
@@ -61,10 +64,11 @@ def request_json(path, body=None, headers=None, timeout=REQUEST_TIMEOUT_SECONDS)
             progress('body_' + operation)
     except HTTPError as error:
         progress('http_' + str(error.code))
+        if error.code == 401:
+            raise QuoteAuthFailed("富途回應 HTTP 401：簽章驗證失敗；可能是伺服器時間或 AppKey 設定問題。") from None
         if error.code == 429:
             raise QuoteRateLimited("富途暫時限流，已停止本次剩餘請求；未取得報價的原價不變。") from None
-        messages = {401: "富途授權失敗，請檢查 AppKey 與金鑰配對。",
-                    403: "富途未授予行情權限；不會自動購買服務。",
+        messages = {403: "富途未授予行情權限；不會自動購買服務。",
                     429: "富途請求額度暫時受限；原價不變。"}
         raise ValueError(messages.get(error.code, f"富途服務回應 HTTP {error.code}；原價不變。")) from None
     except (URLError, TimeoutError, OSError) as error:
@@ -296,13 +300,15 @@ def fetch_us_quotes(symbols, config=None):
     app_key, key = load_credentials(config or {})
     quotes, errors, warnings = {}, {}, {}
     deadline = time.monotonic() + QUOTE_BUDGET_SECONDS
-    clock_offset, count, stopped = 0, 0, None
+    clock_offset, count, stopped, auth_failed = 0, 0, None, None
 
     def now():
         return time.time() + clock_offset / 1000
 
     def call(path, payload=None):
-        nonlocal clock_offset, count, stopped
+        nonlocal clock_offset, count, stopped, auth_failed
+        if auth_failed:
+            raise QuoteAuthFailed(auth_failed)
         if stopped:
             raise QuoteRateLimited(stopped)
         if time.monotonic() >= deadline:
@@ -314,19 +320,43 @@ def fetch_us_quotes(symbols, config=None):
             raise ValueError("本次查價逾時")
         count += 1
         body = json.dumps(payload, separators=(",", ":")).encode() if payload is not None else None
+        def authenticated_request():
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise ValueError("本次查價逾時")
+            return request_json(path, body=body, headers=signed_headers(app_key, key, path, int(now()*1000), body),
+                                timeout=min(REQUEST_TIMEOUT_SECONDS, remaining))
+        corrected = False
+        def correct_clock_and_retry():
+            nonlocal clock_offset, corrected
+            corrected = True
+            progress('auth_clock_check')
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise ValueError("本次查價逾時")
+            server = request_json("/api/v1.0/server-time", timeout=min(REQUEST_TIMEOUT_SECONDS, remaining))
+            stamp = positive_number(server.get("server_time_ms"))
+            if not stamp:
+                raise ValueError("無法校正富途簽章時間")
+            clock_offset = int(stamp) - int(time.time()*1000)
+            progress('auth_clock_retry')
+            try:
+                return authenticated_request()
+            except QuoteAuthFailed:
+                progress('auth_failed_after_clock')
+                raise QuoteAuthFailed("富途 HTTP 401：校正伺服器時間後仍未通過簽章驗證；請核對 AppKey ID、金鑰配對與演算法。") from None
         try:
-            result = request_json(path, body=body, headers=signed_headers(app_key, key, path, int(now()*1000), body),
-                                  timeout=min(REQUEST_TIMEOUT_SECONDS, remaining))
-            if result.get("ret_code") == -12006:
-                server = request_json("/api/v1.0/server-time", timeout=min(REQUEST_TIMEOUT_SECONDS, max(0.1, deadline-time.monotonic())))
-                stamp = positive_number(server.get("server_time_ms"))
-                if not stamp:
-                    raise ValueError("無法校正富途簽章時間")
-                clock_offset = int(stamp) - int(time.time()*1000)
-                result = request_json(path, body=body, headers=signed_headers(app_key, key, path, int(stamp), body),
-                                      timeout=min(REQUEST_TIMEOUT_SECONDS, max(0.1, deadline-time.monotonic())))
+            try:
+                result = authenticated_request()
+            except QuoteAuthFailed:
+                result = correct_clock_and_retry()
+            if result.get("ret_code") == -12006 and not corrected:
+                result = correct_clock_and_retry()
         except QuoteRateLimited as error:
             stopped = str(error)
+            raise
+        except QuoteAuthFailed as error:
+            auth_failed = str(error)
             raise
         error_code = result.get("error") if isinstance(result.get("error"), dict) else {}
         if str(result.get("ret_code")) in ("-12011", "-11") or error_code.get("code") == "rate_limited":
