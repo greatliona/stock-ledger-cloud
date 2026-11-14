@@ -58,7 +58,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.63", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.64", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -1811,7 +1811,7 @@ function removePendingCryptoContract() {
 }
 
 function renderTradeHistory() {
-  const allTrades = [...state.tradeHistory].sort(compareTradeRecords);
+  const allTrades = aggregateTradeRecords(state.tradeHistory);
   const totalCost = allTrades.reduce((sum, trade) => sum + trade.costTwd, 0);
   const totalPnl = allTrades.reduce((sum, trade) => sum + trade.pnlTwd, 0);
   const totalPnlPct = totalCost ? (totalPnl / totalCost) * 100 : 0;
@@ -1822,12 +1822,11 @@ function renderTradeHistory() {
 
   const marketFilter = els.tradeMarketFilter.value || "all";
   const monthFilter = els.tradeMonthFilter.value || "";
-  const filteredTrades = allTrades.filter((trade) =>
+  const visibleTrades = allTrades.filter((trade) =>
     (marketFilter === "all" || trade.market === marketFilter)
     && (!monthFilter || trade.sellDate.startsWith(monthFilter))
   );
-  const visibleTrades = aggregateTradeRecords(filteredTrades);
-  els.tradeFilterStats.textContent = formatTradeFilterStats(filteredTrades);
+  els.tradeFilterStats.textContent = formatTradeFilterStats(visibleTrades);
 
   els.tradeHistoryList.innerHTML = "";
   if (!visibleTrades.length) {
@@ -1844,7 +1843,7 @@ function renderTradeHistory() {
     record.dataset.tradeRecord = trade.id;
     if (trade.sourceIds.length > 1) {
       record.classList.add("trade-record-group");
-      record.innerHTML = renderTradeDaySummary(trade);
+      record.innerHTML = renderTradeRecord(trade);
     } else if (editingTradeId === trade.id) {
       record.classList.add("is-editing");
       record.innerHTML = renderTradeEditForm(trade);
@@ -1871,9 +1870,23 @@ function renderTradeHistory() {
 
 function aggregateTradeRecords(trades) {
   const groups = new Map();
-  for (const trade of [...trades].sort(compareTradeRecords)) {
+  const ordered = [...trades].sort(compareTradeRecords);
+  const namesBySymbol = new Map();
+  for (const trade of ordered) {
     const side = trade.side === "short" ? "short" : "long";
-    const key = `${trade.sellDate}|${side}`;
+    const name = tradeGroupName(trade);
+    if (!name) continue;
+    const symbolKey = `${trade.market}|${trade.sellDate}|${side}|${tradeGroupSymbol(trade)}`;
+    if (!namesBySymbol.has(symbolKey)) namesBySymbol.set(symbolKey, new Set());
+    namesBySymbol.get(symbolKey).add(name);
+  }
+  for (const trade of ordered) {
+    const side = trade.side === "short" ? "short" : "long";
+    const symbol = tradeGroupSymbol(trade);
+    const symbolKey = `${trade.market}|${trade.sellDate}|${side}|${symbol}`;
+    const possibleNames = namesBySymbol.get(symbolKey);
+    const name = tradeGroupName(trade) || (possibleNames?.size === 1 ? [...possibleNames][0] : "");
+    const key = `${trade.market}|${trade.sellDate}|${side}|${name ? `name:${name}` : `symbol:${symbol}`}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(trade);
   }
@@ -1881,37 +1894,43 @@ function aggregateTradeRecords(trades) {
     if (items.length === 1) return {...items[0], sourceIds: [items[0].id]};
     const first = items[0];
     const sum = (field) => items.reduce((total, item) => total + toNumber(item[field]), 0);
+    const shares = sum("shares");
+    const costNative = sum("costNative");
     const costTwd = sum("costTwd");
     const pnlTwd = sum("pnlTwd");
     return {
-      id: first.id, sellDate: first.sellDate, side: first.side === "short" ? "short" : "long",
-      groupType: "daily", market: "all", symbol: "", name: "",
+      ...first,
+      name: items.find((item) => String(item.name || "").trim())?.name || first.name,
       sourceIds: items.map((item) => item.id),
+      symbols: [...new Set(items.map((item) => tradeGroupSymbol(item)))].sort(),
+      buyDate: items.map((item) => item.buyDate).sort()[0],
+      buyDateEnd: items.map((item) => item.buyDate).sort().at(-1),
+      holdingDaysValue: shares ? items.reduce((total, item) => total + holdingDays(item) * item.shares, 0) / shares : 0,
+      shares,
+      avgCost: shares ? items.reduce((total, item) => total + item.avgCost * item.shares, 0) / shares : 0,
+      sellPrice: shares ? items.reduce((total, item) => total + item.sellPrice * item.shares, 0) / shares : 0,
+      fxRate: costNative ? costTwd / costNative : first.fxRate,
+      costNative,
+      proceedsNative: sum("proceedsNative"),
+      pnlNative: sum("pnlNative"),
       costTwd,
       proceedsTwd: sum("proceedsTwd"),
       pnlTwd,
       pnlPct: costTwd ? pnlTwd / costTwd * 100 : 0,
-      wins: items.filter((item) => item.pnlTwd > 0).length,
     };
   }).sort(compareTradeRecords);
 }
 
-function renderTradeDaySummary(trade) {
-  const direction = trade.side === "short" ? "空" : "多";
-  return `
-    <span class="trade-record-field trade-record-sell-date"><small>賣出</small>${tradeDate(trade.sellDate)}</span>
-    <span class="trade-record-field trade-record-buy-date"><small>買入</small>—</span>
-    <span class="trade-record-field"><small>持有天數</small>—</span>
-    <span class="trade-record-field trade-record-symbol-field"><small>當日交易</small><span class="trade-record-symbol">${trade.sourceIds.length} 筆 · ${direction}</span><span class="trade-record-code">勝 ${trade.wins}／${trade.sourceIds.length}</span></span>
-    <span class="trade-record-field"><small>數量</small>—</span>
-    <span class="trade-record-field"><small>平均成本</small>—</span>
-    <span class="trade-record-field"><small>賣出價</small>—</span>
-    <span class="trade-record-field"><small>總成本</small>${money(trade.costTwd)}</span>
-    <span class="trade-record-field"><small>賣出金額</small>${money(trade.proceedsTwd)}</span>
-    <span class="trade-record-field ${trade.pnlTwd >= 0 ? "gain" : "loss"}"><small>獲利</small>${signedMoney(trade.pnlTwd)}</span>
-    <span class="trade-record-field ${trade.pnlTwd >= 0 ? "gain" : "loss"}"><small>獲利%</small>${signedPercent(trade.pnlPct)}</span>
-    <span class="trade-record-actions"><button class="mini-btn trade-group-toggle" data-trade-action="toggle-group" data-trade-id="${escapeHTML(trade.id)}" type="button" aria-expanded="${expandedTradeGroups.has(trade.id)}" aria-label="${expandedTradeGroups.has(trade.id) ? "收合" : "展開"} ${trade.sourceIds.length} 筆交易">${expandedTradeGroups.has(trade.id) ? "收合" : "展開"}</button></span>
-  `;
+function tradeGroupName(trade) {
+  return String(trade.name || "").normalize("NFKC").replace(/\s+/g, "").toUpperCase();
+}
+
+function tradeGroupSymbol(trade) {
+  let symbol = String(trade.symbol || "").normalize("NFKC").trim().toUpperCase().replace(/\s*\((SHORT|LONG)\)$/, "");
+  if (trade.market === "tw") symbol = symbol.replace(/\.(TW|TWO)$/, "");
+  if (trade.market === "us") symbol = symbol.replace(/^US\./, "");
+  if (trade.market === "crypto") symbol = symbol.replace(/[\s/\-]/g, "");
+  return symbol;
 }
 
 function formatTradeFilterStats(trades) {
@@ -1941,7 +1960,9 @@ function holdingDays(trade) {
 }
 
 function renderTradeRecord(trade) {
-  const symbolLabel = stockDisplaySymbol(trade);
+  const symbolLabel = trade.symbols?.length > 1
+    ? trade.symbols.map((symbol) => `${symbol}${trade.side === "short" ? "(short)" : ""}`).join("、")
+    : stockDisplaySymbol(trade);
   const averageCost = trade.market === "crypto" ? `${formatNumber(trade.avgCost, 6)} USDT` : trade.market === "us" ? usdMoney(trade.avgCost) : unitMoney(trade.avgCost);
   const sellPrice = trade.market === "crypto" ? `${formatNumber(trade.sellPrice, 6)} USDT` : trade.market === "us" ? usdMoney(trade.sellPrice) : unitMoney(trade.sellPrice);
   const costNative = trade.market === "crypto" ? `<span class="trade-record-native">${formatNumber(trade.costNative, 2)} USDT</span>` : trade.market === "us" ? `<span class="trade-record-native">${usdMoney(trade.costNative)}</span>` : "";
@@ -1964,8 +1985,9 @@ function renderTradeRecord(trade) {
     <span class="trade-record-field ${trade.pnlTwd >= 0 ? "gain" : "loss"}"><small>獲利</small>${signedMoney(trade.pnlTwd)}${pnlNative}</span>
     <span class="trade-record-field ${trade.pnlTwd >= 0 ? "gain" : "loss"}"><small>獲利%</small>${signedPercent(trade.pnlPct)}</span>
     <span class="trade-record-actions">
+      ${trade.sourceIds?.length > 1 ? `<button class="mini-btn trade-group-toggle" data-trade-action="toggle-group" data-trade-id="${escapeHTML(trade.id)}" type="button" aria-expanded="${expandedTradeGroups.has(trade.id)}" aria-label="${expandedTradeGroups.has(trade.id) ? "收合" : "展開"} ${trade.sourceIds.length} 筆交易">${expandedTradeGroups.has(trade.id) ? "收合" : `${trade.sourceIds.length}筆`}</button>` : `
       <button class="mini-btn" data-trade-action="edit" data-trade-id="${escapeHTML(trade.id)}" type="button" aria-label="修改 ${escapeHTML(trade.symbol)} 交易紀錄">${editIcon()}</button>
-      <button class="mini-btn" data-trade-action="delete" data-trade-id="${escapeHTML(trade.id)}" type="button" aria-label="刪除 ${escapeHTML(trade.symbol)} 交易紀錄">x</button>
+      <button class="mini-btn" data-trade-action="delete" data-trade-id="${escapeHTML(trade.id)}" type="button" aria-label="刪除 ${escapeHTML(trade.symbol)} 交易紀錄">x</button>`}
     </span>
   `;
 }
@@ -2111,7 +2133,7 @@ function createMonthlyPerformanceSheet(trades) {
     for (const col of ["F", "G"]) sheet[`${col}${row}`].z = "#,##0.00";
   }
   window.XLSX.utils.sheet_add_aoa(sheet, [
-    ["統計口徑", "依賣出月份，以台股、美股及加密合約的原始逐筆交易計算。"],
+    ["統計口徑", "依賣出月份；同市場、同名稱、同賣出日、同方向的交易算一筆。"],
     ["勝率", "獲利大於 0 的筆數／總筆數；打平計入總筆數。"],
     ["平均獲利率", "各筆交易獲利率的算術平均。"],
     ["整體獲利率", "台幣總獲利／台幣總成本；總成本為 0 時留白。"],
@@ -2140,7 +2162,7 @@ function exportTradeHistoryExcel() {
       trade.buyDateEnd && trade.buyDateEnd !== trade.buyDate ? `${tradeDate(trade.buyDate)}–${tradeDate(trade.buyDateEnd)}` : tradeDate(trade.buyDate),
       holdingDays(trade),
       trade.market === "us" ? "" : trade.name,
-      stockDisplaySymbol(trade),
+      trade.symbols?.length > 1 ? trade.symbols.join("、") : stockDisplaySymbol(trade),
       trade.shares,
       trade.currency,
       trade.avgCost,
@@ -2154,9 +2176,7 @@ function exportTradeHistoryExcel() {
       trade.pnlTwd,
       trade.pnlPct / 100,
     ];
-    const rows = trades.map((trade) => trade.groupType === "daily"
-      ? [tradeDate(trade.sellDate), "", "", `${trade.sourceIds.length} 筆交易（${trade.side === "short" ? "空" : "多"}）`, "", "", "TWD", "", "", "", "", "", "", trade.costTwd, trade.proceedsTwd, trade.pnlTwd, trade.pnlPct / 100]
-      : detailRow(trade));
+    const rows = trades.map(detailRow);
     const detailRows = rawTrades.map(detailRow);
     const totalCost = trades.reduce((sum, trade) => sum + trade.costTwd, 0);
     const totalProceeds = trades.reduce((sum, trade) => sum + trade.proceedsTwd, 0);
@@ -2194,7 +2214,7 @@ function exportTradeHistoryExcel() {
       if (detailWorksheet[`Q${row}`]) detailWorksheet[`Q${row}`].z = "0.00%";
     }
     window.XLSX.utils.book_append_sheet(workbook, detailWorksheet, "逐筆明細");
-    window.XLSX.utils.book_append_sheet(workbook, createMonthlyPerformanceSheet(rawTrades), "每月績效");
+    window.XLSX.utils.book_append_sheet(workbook, createMonthlyPerformanceSheet(trades), "每月績效");
     const workbookData = window.XLSX.write(workbook, { bookType: "xlsx", type: "array", compression: true });
     const fileName = `stock-trades-${todayISO()}.xlsx`;
     const blob = new Blob([workbookData], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });

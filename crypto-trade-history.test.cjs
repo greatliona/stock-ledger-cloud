@@ -16,12 +16,13 @@ assert.equal(first.pnlPct, 40);
 assert.equal(second.pnlNative, -30);
 const grouped = context.aggregateTradeRecords([first, second]);
 assert.equal(grouped.length, 1);
-assert.equal(grouped[0].groupType, 'daily');
+assert.equal(grouped[0].shares, 5);
+assert.equal(grouped[0].avgCost, 100);
+assert.equal(grouped[0].sellPrice, 98);
 assert.equal(grouped[0].costTwd, 4000);
 assert.equal(grouped[0].pnlTwd, -320);
 assert.equal(grouped[0].sourceIds.length, 2);
-assert.ok(context.renderTradeDaySummary(grouped[0]).includes('2 筆 · 多'));
-assert.ok(context.renderTradeDaySummary(grouped[0]).includes('平均成本</small>—'));
+assert.ok(context.renderTradeRecord(grouped[0]).includes('2筆'));
 
 const shortTrade = context.createCryptoTradeRecord({...base, side: 'short', sellDate: '2026-11-13', shares: 1, avgCost: 100, sellPrice: 80, marginUsdt: 25});
 assert.equal(shortTrade.pnlNative, 20);
@@ -37,11 +38,20 @@ const us = context.createTradeRecord({market: 'us', symbol: 'VOO', shares: 2, av
 const twSecond = context.createTradeRecord({market: 'tw', symbol: '2330.TW', name: '', shares: 5, avgCost: 120, sellPrice: 110, buyDate: '2026-11-03', sellDate: '2026-11-14'});
 const usSecond = context.createTradeRecord({market: 'us', symbol: 'VOO', shares: 3, avgCost: 120, sellPrice: 130, fxRate: 32, buyDate: '2026-11-03', sellDate: '2026-11-14'});
 const allGroups = context.aggregateTradeRecords([tw, twSecond, us, usSecond, first, second]);
-assert.equal(allGroups.length, 1);
-assert.equal(allGroups[0].sourceIds.length, 6);
-assert.equal(allGroups[0].costTwd, [tw, twSecond, us, usSecond, first, second].reduce((sum, trade) => sum + trade.costTwd, 0));
+assert.equal(allGroups.length, 3);
+assert.ok(allGroups.every((group) => group.sourceIds.length === 2));
+assert.equal(allGroups.find((group) => group.market === 'tw').name, '台積電');
+assert.equal(allGroups.find((group) => group.market === 'tw').costTwd, 1600);
+assert.equal(allGroups.find((group) => group.market === 'tw').pnlTwd, 50);
+assert.equal(allGroups.find((group) => group.market === 'tw').shares, 15);
 const sameNameOtherCode = context.createTradeRecord({market: 'tw', symbol: 'ALT', name: '台積電', shares: 1, avgCost: 100, sellPrice: 110, buyDate: '2026-11-01', sellDate: '2026-11-14'});
 assert.equal(context.aggregateTradeRecords([tw, twSecond, sameNameOtherCode]).length, 1);
+const differentNameSameCode = context.createTradeRecord({market: 'tw', symbol: '2330', name: '不同名稱', shares: 1, avgCost: 100, sellPrice: 110, buyDate: '2026-11-01', sellDate: '2026-11-14'});
+assert.equal(context.aggregateTradeRecords([tw, differentNameSameCode]).length, 2);
+const differentDate = context.createTradeRecord({market: 'tw', symbol: '2330', name: '台積電', shares: 1, avgCost: 100, sellPrice: 110, buyDate: '2026-11-01', sellDate: '2026-11-13'});
+assert.equal(context.aggregateTradeRecords([tw, differentDate]).length, 2);
+const differentMarket = context.createTradeRecord({market: 'us', symbol: '2330', name: '台積電', shares: 1, avgCost: 100, sellPrice: 110, fxRate: 32, buyDate: '2026-11-01', sellDate: '2026-11-14'});
+assert.equal(context.aggregateTradeRecords([tw, differentMarket]).length, 2);
 const shortSameDay = context.createCryptoTradeRecord({...base, side: 'short', shares: 1, avgCost: 100, sellPrice: 80, marginUsdt: 25});
 const separateDirections = context.aggregateTradeRecords([first, second, shortSameDay]);
 assert.equal(separateDirections.length, 2);
@@ -55,7 +65,7 @@ assert.equal(restored.tradeHistory.length, 5);
 assert.equal(restored.tradeHistory[0].market, 'crypto');
 assert.equal(restored.tradeHistory[0].pnlTwd, first.pnlTwd);
 assert.ok(restored.cryptoContracts[0].openDate);
-assert.equal(context.aggregateTradeRecords(restored.tradeHistory).length, 1);
+assert.equal(context.aggregateTradeRecords(restored.tradeHistory).length, 3);
 
 const colors = new Map([['USDT', 0], ['BTCUSDT', 1]]);
 vm.runInContext('const pieColorFamilies = [["#fff"],["#000"]]; const chineseNameSorter = new Intl.Collator("zh-TW");', context);
@@ -75,15 +85,22 @@ context.els = {
   tradeHistoryList: {innerHTML: '', append: (card) => cards.push(card)},
 };
 context.renderTradeHistory();
-assert.equal(cards.length, 1);
-assert.match(cards[0].innerHTML, /6 筆 · 多/);
-assert.match(cards[0].innerHTML, /aria-expanded="false"[^]*?>展開<\/button>/);
+assert.equal(cards.length, 6); // same date alone must not merge different names
 assert.match(context.els.tradeFilterStats.textContent, /0／6/);
-context.groupIdForTest = cards[0].dataset.tradeRecord;
+const duplicate = context.createTradeRecord({market: 'tw', symbol: '7003', name: '智通', shares: 5, avgCost: 100,
+  sellPrice: 95, buyDate: '2026-10-15', sellDate: '2026-11-03'});
+context.state.tradeHistory.push(duplicate);
+cards.length = 0;
+context.renderTradeHistory();
+assert.equal(cards.length, 6); // only 智通's two records are combined
+const groupedCard = cards.find((card) => card.innerHTML.includes('2筆'));
+assert.ok(groupedCard);
+assert.match(groupedCard.innerHTML, /智通/);
+context.groupIdForTest = groupedCard.dataset.tradeRecord;
 vm.runInContext('expandedTradeGroups.add(groupIdForTest)', context);
 cards.length = 0;
 context.renderTradeHistory();
-assert.equal(cards.length, 7); // one daily row plus six editable originals
+assert.equal(cards.length, 8); // five singles, one group and its two originals
 cards.length = 0;
 context.els.tradeMarketFilter.value = 'us';
 context.renderTradeHistory();
@@ -108,9 +125,9 @@ context.markDownloaded = () => { downloaded = true; };
 vm.runInContext('downloadBlob = markDownloaded; setStatus = () => {}; showTradeExportFeedback = () => {};', context);
 context.exportTradeHistoryExcel();
 assert.equal(downloaded, true);
-assert.equal(excelSheets[0].length, 5); // header + two daily directions + blank + total
+assert.equal(excelSheets[0].length, 7); // header + four name/direction groups + blank + total
 assert.equal(excelSheets[1].length, 8); // original seven trades remain available
 assert.equal(excelSheets[2].length, 2); // monthly header + one month
-assert.equal(excelSheets[2][1][1], 7); // win rate counts individual trades
+assert.equal(excelSheets[2][1][1], 4); // win rate counts combined records
 assert.deepEqual(excelNames, ['交易紀錄', '逐筆明細', '每月績效']);
-console.log('PASS: crypto close, all same-day assets grouped, long/short split, original records and Excel details preserved');
+console.log('PASS: same name/day/market/direction merges; different names stay separate; originals and Excel details preserved');
