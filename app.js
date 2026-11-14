@@ -58,7 +58,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.60", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.61", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -1351,7 +1351,10 @@ function renderCryptoContracts() {
     card.open = openCryptoCards.has(contract.id);
     card.innerHTML = `
       <summary class="crypto-card-toggle">
-        <strong>${escapeHTML(contract.name)}</strong>
+        <span class="crypto-card-identity">
+          <strong>${escapeHTML(contract.name)}</strong>
+          <span class="crypto-direction ${contract.side === "short" ? "is-short" : "is-long"}" aria-label="${contract.side === "short" ? "做空" : "做多"}" title="${contract.side === "short" ? "做空" : "做多"}">${contract.side === "short" ? "空" : "多"}</span>
+        </span>
         <span class="crypto-card-toggle-pnl ${position.pnlTwd >= 0 ? "gain" : "loss"}">
           <span>${signedMoney(position.pnlTwd)}</span>
           <span>${signedPercent(position.pnlPct)}</span>

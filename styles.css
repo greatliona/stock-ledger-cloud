@@ -437,6 +437,23 @@ h2 {
   white-space: nowrap;
 }
 
+.crypto-card-identity {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.crypto-direction {
+  flex: none;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.crypto-direction.is-long { color: var(--red); }
+.crypto-direction.is-short { color: var(--green); }
+
 .crypto-card-toggle-pnl {
   display: flex;
   align-items: baseline;
