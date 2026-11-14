@@ -58,7 +58,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.64", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.65", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -1898,9 +1898,10 @@ function aggregateTradeRecords(trades) {
     const costNative = sum("costNative");
     const costTwd = sum("costTwd");
     const pnlTwd = sum("pnlTwd");
+    const namedTrade = items.find((item) => String(item.name || "").trim()) || first;
     return {
       ...first,
-      name: items.find((item) => String(item.name || "").trim())?.name || first.name,
+      name: first.market === "tw" ? tradeCompanyName(namedTrade) : namedTrade.name,
       sourceIds: items.map((item) => item.id),
       symbols: [...new Set(items.map((item) => tradeGroupSymbol(item)))].sort(),
       buyDate: items.map((item) => item.buyDate).sort()[0],
@@ -1922,7 +1923,15 @@ function aggregateTradeRecords(trades) {
 }
 
 function tradeGroupName(trade) {
-  return String(trade.name || "").normalize("NFKC").replace(/\s+/g, "").toUpperCase();
+  return tradeCompanyName(trade).toUpperCase();
+}
+
+function tradeCompanyName(trade) {
+  const name = String(trade.name || "").normalize("NFKC").replace(/\s+/g, "");
+  if (trade.market !== "tw") return name;
+  // Remove a warrant's broker and series suffix, not broker words inside a company name.
+  const warrant = name.match(/^(.+?)(?:中國信託|華南永昌|第一金|元大|凱基|群益|富邦|國泰|永豐|統一|兆豐|台新|元富|中信|玉山|日盛|康和|宏遠)[A-Z]*\d[A-Z0-9]*.*$/i);
+  return warrant ? warrant[1] : name;
 }
 
 function tradeGroupSymbol(trade) {
@@ -2133,7 +2142,7 @@ function createMonthlyPerformanceSheet(trades) {
     for (const col of ["F", "G"]) sheet[`${col}${row}`].z = "#,##0.00";
   }
   window.XLSX.utils.sheet_add_aoa(sheet, [
-    ["統計口徑", "依賣出月份；同市場、同名稱、同賣出日、同方向的交易算一筆。"],
+    ["統計口徑", "依賣出月份；同市場、同公司（台股忽略權證券商與尾碼）、同賣出日、同方向算一筆。"],
     ["勝率", "獲利大於 0 的筆數／總筆數；打平計入總筆數。"],
     ["平均獲利率", "各筆交易獲利率的算術平均。"],
     ["整體獲利率", "台幣總獲利／台幣總成本；總成本為 0 時留白。"],
