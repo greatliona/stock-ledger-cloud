@@ -58,7 +58,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.59", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.60", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -263,7 +263,9 @@ let editingUsHoldingId = "";
 let editingFundId = "";
 let editingTradeId = "";
 let pendingHoldingSale = null;
+let pendingCryptoCloseId = "";
 let pendingTradeDeleteId = "";
+const expandedTradeGroups = new Set();
 let tradeExportFeedbackTimer = 0;
 let activeTradeDialogCleanup = null;
 const assetChartInteractions = new WeakMap();
@@ -401,6 +403,18 @@ const els = {
   tradePreviewPnl: document.querySelector("#tradePreviewPnl"),
   tradePreviewPnlPct: document.querySelector("#tradePreviewPnlPct"),
   tradeDecisionError: document.querySelector("#tradeDecisionError"),
+  cryptoCloseDialog: document.querySelector("#cryptoCloseDialog"),
+  cryptoCloseForm: document.querySelector("#cryptoCloseForm"),
+  cryptoCloseName: document.querySelector("#cryptoCloseName"),
+  cryptoCloseOpenDate: document.querySelector("#cryptoCloseOpenDate"),
+  cryptoCloseDate: document.querySelector("#cryptoCloseDate"),
+  cryptoClosePrice: document.querySelector("#cryptoClosePrice"),
+  cryptoCloseFxRate: document.querySelector("#cryptoCloseFxRate"),
+  cryptoCloseCost: document.querySelector("#cryptoCloseCost"),
+  cryptoCloseProceeds: document.querySelector("#cryptoCloseProceeds"),
+  cryptoClosePnl: document.querySelector("#cryptoClosePnl"),
+  cryptoClosePnlPct: document.querySelector("#cryptoClosePnlPct"),
+  cryptoCloseError: document.querySelector("#cryptoCloseError"),
   skipTradeBtn: document.querySelector("#skipTradeBtn"),
   cancelTradeBtn: document.querySelector("#cancelTradeBtn"),
   deleteTradeDialog: document.querySelector("#deleteTradeDialog"),
@@ -488,6 +502,7 @@ els.cryptoForm.addEventListener("submit", (event) => {
     entryPrice: toNumber(els.cryptoEntryPrice.value),
     currentPrice: toNumber(els.cryptoCurrentPrice.value),
     liquidationPrice: null,
+    openDate: todayISO(),
   });
   saveAndRender("已新增加密貨幣合約。");
   els.cryptoForm.reset();
@@ -507,7 +522,7 @@ els.cryptoList.addEventListener("click", (event) => {
   const changes = {};
   inputs.forEach(input => {
     const field = input.dataset.cryptoField;
-    changes[field] = field === "side" ? input.value : field === "liquidationPrice" ? toOptionalNumber(input.value) : toNumber(input.value);
+    changes[field] = field === "side" ? input.value : field === "openDate" ? parseDateInput(input.value) : field === "liquidationPrice" ? toOptionalNumber(input.value) : toNumber(input.value);
   });
   Object.assign(contract, changes);
   editingCryptoId = "";
@@ -518,11 +533,31 @@ els.cryptoList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-delete-crypto-id]");
   if (!button) return;
   const contract = findCryptoContract(button.dataset.deleteCryptoId);
-  if (!contract || !confirm(`確定刪除 ${contract.name || "這筆加密貨幣合約"}？`)) return;
-  openCryptoCards.delete(contract.id);
-  state.cryptoContracts = state.cryptoContracts.filter((item) => item.id !== contract.id);
-  saveAndRender("已刪除加密貨幣合約。");
+  if (!contract) return;
+  openCryptoCloseDialog(contract);
 });
+
+els.cryptoCloseForm.addEventListener("input", renderCryptoClosePreview);
+els.cryptoCloseForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const contract = findCryptoContract(pendingCryptoCloseId);
+  if (!contract) { els.cryptoCloseError.textContent = "找不到合約，請重新操作。"; return; }
+  const values = readCryptoCloseValues(contract);
+  const error = validateCryptoCloseValues(values);
+  if (error) { els.cryptoCloseError.textContent = error; return; }
+  state.tradeHistory.push(createCryptoTradeRecord(values));
+  removePendingCryptoContract();
+  closeCryptoCloseDialog();
+  els.tradeHistoryDetails.open = true;
+  saveAndRender("已刪除合約並建立交易紀錄。", true);
+});
+document.querySelector("#cryptoCloseSkip").addEventListener("click", () => {
+  removePendingCryptoContract();
+  closeCryptoCloseDialog();
+  saveAndRender("已刪除合約，未建立交易紀錄。");
+});
+document.querySelector("#cryptoCloseCancel").addEventListener("click", closeCryptoCloseDialog);
+els.cryptoCloseDialog.addEventListener("cancel", () => { pendingCryptoCloseId = ""; els.cryptoCloseError.textContent = ""; });
 
 els.holdingsBody.addEventListener("change", (event) => {
   const input = event.target.closest("[data-price-id]");
@@ -926,6 +961,13 @@ els.exportTradesBtn.addEventListener("click", exportTradeHistoryExcel);
 els.tradeHistoryList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-trade-action]");
   if (!button) return;
+  if (button.dataset.tradeAction === "toggle-group") {
+    const id = button.dataset.tradeId;
+    if (expandedTradeGroups.has(id)) expandedTradeGroups.delete(id);
+    else expandedTradeGroups.add(id);
+    renderTradeHistory();
+    return;
+  }
   const trade = findTradeRecord(button.dataset.tradeId);
   if (!trade) return;
 
@@ -1681,8 +1723,92 @@ function createTradeRecord(values) {
   };
 }
 
+function createCryptoTradeRecord(values) {
+  const quantity = Math.max(0, toNumber(values.shares ?? values.quantity));
+  const avgCost = Math.max(0, toNumber(values.avgCost ?? values.entryPrice));
+  const sellPrice = Math.max(0, toNumber(values.sellPrice));
+  const marginUsdt = Math.max(0, toNumber(values.marginUsdt));
+  const fxRate = Math.max(0, toNumber(values.fxRate));
+  const pnlNative = Math.max(-marginUsdt, quantity * (sellPrice - avgCost) * (values.side === "short" ? -1 : 1));
+  const proceedsNative = marginUsdt + pnlNative;
+  const costTwd = marginUsdt * fxRate;
+  const pnlTwd = pnlNative * fxRate;
+  return {
+    id: values.id || crypto.randomUUID(), market: "crypto", symbol: normalizeSymbol(String(values.symbol || "")),
+    name: "", side: values.side === "short" ? "short" : "long",
+    buyDate: parseDateInput(values.buyDate) || LEGACY_PURCHASE_DATE,
+    sellDate: parseDateInput(values.sellDate) || todayISO(),
+    shares: quantity, avgCost, sellPrice, marginUsdt,
+    leverage: Math.max(1, toNumber(values.leverage)), fxRate, currency: "USDT",
+    costNative: marginUsdt, proceedsNative, pnlNative,
+    costTwd, proceedsTwd: proceedsNative * fxRate, pnlTwd,
+    pnlPct: marginUsdt ? (pnlNative / marginUsdt) * 100 : 0,
+    recordedAt: String(values.recordedAt || new Date().toISOString()),
+  };
+}
+
+function validateCryptoCloseValues(values) {
+  if (!values.symbol) return "請填寫合約名稱。";
+  if (!values.buyDate || !values.sellDate) return "請確認開倉與平倉日期。";
+  if (values.sellDate < values.buyDate) return "平倉日期不能早於開倉日期。";
+  if (!(values.shares > 0)) return "持倉數量必須大於 0。";
+  if (!(values.marginUsdt > 0)) return "保證金必須大於 0。";
+  if (values.avgCost < 0 || !Number.isFinite(values.avgCost)) return "請填寫有效的開倉價。";
+  if (values.sellPrice < 0 || !Number.isFinite(values.sellPrice)) return "請填寫有效的平倉價。";
+  if (!(values.fxRate > 0)) return "請填寫有效的台幣匯率。";
+  return "";
+}
+
+function openCryptoCloseDialog(contract) {
+  pendingCryptoCloseId = contract.id;
+  els.cryptoCloseName.textContent = `${contract.name} · ${contract.side === "short" ? "做空" : "做多"} · ${formatNumber(contract.quantity, 6)} ${getCryptoBaseAsset(contract.name)}`;
+  els.cryptoCloseOpenDate.value = tradeDate(contract.openDate || todayISO());
+  els.cryptoCloseDate.value = tradeDate(todayISO());
+  els.cryptoClosePrice.value = contract.currentPrice;
+  els.cryptoCloseFxRate.value = state.usdTwdRate || "";
+  els.cryptoCloseError.textContent = "";
+  renderCryptoClosePreview();
+  showTradeDialog(els.cryptoCloseDialog);
+}
+
+function closeCryptoCloseDialog() {
+  pendingCryptoCloseId = "";
+  els.cryptoCloseError.textContent = "";
+  if (els.cryptoCloseDialog.open) els.cryptoCloseDialog.close();
+}
+
+function readCryptoCloseValues(contract) {
+  return {
+    symbol: contract.name, side: contract.side, leverage: contract.leverage,
+    shares: contract.quantity, avgCost: contract.entryPrice, marginUsdt: contract.marginUsdt,
+    buyDate: parseDateInput(els.cryptoCloseOpenDate.value), sellDate: parseDateInput(els.cryptoCloseDate.value),
+    sellPrice: els.cryptoClosePrice.value === "" ? NaN : Number(els.cryptoClosePrice.value),
+    fxRate: els.cryptoCloseFxRate.value === "" ? NaN : Number(els.cryptoCloseFxRate.value),
+  };
+}
+
+function renderCryptoClosePreview() {
+  const contract = findCryptoContract(pendingCryptoCloseId);
+  if (!contract) return;
+  const values = readCryptoCloseValues(contract);
+  const trade = createCryptoTradeRecord(values);
+  els.cryptoCloseCost.textContent = money(trade.costTwd);
+  els.cryptoCloseProceeds.textContent = money(trade.proceedsTwd);
+  els.cryptoClosePnl.textContent = signedMoney(trade.pnlTwd);
+  els.cryptoClosePnlPct.textContent = signedPercent(trade.pnlPct);
+  els.cryptoClosePnl.className = trade.pnlTwd >= 0 ? "gain" : "loss";
+  els.cryptoClosePnlPct.className = trade.pnlTwd >= 0 ? "gain" : "loss";
+}
+
+function removePendingCryptoContract() {
+  if (!pendingCryptoCloseId) return;
+  openCryptoCards.delete(pendingCryptoCloseId);
+  if (editingCryptoId === pendingCryptoCloseId) editingCryptoId = "";
+  state.cryptoContracts = state.cryptoContracts.filter((item) => item.id !== pendingCryptoCloseId);
+}
+
 function renderTradeHistory() {
-  const allTrades = [...state.tradeHistory].sort(compareTradeRecords);
+  const allTrades = aggregateTradeRecords(state.tradeHistory);
   const totalCost = allTrades.reduce((sum, trade) => sum + trade.costTwd, 0);
   const totalPnl = allTrades.reduce((sum, trade) => sum + trade.pnlTwd, 0);
   const totalPnlPct = totalCost ? (totalPnl / totalCost) * 100 : 0;
@@ -1712,14 +1838,70 @@ function renderTradeHistory() {
     const record = document.createElement("article");
     record.className = "trade-record";
     record.dataset.tradeRecord = trade.id;
-    if (editingTradeId === trade.id) {
+    if (trade.sourceIds.length > 1) {
+      record.classList.add("trade-record-group");
+      record.innerHTML = renderTradeRecord(trade);
+    } else if (editingTradeId === trade.id) {
       record.classList.add("is-editing");
       record.innerHTML = renderTradeEditForm(trade);
     } else {
       record.innerHTML = renderTradeRecord(trade);
     }
     els.tradeHistoryList.append(record);
+    if (trade.sourceIds.length > 1 && expandedTradeGroups.has(trade.id)) {
+      for (const sourceId of trade.sourceIds) {
+        const original = findTradeRecord(sourceId);
+        if (!original) continue;
+        const detail = document.createElement("article");
+        detail.className = "trade-record trade-record-group-detail";
+        detail.dataset.tradeRecord = original.id;
+        if (editingTradeId === original.id) {
+          detail.classList.add("is-editing");
+          detail.innerHTML = renderTradeEditForm(original);
+        } else detail.innerHTML = renderTradeRecord(original);
+        els.tradeHistoryList.append(detail);
+      }
+    }
   }
+}
+
+function aggregateTradeRecords(trades) {
+  const groups = new Map();
+  for (const trade of [...trades].sort(compareTradeRecords)) {
+    const identity = String(trade.name || trade.symbol || "").trim().toUpperCase();
+    const key = `${trade.market}|${trade.sellDate}|${identity}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(trade);
+  }
+  return [...groups.values()].map((items) => {
+    if (items.length === 1) return {...items[0], sourceIds: [items[0].id]};
+    const first = items[0];
+    const sum = (field) => items.reduce((total, item) => total + toNumber(item[field]), 0);
+    const shares = sum("shares");
+    const costNative = sum("costNative");
+    const costTwd = sum("costTwd");
+    const pnlTwd = sum("pnlTwd");
+    return {
+      ...first,
+      id: first.id,
+      sourceIds: items.map((item) => item.id),
+      buyDate: items.map((item) => item.buyDate).sort()[0],
+      buyDateEnd: items.map((item) => item.buyDate).sort().at(-1),
+      holdingDaysValue: shares ? items.reduce((total, item) => total + holdingDays(item) * item.shares, 0) / shares : 0,
+      shares,
+      avgCost: shares ? items.reduce((total, item) => total + item.avgCost * item.shares, 0) / shares : 0,
+      sellPrice: shares ? items.reduce((total, item) => total + item.sellPrice * item.shares, 0) / shares : 0,
+      fxRate: costNative ? costTwd / costNative : first.fxRate,
+      costNative,
+      proceedsNative: sum("proceedsNative"),
+      pnlNative: sum("pnlNative"),
+      costTwd,
+      proceedsTwd: sum("proceedsTwd"),
+      pnlTwd,
+      pnlPct: costTwd ? pnlTwd / costTwd * 100 : 0,
+      side: items.every((item) => item.side === first.side) ? first.side : "mixed",
+    };
+  }).sort(compareTradeRecords);
 }
 
 function formatTradeFilterStats(trades) {
@@ -1742,27 +1924,28 @@ function tradeDate(value) {
 }
 
 function holdingDays(trade) {
+  if (Number.isFinite(trade.holdingDaysValue)) return Math.round(trade.holdingDaysValue * 10) / 10;
   const buy = parseDateInput(trade.buyDate);
   const sell = parseDateInput(trade.sellDate);
   return buy && sell ? Math.max(0, Math.round((Date.parse(sell + "T00:00:00Z") - Date.parse(buy + "T00:00:00Z")) / 86400000)) : 0;
 }
 
 function renderTradeRecord(trade) {
-  const averageCost = trade.market === "us" ? usdMoney(trade.avgCost) : unitMoney(trade.avgCost);
-  const sellPrice = trade.market === "us" ? usdMoney(trade.sellPrice) : unitMoney(trade.sellPrice);
-  const costNative = trade.market === "us" ? `<span class="trade-record-native">${usdMoney(trade.costNative)}</span>` : "";
-  const proceedsNative = trade.market === "us" ? `<span class="trade-record-native">${usdMoney(trade.proceedsNative)}</span>` : "";
-  const pnlNative = trade.market === "us" ? `<span class="trade-record-native">${signedUsdMoney(trade.pnlNative)}</span>` : "";
+  const averageCost = trade.market === "crypto" ? `${formatNumber(trade.avgCost, 6)} USDT` : trade.market === "us" ? usdMoney(trade.avgCost) : unitMoney(trade.avgCost);
+  const sellPrice = trade.market === "crypto" ? `${formatNumber(trade.sellPrice, 6)} USDT` : trade.market === "us" ? usdMoney(trade.sellPrice) : unitMoney(trade.sellPrice);
+  const costNative = trade.market === "crypto" ? `<span class="trade-record-native">${formatNumber(trade.costNative, 2)} USDT</span>` : trade.market === "us" ? `<span class="trade-record-native">${usdMoney(trade.costNative)}</span>` : "";
+  const proceedsNative = trade.market === "crypto" ? `<span class="trade-record-native">${formatNumber(trade.proceedsNative, 2)} USDT</span>` : trade.market === "us" ? `<span class="trade-record-native">${usdMoney(trade.proceedsNative)}</span>` : "";
+  const pnlNative = trade.market === "crypto" ? `<span class="trade-record-native">${signedNumber(trade.pnlNative, 2)} USDT</span>` : trade.market === "us" ? `<span class="trade-record-native">${signedUsdMoney(trade.pnlNative)}</span>` : "";
   return `
     <span class="trade-record-field trade-record-sell-date"><small>賣出</small>${tradeDate(trade.sellDate)}</span>
-    <span class="trade-record-field trade-record-buy-date"><small>買入</small>${tradeDate(trade.buyDate)}</span>
+    <span class="trade-record-field trade-record-buy-date"><small>買入</small>${tradeDate(trade.buyDate)}${trade.buyDateEnd && trade.buyDateEnd !== trade.buyDate ? `<span class="trade-record-native">至 ${tradeDate(trade.buyDateEnd)}</span>` : ""}</span>
     <span class="trade-record-field"><small>持有天數</small>${holdingDays(trade)} 天</span>
     <span class="trade-record-field trade-record-symbol-field">
-      <small>股名／股號</small>
+      <small>${trade.market === "crypto" ? "標的" : "股名／股號"}</small>
       <span class="trade-record-symbol">${escapeHTML(trade.market === "us" ? stockDisplaySymbol(trade) : (trade.name || stockDisplaySymbol(trade)))}</span>
       ${trade.market !== "us" && trade.name ? `<span class="trade-record-code">${escapeHTML(stockDisplaySymbol(trade))}</span>` : ""}
     </span>
-    <span class="trade-record-field"><small>股數</small>${formatNumber(trade.shares, 3)}</span>
+    <span class="trade-record-field"><small>${trade.market === "crypto" ? "數量" : "股數"}</small>${formatNumber(trade.shares, 6)}</span>
     <span class="trade-record-field"><small>平均成本</small>${averageCost}</span>
     <span class="trade-record-field"><small>賣出價</small>${sellPrice}</span>
     <span class="trade-record-field"><small>總成本</small>${money(trade.costTwd)}${costNative}</span>
@@ -1770,13 +1953,28 @@ function renderTradeRecord(trade) {
     <span class="trade-record-field ${trade.pnlTwd >= 0 ? "gain" : "loss"}"><small>獲利</small>${signedMoney(trade.pnlTwd)}${pnlNative}</span>
     <span class="trade-record-field ${trade.pnlTwd >= 0 ? "gain" : "loss"}"><small>獲利%</small>${signedPercent(trade.pnlPct)}</span>
     <span class="trade-record-actions">
+      ${trade.sourceIds?.length > 1 ? `<button class="mini-btn trade-group-toggle" data-trade-action="toggle-group" data-trade-id="${escapeHTML(trade.id)}" type="button" aria-label="${expandedTradeGroups.has(trade.id) ? "收合" : "展開"} ${trade.sourceIds.length} 筆交易" title="${trade.sourceIds.length} 筆明細">${expandedTradeGroups.has(trade.id) ? "收合" : `${trade.sourceIds.length}筆`}</button>` : `
       <button class="mini-btn" data-trade-action="edit" data-trade-id="${escapeHTML(trade.id)}" type="button" aria-label="修改 ${escapeHTML(trade.symbol)} 交易紀錄">${editIcon()}</button>
-      <button class="mini-btn" data-trade-action="delete" data-trade-id="${escapeHTML(trade.id)}" type="button" aria-label="刪除 ${escapeHTML(trade.symbol)} 交易紀錄">x</button>
+      <button class="mini-btn" data-trade-action="delete" data-trade-id="${escapeHTML(trade.id)}" type="button" aria-label="刪除 ${escapeHTML(trade.symbol)} 交易紀錄">x</button>`}
     </span>
   `;
 }
 
 function renderTradeEditForm(trade) {
+  if (trade.market === "crypto") return `
+    <form class="trade-edit-form" data-trade-edit-form="${escapeHTML(trade.id)}">
+      <label>合約名稱<input data-trade-field="symbol" autocomplete="off" value="${escapeHTML(trade.symbol)}" required /></label>
+      <label>方向<select data-trade-field="side"><option value="long"${trade.side === "long" ? " selected" : ""}>做多</option><option value="short"${trade.side === "short" ? " selected" : ""}>做空</option></select></label>
+      <label>開倉日期<input data-trade-field="buyDate" type="text" placeholder="YYYY/MM/DD" value="${tradeDate(trade.buyDate)}" required /></label>
+      <label>平倉日期<input data-trade-field="sellDate" type="text" placeholder="YYYY/MM/DD" value="${tradeDate(trade.sellDate)}" required /></label>
+      <label>持倉數量<input data-trade-field="shares" type="number" min="0.000001" step="any" value="${trade.shares}" required /></label>
+      <label>保證金 USDT<input data-trade-field="marginUsdt" type="number" min="0.000001" step="any" value="${trade.marginUsdt}" required /></label>
+      <label>開倉價<input data-trade-field="avgCost" type="number" min="0" step="any" value="${trade.avgCost}" required /></label>
+      <label>平倉價<input data-trade-field="sellPrice" type="number" min="0" step="any" value="${trade.sellPrice}" required /></label>
+      <label>台幣匯率<input data-trade-field="fxRate" type="number" min="0.001" step="any" value="${trade.fxRate}" required /></label>
+      <p class="trade-dialog-error" data-trade-edit-error></p>
+      <div class="trade-edit-actions"><button class="primary-btn" data-trade-action="save" data-trade-id="${escapeHTML(trade.id)}" type="button">儲存</button><button class="secondary-btn" data-trade-action="cancel" data-trade-id="${escapeHTML(trade.id)}" type="button">取消</button></div>
+    </form>`;
   return `
     <form class="trade-edit-form" data-trade-edit-form="${escapeHTML(trade.id)}">
       <label>市場<select data-trade-field="market"><option value="tw"${trade.market === "tw" ? " selected" : ""}>台股</option><option value="us"${trade.market === "us" ? " selected" : ""}>美股</option></select></label>
@@ -1798,6 +1996,20 @@ function renderTradeEditForm(trade) {
 }
 
 function readTradeEditForm(form, trade) {
+  if (trade.market === "crypto") {
+    const field = (name) => form.querySelector(`[data-trade-field='${name}']`).value;
+    const numericField = (name) => field(name) === "" ? NaN : Number(field(name));
+    const values = {
+      id: trade.id, symbol: normalizeSymbol(field("symbol")), side: field("side"),
+      buyDate: parseDateInput(field("buyDate")), sellDate: parseDateInput(field("sellDate")),
+      shares: numericField("shares"), marginUsdt: numericField("marginUsdt"),
+      avgCost: numericField("avgCost"), sellPrice: numericField("sellPrice"),
+      fxRate: numericField("fxRate"), leverage: trade.leverage, recordedAt: trade.recordedAt,
+    };
+    const error = validateCryptoCloseValues(values);
+    form.querySelector("[data-trade-edit-error]").textContent = error;
+    return error ? null : createCryptoTradeRecord(values);
+  }
   const market = form.querySelector("[data-trade-field='market']").value === "us" ? "us" : "tw";
   const values = {
     id: trade.id,
@@ -1889,7 +2101,7 @@ function createMonthlyPerformanceSheet(trades) {
     for (const col of ["F", "G"]) sheet[`${col}${row}`].z = "#,##0.00";
   }
   window.XLSX.utils.sheet_add_aoa(sheet, [
-    ["統計口徑", "依賣出月份，合併台股與美股全部交易。"],
+    ["統計口徑", "依賣出月份，合併台股、美股及加密合約同日同標的交易。"],
     ["勝率", "獲利大於 0 的筆數／總筆數；打平計入總筆數。"],
     ["平均獲利率", "各筆交易獲利率的算術平均。"],
     ["整體獲利率", "台幣總獲利／台幣總成本；總成本為 0 時留白。"],
@@ -1898,7 +2110,7 @@ function createMonthlyPerformanceSheet(trades) {
 }
 
 function exportTradeHistoryExcel() {
-  const trades = [...state.tradeHistory].sort(compareTradeRecords);
+  const trades = aggregateTradeRecords(state.tradeHistory);
   if (!trades.length) {
     setStatus("目前沒有可匯出的交易紀錄。");
     return;
@@ -1911,10 +2123,10 @@ function exportTradeHistoryExcel() {
   setStatus("正在產生交易紀錄 Excel...");
   showTradeExportFeedback("正在產生...");
   try {
-    const headers = ["賣出", "買入", "持有天數", "股名", "股號／Ticker", "股數", "幣別", "平均成本", "賣出價格", "賣出匯率", "原幣成本", "原幣賣出金額", "原幣獲利", "台幣成本", "台幣賣出金額", "台幣獲利", "獲利%"];
+    const headers = ["賣出／平倉", "買入／開倉", "持有天數", "股名", "代號／Ticker", "數量", "幣別", "平均成本", "賣出／平倉價", "賣出匯率", "原幣成本", "原幣賣出金額", "原幣獲利", "台幣成本", "台幣賣出金額", "台幣獲利", "獲利%"];
     const rows = trades.map((trade) => [
       tradeDate(trade.sellDate),
-      tradeDate(trade.buyDate),
+      trade.buyDateEnd && trade.buyDateEnd !== trade.buyDate ? `${tradeDate(trade.buyDate)}–${tradeDate(trade.buyDateEnd)}` : tradeDate(trade.buyDate),
       holdingDays(trade),
       trade.market === "us" ? "" : trade.name,
       stockDisplaySymbol(trade),
@@ -3092,6 +3304,8 @@ function buildPieGroupSummary(slices, groupNames, groupColorFamilies, total) {
       color: getPieGroupBaseColor(group, groupColorFamilies),
     }))
     .sort((a, b) => {
+      if (a.group === "USDT") return -1;
+      if (b.group === "USDT") return 1;
       if (a.group === "Cash") return -1;
       if (b.group === "Cash") return 1;
       return b.value - a.value || chineseNameSorter.compare(a.group, b.group);
@@ -3753,7 +3967,7 @@ function calculateCryptoPosition(contract) {
 }
 
 function stockDisplaySymbol(holding) {
-  return `${holding.symbol || ""}${holding.side === "short" ? "(short)" : ""}`;
+  return `${holding.symbol || ""}${holding.side === "short" ? "(short)" : holding.side === "mixed" ? "(多/空)" : ""}`;
 }
 
 // Simplified capital basis: initial notional plus directional P/L, not broker margin equity.
@@ -4077,6 +4291,7 @@ function migrateState(value) {
             entryPrice,
             currentPrice: toNumber(contract.currentPrice),
             liquidationPrice: toOptionalNumber(contract.liquidationPrice),
+            openDate: parseDateInput(contract.openDate) || todayISO(),
           };
         }
 
@@ -4093,6 +4308,7 @@ function migrateState(value) {
           entryPrice: 1,
           currentPrice: Math.max(0, 1 + legacyMove),
           liquidationPrice: toOptionalNumber(contract.liquidationPrice),
+          openDate: parseDateInput(contract.openDate) || todayISO(),
         };
       })
     : [];
@@ -4165,6 +4381,11 @@ function migrateState(value) {
 
   const tradeHistory = Array.isArray(value.tradeHistory)
     ? value.tradeHistory.map((trade) => {
+        if (trade.market === "crypto") return createCryptoTradeRecord({
+          ...trade, id: trade.id || crypto.randomUUID(),
+          marginUsdt: Number.isFinite(Number(trade.marginUsdt)) ? trade.marginUsdt : trade.costNative,
+          shares: trade.shares, avgCost: trade.avgCost, sellPrice: trade.sellPrice,
+        });
         const market = trade.market === "us" ? "us" : "tw";
         const shares = Math.max(0, toNumber(trade.shares));
         const avgCost = Number.isFinite(Number(trade.avgCost))

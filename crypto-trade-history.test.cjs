@@ -1,0 +1,77 @@
+const fs = require('node:fs');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+
+const source = fs.readFileSync(__dirname + '/app.js', 'utf8');
+const functions = source.match(/^function \w+\([^]*?^}/gm).join('\n');
+const context = vm.createContext({console, crypto: require('node:crypto').webcrypto});
+vm.runInContext('const LEGACY_PURCHASE_DATE = "2026-09-05"; const expandedTradeGroups = new Set();\n' + functions, context);
+
+const base = {symbol: 'BTCUSDT', buyDate: '2026-11-01', sellDate: '2026-11-14', side: 'long', leverage: 4, fxRate: 32};
+const first = context.createCryptoTradeRecord({...base, shares: 2, avgCost: 100, sellPrice: 110, marginUsdt: 50});
+const second = context.createCryptoTradeRecord({...base, shares: 3, avgCost: 100, sellPrice: 90, marginUsdt: 75});
+assert.equal(first.pnlNative, 20);
+assert.equal(first.proceedsNative, 70);
+assert.equal(first.pnlPct, 40);
+assert.equal(second.pnlNative, -30);
+const grouped = context.aggregateTradeRecords([first, second]);
+assert.equal(grouped.length, 1);
+assert.equal(grouped[0].shares, 5);
+assert.equal(grouped[0].costNative, 125);
+assert.equal(grouped[0].pnlNative, -10);
+assert.equal(grouped[0].pnlTwd, -320);
+assert.equal(grouped[0].avgCost, 100);
+assert.equal(grouped[0].sellPrice, 98);
+assert.equal(grouped[0].sourceIds.length, 2);
+assert.ok(context.renderTradeRecord(grouped[0]).includes('2筆'));
+
+const shortTrade = context.createCryptoTradeRecord({...base, side: 'short', sellDate: '2026-11-13', shares: 1, avgCost: 100, sellPrice: 80, marginUsdt: 25});
+assert.equal(shortTrade.pnlNative, 20);
+assert.equal(shortTrade.proceedsNative, 45);
+const wipedOut = context.createCryptoTradeRecord({...base, sellDate: '2026-11-12', shares: 10, avgCost: 100, sellPrice: 0, marginUsdt: 25});
+assert.equal(wipedOut.pnlNative, -25);
+assert.equal(wipedOut.proceedsNative, 0);
+assert.equal(context.validateCryptoCloseValues({...base, shares: 1, avgCost: 100, sellPrice: 90, marginUsdt: 25}), '');
+assert.ok(context.validateCryptoCloseValues({...base, shares: 1, avgCost: 100, sellPrice: 90, marginUsdt: 25, fxRate: 0}));
+
+const tw = context.createTradeRecord({market: 'tw', symbol: '2330', name: '台積電', shares: 10, avgCost: 100, sellPrice: 110, buyDate: '2026-11-01', sellDate: '2026-11-14'});
+const us = context.createTradeRecord({market: 'us', symbol: 'VOO', shares: 2, avgCost: 100, sellPrice: 110, fxRate: 32, buyDate: '2026-11-01', sellDate: '2026-11-14'});
+const twSecond = context.createTradeRecord({market: 'tw', symbol: '2330', name: '台積電', shares: 5, avgCost: 120, sellPrice: 110, buyDate: '2026-11-03', sellDate: '2026-11-14'});
+const usSecond = context.createTradeRecord({market: 'us', symbol: 'VOO', shares: 3, avgCost: 120, sellPrice: 130, fxRate: 32, buyDate: '2026-11-03', sellDate: '2026-11-14'});
+const allGroups = context.aggregateTradeRecords([tw, twSecond, us, usSecond, first, second]);
+assert.equal(allGroups.length, 3);
+assert.ok(allGroups.every((group) => group.sourceIds.length === 2));
+assert.equal(allGroups.find((group) => group.market === 'tw').buyDateEnd, '2026-11-03');
+assert.equal(allGroups.find((group) => group.market === 'us').shares, 5);
+const restored = context.migrateState({holdings: [], history: [], tradeHistory: [first, second, tw, us], cryptoContracts: [{...base, id: 'open', name: 'BTCUSDT', quantity: 2, entryPrice: 100, currentPrice: 110, marginUsdt: 50}]});
+assert.equal(restored.tradeHistory.length, 4);
+assert.equal(restored.tradeHistory[0].market, 'crypto');
+assert.equal(restored.tradeHistory[0].pnlTwd, first.pnlTwd);
+assert.ok(restored.cryptoContracts[0].openDate);
+
+const colors = new Map([['USDT', 0], ['BTCUSDT', 1]]);
+vm.runInContext('const pieColorFamilies = [["#fff"],["#000"]]; const chineseNameSorter = new Intl.Collator("zh-TW");', context);
+const summary = context.buildPieGroupSummary([{group: 'BTCUSDT', value: 100}, {group: 'USDT', value: 5}], ['BTCUSDT', 'USDT'], colors, 105);
+assert.equal(summary[0].group, 'USDT');
+
+const excelSheets = [];
+let downloaded = false;
+context.window = {XLSX: {utils: {
+  aoa_to_sheet: (rows) => {
+    excelSheets.push(rows);
+    const sheet = {};
+    rows.forEach((row, r) => row.forEach((value, c) => { if (value !== '') sheet[`${String.fromCharCode(65 + c)}${r + 1}`] = {v: value}; }));
+    return sheet;
+  },
+  book_new: () => ({}), book_append_sheet: () => {}, sheet_add_aoa: () => {},
+}, write: () => new Uint8Array([1])}};
+context.state = {tradeHistory: [tw, twSecond, us, usSecond, first, second]};
+context.els = {exportTradesBtn: {disabled: false}};
+context.Blob = Blob;
+context.markDownloaded = () => { downloaded = true; };
+vm.runInContext('downloadBlob = markDownloaded; setStatus = () => {}; showTradeExportFeedback = () => {};', context);
+context.exportTradeHistoryExcel();
+assert.equal(downloaded, true);
+assert.equal(excelSheets[0].length, 6); // header + three groups + blank + total
+assert.equal(excelSheets[1].length, 2); // monthly header + one month
+console.log('PASS: crypto close long/short/liquidation, weighted grouping, all-market grouping, migration, USDT first');

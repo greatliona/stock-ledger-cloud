@@ -1655,6 +1655,17 @@ tbody tr:last-child td {
   border-bottom: 0;
 }
 
+.trade-record-group-detail {
+  border-left: 3px solid var(--muted);
+  padding-left: 7px;
+}
+
+.trade-group-toggle {
+  min-width: 42px;
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+
 .trade-record-field {
   min-width: 0;
   color: var(--ink);
