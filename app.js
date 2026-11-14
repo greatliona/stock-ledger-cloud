@@ -58,7 +58,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.61", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.62", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -1870,9 +1870,19 @@ function renderTradeHistory() {
 
 function aggregateTradeRecords(trades) {
   const groups = new Map();
-  for (const trade of [...trades].sort(compareTradeRecords)) {
-    const identity = String(trade.name || trade.symbol || "").trim().toUpperCase();
-    const key = `${trade.market}|${trade.sellDate}|${identity}`;
+  const ordered = [...trades].sort(compareTradeRecords);
+  const namesByAsset = new Map();
+  for (const trade of ordered) {
+    const side = trade.side === "short" ? "short" : "long";
+    const assetKey = `${trade.market}|${trade.sellDate}|${side}|${tradeGroupIdentity(trade)}`;
+    const name = tradeGroupName(trade);
+    if (name && !namesByAsset.has(assetKey)) namesByAsset.set(assetKey, name);
+  }
+  for (const trade of ordered) {
+    const side = trade.side === "short" ? "short" : "long";
+    const assetKey = `${trade.market}|${trade.sellDate}|${side}|${tradeGroupIdentity(trade)}`;
+    const identity = namesByAsset.get(assetKey) || tradeGroupIdentity(trade);
+    const key = `${trade.market}|${trade.sellDate}|${identity}|${side}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(trade);
   }
@@ -1887,7 +1897,9 @@ function aggregateTradeRecords(trades) {
     return {
       ...first,
       id: first.id,
+      name: items.find((item) => String(item.name || "").trim())?.name || first.name,
       sourceIds: items.map((item) => item.id),
+      symbols: [...new Set(items.map((item) => tradeGroupIdentity(item)))].sort(),
       buyDate: items.map((item) => item.buyDate).sort()[0],
       buyDateEnd: items.map((item) => item.buyDate).sort().at(-1),
       holdingDaysValue: shares ? items.reduce((total, item) => total + holdingDays(item) * item.shares, 0) / shares : 0,
@@ -1905,6 +1917,21 @@ function aggregateTradeRecords(trades) {
       side: items.every((item) => item.side === first.side) ? first.side : "mixed",
     };
   }).sort(compareTradeRecords);
+}
+
+function tradeGroupIdentity(trade) {
+  const market = String(trade.market || "");
+  let symbol = String(trade.symbol || "").normalize("NFKC").trim().toUpperCase().replace(/\s*\((SHORT|LONG)\)$/, "");
+  if (market === "tw") symbol = symbol.replace(/\.(TW|TWO)$/, "");
+  if (market === "us") symbol = symbol.replace(/^US\./, "");
+  if (market === "crypto") symbol = symbol.replace(/[\s/\-]/g, "");
+  if (symbol) return symbol;
+  return String(trade.name || "").normalize("NFKC").replace(/\s+/g, "").toUpperCase();
+}
+
+function tradeGroupName(trade) {
+  const name = String(trade.name || "").normalize("NFKC").replace(/\s+/g, "").toUpperCase();
+  return name === "未命名" ? "" : name;
 }
 
 function formatTradeFilterStats(trades) {
@@ -1934,6 +1961,9 @@ function holdingDays(trade) {
 }
 
 function renderTradeRecord(trade) {
+  const symbolLabel = trade.symbols?.length > 1
+    ? trade.symbols.map((symbol) => `${symbol}${trade.side === "short" ? "(short)" : ""}`).join("、")
+    : stockDisplaySymbol(trade);
   const averageCost = trade.market === "crypto" ? `${formatNumber(trade.avgCost, 6)} USDT` : trade.market === "us" ? usdMoney(trade.avgCost) : unitMoney(trade.avgCost);
   const sellPrice = trade.market === "crypto" ? `${formatNumber(trade.sellPrice, 6)} USDT` : trade.market === "us" ? usdMoney(trade.sellPrice) : unitMoney(trade.sellPrice);
   const costNative = trade.market === "crypto" ? `<span class="trade-record-native">${formatNumber(trade.costNative, 2)} USDT</span>` : trade.market === "us" ? `<span class="trade-record-native">${usdMoney(trade.costNative)}</span>` : "";
@@ -1945,8 +1975,8 @@ function renderTradeRecord(trade) {
     <span class="trade-record-field"><small>持有天數</small>${holdingDays(trade)} 天</span>
     <span class="trade-record-field trade-record-symbol-field">
       <small>${trade.market === "crypto" ? "標的" : "股名／股號"}</small>
-      <span class="trade-record-symbol">${escapeHTML(trade.market === "us" ? stockDisplaySymbol(trade) : (trade.name || stockDisplaySymbol(trade)))}</span>
-      ${trade.market !== "us" && trade.name ? `<span class="trade-record-code">${escapeHTML(stockDisplaySymbol(trade))}</span>` : ""}
+      <span class="trade-record-symbol">${escapeHTML(trade.market === "us" ? symbolLabel : (trade.name || symbolLabel))}</span>
+      ${trade.market !== "us" && trade.name ? `<span class="trade-record-code">${escapeHTML(symbolLabel)}</span>` : ""}
     </span>
     <span class="trade-record-field"><small>${trade.market === "crypto" ? "數量" : "股數"}</small>${formatNumber(trade.shares, 6)}</span>
     <span class="trade-record-field"><small>平均成本</small>${averageCost}</span>
@@ -2132,7 +2162,7 @@ function exportTradeHistoryExcel() {
       trade.buyDateEnd && trade.buyDateEnd !== trade.buyDate ? `${tradeDate(trade.buyDate)}–${tradeDate(trade.buyDateEnd)}` : tradeDate(trade.buyDate),
       holdingDays(trade),
       trade.market === "us" ? "" : trade.name,
-      stockDisplaySymbol(trade),
+      trade.symbols?.length > 1 ? trade.symbols.join("、") : stockDisplaySymbol(trade),
       trade.shares,
       trade.currency,
       trade.avgCost,

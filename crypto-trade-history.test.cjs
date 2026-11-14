@@ -36,18 +36,32 @@ assert.ok(context.validateCryptoCloseValues({...base, shares: 1, avgCost: 100, s
 
 const tw = context.createTradeRecord({market: 'tw', symbol: '2330', name: '台積電', shares: 10, avgCost: 100, sellPrice: 110, buyDate: '2026-11-01', sellDate: '2026-11-14'});
 const us = context.createTradeRecord({market: 'us', symbol: 'VOO', shares: 2, avgCost: 100, sellPrice: 110, fxRate: 32, buyDate: '2026-11-01', sellDate: '2026-11-14'});
-const twSecond = context.createTradeRecord({market: 'tw', symbol: '2330', name: '台積電', shares: 5, avgCost: 120, sellPrice: 110, buyDate: '2026-11-03', sellDate: '2026-11-14'});
+const twSecond = context.createTradeRecord({market: 'tw', symbol: '2330.TW', name: '', shares: 5, avgCost: 120, sellPrice: 110, buyDate: '2026-11-03', sellDate: '2026-11-14'});
 const usSecond = context.createTradeRecord({market: 'us', symbol: 'VOO', shares: 3, avgCost: 120, sellPrice: 130, fxRate: 32, buyDate: '2026-11-03', sellDate: '2026-11-14'});
 const allGroups = context.aggregateTradeRecords([tw, twSecond, us, usSecond, first, second]);
 assert.equal(allGroups.length, 3);
 assert.ok(allGroups.every((group) => group.sourceIds.length === 2));
 assert.equal(allGroups.find((group) => group.market === 'tw').buyDateEnd, '2026-11-03');
+assert.equal(allGroups.find((group) => group.market === 'tw').name, '台積電');
 assert.equal(allGroups.find((group) => group.market === 'us').shares, 5);
-const restored = context.migrateState({holdings: [], history: [], tradeHistory: [first, second, tw, us], cryptoContracts: [{...base, id: 'open', name: 'BTCUSDT', quantity: 2, entryPrice: 100, currentPrice: 110, marginUsdt: 50}]});
-assert.equal(restored.tradeHistory.length, 4);
+const sameNameOtherCode = context.createTradeRecord({market: 'tw', symbol: 'ALT', name: '台積電', shares: 1, avgCost: 100, sellPrice: 110, buyDate: '2026-11-01', sellDate: '2026-11-14'});
+const nameGroup = context.aggregateTradeRecords([tw, twSecond, sameNameOtherCode]);
+assert.equal(nameGroup.length, 1);
+assert.equal(nameGroup[0].symbols.length, 2);
+assert.match(context.renderTradeRecord(nameGroup[0]), /2330、ALT/);
+const shortSameDay = context.createCryptoTradeRecord({...base, side: 'short', shares: 1, avgCost: 100, sellPrice: 80, marginUsdt: 25});
+const separateDirections = context.aggregateTradeRecords([first, second, shortSameDay]);
+assert.equal(separateDirections.length, 2);
+assert.equal(separateDirections.find((group) => group.side === 'long').sourceIds.length, 2);
+assert.equal(separateDirections.find((group) => group.side === 'short').sourceIds.length, 1);
+const stockShort = context.createTradeRecord({market: 'tw', symbol: '2330', name: '台積電', side: 'short', shares: 1, avgCost: 100, sellPrice: 90, buyDate: '2026-11-01', sellDate: '2026-11-14'});
+assert.equal(context.aggregateTradeRecords([tw, twSecond, stockShort]).length, 2);
+const restored = context.migrateState({holdings: [], history: [], tradeHistory: [first, second, tw, twSecond, us], cryptoContracts: [{...base, id: 'open', name: 'BTCUSDT', quantity: 2, entryPrice: 100, currentPrice: 110, marginUsdt: 50}]});
+assert.equal(restored.tradeHistory.length, 5);
 assert.equal(restored.tradeHistory[0].market, 'crypto');
 assert.equal(restored.tradeHistory[0].pnlTwd, first.pnlTwd);
 assert.ok(restored.cryptoContracts[0].openDate);
+assert.equal(context.aggregateTradeRecords(restored.tradeHistory).length, 3);
 
 const colors = new Map([['USDT', 0], ['BTCUSDT', 1]]);
 vm.runInContext('const pieColorFamilies = [["#fff"],["#000"]]; const chineseNameSorter = new Intl.Collator("zh-TW");', context);
@@ -65,13 +79,14 @@ context.window = {XLSX: {utils: {
   },
   book_new: () => ({}), book_append_sheet: () => {}, sheet_add_aoa: () => {},
 }, write: () => new Uint8Array([1])}};
-context.state = {tradeHistory: [tw, twSecond, us, usSecond, first, second]};
+context.state = {tradeHistory: [tw, twSecond, us, usSecond, first, second, shortSameDay]};
 context.els = {exportTradesBtn: {disabled: false}};
 context.Blob = Blob;
 context.markDownloaded = () => { downloaded = true; };
 vm.runInContext('downloadBlob = markDownloaded; setStatus = () => {}; showTradeExportFeedback = () => {};', context);
 context.exportTradeHistoryExcel();
 assert.equal(downloaded, true);
-assert.equal(excelSheets[0].length, 6); // header + three groups + blank + total
+assert.equal(excelSheets[0].length, 7); // header + four groups + blank + total
 assert.equal(excelSheets[1].length, 2); // monthly header + one month
+assert.equal(excelSheets[1][1][1], 4); // long and short count separately
 console.log('PASS: crypto close long/short/liquidation, weighted grouping, all-market grouping, migration, USDT first');
