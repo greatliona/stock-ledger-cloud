@@ -8,11 +8,61 @@ const frame = document.getElementById("ledger");
 let mounted = false, reply = null, loaded = false;
 let activeRequestId = null;
 let resizeObserver, pendingResize = 0, lastHeight = 0;
+let pendingBackground = 0;
+const backgroundTargets = new Set();
+function watchBackgroundViewport(target) {
+  if (!target || backgroundTargets.has(target)) return;
+  backgroundTargets.add(target);
+  target.addEventListener("scroll", scheduleBackground, {capture:true, passive:true});
+  target.addEventListener("resize", scheduleBackground, {passive:true});
+}
+function syncBackground() {
+  pendingBackground = 0;
+  const root = frame.contentDocument?.documentElement;
+  if (!root) return;
+  let host = window;
+  let top = frame.getBoundingClientRect().top + frame.clientTop;
+  // Only read geometry from accessible ancestors; never modify the host page.
+  // Streamlit scrolls an outer section while this iframe is full-content height.
+  while (true) {
+    watchBackgroundViewport(host);
+    watchBackgroundViewport(host.visualViewport);
+    if (host === host.parent) break;
+    try {
+      const embedding = host.frameElement;
+      if (!embedding) break;
+      const outer = host.parent;
+      const height = outer.innerHeight; // Throws safely at a cross-origin boundary.
+      if (!Number.isFinite(height)) break;
+      top += embedding.getBoundingClientRect().top + embedding.clientTop;
+      host = outer;
+    } catch (_) { break; }
+  }
+  const viewport = host.visualViewport;
+  const offset = (viewport?.offsetTop || 0) - top;
+  const height = Math.max(1, viewport?.height || host.innerHeight);
+  for (const [name, value] of [["--redfish-viewport-top", offset], ["--redfish-viewport-height", height]]) {
+    const px = `${Math.round(value * 100) / 100}px`;
+    if (root.style.getPropertyValue(name) !== px) root.style.setProperty(name, px);
+  }
+}
+function scheduleBackground() {
+  if (!pendingBackground) pendingBackground = requestAnimationFrame(syncBackground);
+}
+window.addEventListener("pagehide", () => {
+  cancelAnimationFrame(pendingBackground);
+  for (const target of backgroundTargets) {
+    target.removeEventListener("scroll", scheduleBackground, true);
+    target.removeEventListener("resize", scheduleBackground);
+  }
+  backgroundTargets.clear();
+});
 function send(type, fields = {}) { parent.postMessage({isStreamlitMessage:true, type, ...fields}, "*"); }
 function syncHeight() {
   pendingResize = 0;
   const doc = frame.contentDocument;
   if (!doc?.body) return;
+  scheduleBackground();
   // Measure content, not documentElement.scrollHeight (which includes the old viewport).
   const height = Math.max(1, Math.ceil(Math.max(doc.body.getBoundingClientRect().height, doc.body.scrollHeight)));
   if (height === lastHeight) return;

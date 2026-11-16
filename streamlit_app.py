@@ -34,9 +34,9 @@ def build_page() -> str:
         assets = st.components.v1.declare_component("ledger_assets", path=str(ROOT / "assets"))
         # srcdoc inherits the bridge document's URL. Resolve the sibling asset
         # component relatively so Community Cloud's /~/+/ proxy prefix survives.
-        background_url = f'url("../{assets.name}/background.png?v=L1.5.69")'
+        background_url = f'url("../{assets.name}/background.png?v=L1.5.70")'
     # An absent image/directory leaves the CSS fallback color, not a blank app.
-    css = css.replace('url("assets/background.png?v=L1.5.69")', background_url)
+    css = css.replace('url("assets/background.png?v=L1.5.70")', background_url)
     xlsx = read_text("xlsx.mini.min.js").replace("</script", "<\\/script")
     js = read_text("app.js")
 

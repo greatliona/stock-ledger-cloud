@@ -23,7 +23,7 @@ exec(compile(functions, "streamlit_app.py", "exec"), scope)
 # No optional image is read during page construction, even if it is unreadable.
 with patch.object(Path, "read_bytes", side_effect=PermissionError()):
     page = scope["build_page"]()
-relative_url = "../streamlit_app.ledger_assets/background.png?v=L1.5.69"
+relative_url = "../streamlit_app.ledger_assets/background.png?v=L1.5.70"
 assert f'url("{relative_url}")' in page
 assert registrations == [("ledger_assets", str(ROOT / "assets"))]
 assert 'data:image/png;base64' not in page
@@ -34,7 +34,7 @@ assert f'url("{relative_url}")' in scope['build_page']()
 # Test both server-configured paths and proxy prefixes unknown to the server.
 for prefix in ("", "/ledger", "/~/+", "/nested/~/+"):
     bridge_url = f"https://ledger.example{prefix}/component/streamlit_app.ledger_quote_bridge/index.html?streamlitUrl=x"
-    assert urljoin(bridge_url, relative_url) == f"https://ledger.example{prefix}/component/streamlit_app.ledger_assets/background.png?v=L1.5.69"
+    assert urljoin(bridge_url, relative_url) == f"https://ledger.example{prefix}/component/streamlit_app.ledger_assets/background.png?v=L1.5.70"
 with patch.object(Path, "is_dir", return_value=False):
     assert "background-image: none" in scope['build_page']()
 print(page if '--html' in sys.argv else 'PASS: relative image URL preserves /~/+/ and nested proxy prefixes; missing directory stays safe')

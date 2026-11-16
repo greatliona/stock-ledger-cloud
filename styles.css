@@ -52,9 +52,9 @@
 :root[data-theme="redfish"] {
   color-scheme: light;
   --bg: #f4eddd;
-  --panel: rgba(255, 252, 244, 0.70);
-  --field: rgba(255, 253, 247, 0.38);
-  --subtle: rgba(255, 253, 247, 0.44);
+  --panel: rgba(255, 252, 244, 0.48);
+  --field: rgba(255, 253, 247, 0.22);
+  --subtle: rgba(255, 253, 247, 0.24);
   --ink: #30261f;
   --muted: #594a40;
   --line: rgba(91, 64, 43, 0.23);
@@ -62,13 +62,13 @@
   --red: #a12436;
   --blue: #963526;
   --amber: #895512;
-  --button-bg: rgba(255, 244, 225, 0.64);
-  --button-hover: rgba(255, 246, 228, 0.88);
+  --button-bg: rgba(255, 244, 225, 0.44);
+  --button-hover: rgba(255, 246, 228, 0.68);
   --button-border: rgba(126, 69, 45, 0.42);
   --button-text: #582a21;
   --shadow: 0 5px 18px rgba(80, 47, 29, 0.07);
   --chart-label: #30261f;
-  --chart-summary: rgba(255, 252, 244, 0.40);
+  --chart-summary: rgba(255, 252, 244, 0.24);
   --chart-line: rgba(68, 43, 26, 0.55);
   --chart-grid: rgba(68, 43, 26, 0.18);
   --chart-marker: #fff3df;
@@ -2578,35 +2578,46 @@ button:disabled {
 :root:not([data-theme="light"]) .note-toggle[aria-expanded="true"],
 :root:not([data-theme="light"]) .history-item.is-editing { background: var(--field); }
 
-/* Repeat the full, uncropped artwork down the long Streamlit iframe, too.
-   No fixed/viewport-height background: the embedded viewport can be thousands
-   of pixels tall. Nested surfaces stay lighter so opacity does not compound. */
+/* One uncropped fish, sized to the visible window (not the long iframe).
+   The bridge supplies the host viewport offset as its foreground scrolls.
+   Standalone pages use the native fixed viewport without JavaScript. */
 :root[data-theme="redfish"] body {
   background-color: var(--bg);
-  background-image: url("assets/background.png?v=L1.5.69");
-  background-position: center top;
-  background-size: 100% auto;
-  background-repeat: repeat-y;
+  isolation: isolate;
+}
+:root[data-theme="redfish"] body::before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+  top: var(--redfish-viewport-top, 0px);
+  left: 0;
+  width: 100%;
+  height: var(--redfish-viewport-height, 100vh);
+  background-image: url("assets/background.png?v=L1.5.70");
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
 }
 :root[data-theme="redfish"] .theme-toggle,
 :root[data-theme="redfish"] input,
 :root[data-theme="redfish"] select,
-:root[data-theme="redfish"] textarea { background: rgba(255, 253, 247, 0.58); }
+:root[data-theme="redfish"] textarea { background: rgba(255, 253, 247, 0.34); }
 :root[data-theme="redfish"] option { background: #fbf5e9; color: var(--ink); }
 :root[data-theme="redfish"] .crypto-card,
 :root[data-theme="redfish"] .trade-record,
 :root[data-theme="redfish"] .history-item,
 :root[data-theme="redfish"] .history-month-list,
-:root[data-theme="redfish"] .settlement-summary { background: rgba(255, 253, 247, 0.14); }
+:root[data-theme="redfish"] .settlement-summary { background: rgba(255, 253, 247, 0.08); }
 :root[data-theme="redfish"] .holdings-panel th { background: transparent; }
 :root[data-theme="redfish"] .asset-chart-slide canvas,
 :root[data-theme="redfish"] #assetChart,
 :root[data-theme="redfish"] #stockPieChart,
 :root[data-theme="redfish"] #categoryPieChart,
 :root[data-theme="redfish"] #cryptoPieChart,
-:root[data-theme="redfish"] #usStockPieChart { background: rgba(255, 253, 247, 0.12); }
-:root[data-theme="redfish"] .asset-chart-tooltip { background: rgba(255, 252, 244, 0.92); border-radius: 6px; padding: 6px 8px; }
-:root[data-theme="redfish"] .trade-dialog { background: rgba(255, 252, 244, 0.94); }
+:root[data-theme="redfish"] #usStockPieChart { background: rgba(255, 253, 247, 0.06); }
+:root[data-theme="redfish"] .asset-chart-tooltip { background: rgba(255, 252, 244, 0.84); border-radius: 6px; padding: 6px 8px; }
+:root[data-theme="redfish"] .trade-dialog { background: rgba(255, 252, 244, 0.86); }
 :root[data-theme="redfish"] .trade-dialog::backdrop { background: rgba(65, 36, 22, 0.22); }
 :root[data-theme="redfish"] .danger-btn { background: rgba(161, 36, 54, 0.88); }
 :root[data-theme="redfish"] .danger-btn:hover { background: rgba(161, 36, 54, 0.96); }
