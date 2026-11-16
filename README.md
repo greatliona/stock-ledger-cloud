@@ -1,11 +1,17 @@
 # 股票記帳本雲端版
 
+## L1.5.68 紅魚背景圖片路徑修正
+
+- 雲端圖片改由帳本既有的 Streamlit component 服務提供，不依賴啟動時的靜態檔案設定或符號連結。
+- 圖片仍只有 `assets/background.png` 一份，不嵌入 Base64；缺圖時維持米色底與帳本功能。
+- `redfish_streamlit_preview.py` 可在關閉靜態檔案服務的真正 Streamlit 上驗證雙層內嵌畫面，僅使用隔離測試資料，不讀取帳本與金鑰。
+
 ## L1.5.67 紅魚半透明外觀
 
 - 右上角外觀選單可切換深色版、淺色版與紅魚版，選擇會保存在目前瀏覽器；不改動帳本資料。
 - 紅魚版使用提供的完整原圖，依畫面寬度縮放並向下重複，卡片、表格、輸入框和圖表背景採半透明。
 - 原圖獨立放在 `assets/background.png`，不轉成 Base64、不嵌入程式或頁面。圖片缺失或無法讀取時改用米色底，帳本照常運作。
-- 雲端使用 [Streamlit 靜態檔案服務](https://docs.streamlit.io/develop/concepts/configuration/serving-static-files)；`.streamlit/config.toml` 與 `static/background.png` 連結必須一起提交。連結指向原圖，不另存一份圖片。
+- 此版的靜態檔案路徑已在 L1.5.68 改為帳本既有頁面服務；請使用新版，無須額外伺服器設定。
 
 ## L1.5.45 即時後端階段診斷
 

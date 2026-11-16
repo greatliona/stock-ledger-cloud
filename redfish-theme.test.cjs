@@ -46,8 +46,8 @@ if(process.argv.includes('--serve')) {
   const bridge=fs.readFileSync(__dirname+'/quote_bridge/index.html','utf8');
   const embedded='<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}iframe{display:block;width:100%;border:0;height:1px}</style><iframe id="outer" src="/bridge"></iframe><script>const f=document.getElementById("outer");addEventListener("message",e=>{if(e.source!==f.contentWindow)return;if(e.data.type==="streamlit:setFrameHeight")f.style.height=e.data.height+"px";if(e.data.type==="streamlit:componentReady")f.contentWindow.postMessage({type:"streamlit:render",args:{html:'+JSON.stringify(page).replace(/</g,'\\u003c')+'}},"*")});</script>';
   http.createServer((req,res)=>{
-    if(req.url.startsWith('/app/static/background.png')){res.writeHead(200,{'Content-Type':'image/png'});return res.end(fs.readFileSync(__dirname+'/static/background.png'));}
-    const routes={'/':page,'/missing':page.replaceAll('/app/static/background.png','/missing-background.png'),'/embedded':embedded,'/bridge':bridge};
+    if(req.url.startsWith('/component/streamlit_app.ledger_assets/background.png')){res.writeHead(200,{'Content-Type':'image/png'});return res.end(fs.readFileSync(__dirname+'/assets/background.png'));}
+    const routes={'/':page,'/missing':page.replaceAll('/component/streamlit_app.ledger_assets/background.png','/missing-background.png'),'/embedded':embedded,'/bridge':bridge};
     const body=routes[req.url];
     res.writeHead(body?200:404,{'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'none'"});
     res.end(body||'Not found');

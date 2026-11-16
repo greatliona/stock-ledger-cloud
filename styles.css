@@ -2583,7 +2583,7 @@ button:disabled {
    of pixels tall. Nested surfaces stay lighter so opacity does not compound. */
 :root[data-theme="redfish"] body {
   background-color: var(--bg);
-  background-image: url("assets/background.png?v=L1.5.67");
+  background-image: url("assets/background.png?v=L1.5.68");
   background-position: center top;
   background-size: 100% auto;
   background-repeat: repeat-y;
