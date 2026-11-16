@@ -1,22 +1,23 @@
 const STORAGE_KEY = "stock-ledger-v1";
 const THEME_KEY = "stock-ledger-theme";
+function normalizeTheme(theme) {
+  return ["dark", "light", "redfish"].includes(theme) ? theme : "dark";
+}
 function applyTheme(theme) {
+  theme = normalizeTheme(theme);
   document.documentElement.dataset.theme = theme;
-  const button = document.getElementById("themeToggle");
-  if (button) {
-    button.textContent = theme === "dark" ? "☀ 淺色模式" : "☾ 深色模式";
-    button.setAttribute("aria-label", theme === "dark" ? "切換淺色模式" : "切換深色模式");
-  }
+  const select = document.getElementById("themeSelect");
+  if (select) select.value = theme;
   if (typeof drawCharts === "function" && typeof els !== "undefined") drawCharts();
 }
 function canvasThemeColor(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
-if (document.documentElement && typeof localStorage !== "undefined") document.documentElement.dataset.theme = localStorage.getItem(THEME_KEY) === "light" ? "light" : "dark";
+if (document.documentElement && typeof localStorage !== "undefined") document.documentElement.dataset.theme = normalizeTheme(localStorage.getItem(THEME_KEY));
 document.addEventListener?.("DOMContentLoaded", () => {
   applyTheme(document.documentElement.dataset.theme);
-  document.getElementById("themeToggle")?.addEventListener("click", () => {
-    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.getElementById("themeSelect")?.addEventListener("change", (event) => {
+    const next = normalizeTheme(event.target.value);
     localStorage.setItem(THEME_KEY, next);
     applyTheme(next);
   });
@@ -58,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.66", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.67", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -2855,7 +2856,7 @@ function drawPieChart() {
     context.moveTo(centerX, centerY);
     context.arc(centerX, centerY, radius, start, start + angle);
     context.closePath();
-    context.fillStyle = slice.color;
+    context.fillStyle = pieThemeColor(slice.color);
     context.fill();
     context.strokeStyle = "rgba(23, 33, 28, 0.32)";
     context.lineWidth = 0.8;
@@ -2972,7 +2973,7 @@ function drawCategoryPieChart() {
     context.moveTo(centerX, centerY);
     context.arc(centerX, centerY, radius, start, start + angle);
     context.closePath();
-    context.fillStyle = slice.color;
+    context.fillStyle = pieThemeColor(slice.color);
     context.fill();
     context.strokeStyle = "rgba(23, 33, 28, 0.32)";
     context.lineWidth = 0.8;
@@ -3105,7 +3106,7 @@ function drawCryptoPieChart() {
     context.moveTo(centerX, centerY);
     context.arc(centerX, centerY, radius, start, start + angle);
     context.closePath();
-    context.fillStyle = slice.color;
+    context.fillStyle = pieThemeColor(slice.color);
     context.fill();
     context.strokeStyle = "rgba(23, 33, 28, 0.32)";
     context.lineWidth = 0.8;
@@ -3206,7 +3207,7 @@ function drawUsStockPieChart() {
     context.moveTo(centerX, centerY);
     context.arc(centerX, centerY, radius, start, start + angle);
     context.closePath();
-    context.fillStyle = slice.color;
+    context.fillStyle = pieThemeColor(slice.color);
     context.fill();
     context.strokeStyle = "rgba(23, 33, 28, 0.32)";
     context.lineWidth = 0.8;
@@ -3416,8 +3417,23 @@ function fillStackedBand(context, points, topKey, bottomKey, color) {
   context.fill();
 }
 
+function pieThemeColor(color) {
+  return document.documentElement.dataset.theme === "redfish" && /^#[0-9a-f]{6}$/i.test(color)
+    ? `${color}b8` : color;
+}
+
 function assetChartAreaColor(color) {
   if (document.documentElement.dataset.theme === "light") return color;
+  if (document.documentElement.dataset.theme === "redfish") {
+    const fills = {
+      [assetChartColors.cashFill]: "rgba(193, 60, 111, 0.26)",
+      [assetChartColors.stockFill]: "rgba(215, 123, 36, 0.30)",
+      [assetChartColors.cryptoFill]: "rgba(196, 158, 17, 0.30)",
+      [assetChartColors.fundFill]: "rgba(29, 143, 94, 0.26)",
+      [assetChartColors.usStockFill]: "rgba(45, 116, 184, 0.26)",
+    };
+    return fills[color] || color;
+  }
   const darkFills = {
     [assetChartColors.cashFill]: "#632b4a",
     [assetChartColors.stockFill]: "#80512f",
@@ -3454,7 +3470,7 @@ function drawSingleStackedColumn(context, point, padding, chartWidth, chartHeigh
 }
 
 function drawAssetLine(context, points, key, color, pointRadius, shouldDraw = () => true) {
-  const dark = document.documentElement.dataset.theme !== "light";
+  const dark = document.documentElement.dataset.theme === "dark";
   const lineColor = dark && color === assetChartColors.cashLine ? "#ef5b91" : color;
   context.strokeStyle = lineColor;
   context.lineWidth = 2;

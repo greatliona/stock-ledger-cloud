@@ -1,5 +1,12 @@
 # 股票記帳本雲端版
 
+## L1.5.67 紅魚半透明外觀
+
+- 右上角外觀選單可切換深色版、淺色版與紅魚版，選擇會保存在目前瀏覽器；不改動帳本資料。
+- 紅魚版使用提供的完整原圖，依畫面寬度縮放並向下重複，卡片、表格、輸入框和圖表背景採半透明。
+- 原圖獨立放在 `assets/background.png`，不轉成 Base64、不嵌入程式或頁面。圖片缺失或無法讀取時改用米色底，帳本照常運作。
+- 雲端使用 [Streamlit 靜態檔案服務](https://docs.streamlit.io/develop/concepts/configuration/serving-static-files)；`.streamlit/config.toml` 與 `static/background.png` 連結必須一起提交。連結指向原圖，不另存一份圖片。
+
 ## L1.5.45 即時後端階段診斷
 
 - 在美股查詢訊息下加入可展開、選取複製的診斷明細，含版本、請求 ID、各階段秒數、最後收到訊息時間及實際錯誤。

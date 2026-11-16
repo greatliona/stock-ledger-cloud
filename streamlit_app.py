@@ -26,6 +26,12 @@ def read_text(filename: str) -> str:
 def build_page() -> str:
     html = read_text("index.html")
     css = read_text("styles.css")
+    # Serve an ordinary image URL, not base64. A failed image request leaves the
+    # CSS fallback color visible and cannot interrupt page construction.
+    base_path = str(st.get_option("server.baseUrlPath") or "").strip("/")
+    prefix = f"/{base_path}" if base_path else ""
+    css = css.replace('url("assets/background.png?v=L1.5.67")',
+                      f'url("{prefix}/app/static/background.png?v=L1.5.67")')
     xlsx = read_text("xlsx.mini.min.js").replace("</script", "<\\/script")
     js = read_text("app.js")
 
