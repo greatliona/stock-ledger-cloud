@@ -41,13 +41,14 @@ if(process.argv.includes('--serve')) {
     cash:120000,cryptoCashUsdt:500,usdTwdRate:32,usCashUsd:0,tradeHistory:[],
     history:Array.from({length:12},(_,i)=>({date:`2026-11-${String(i+1).padStart(2,'0')}`,stockTotal:800000+i*9000,usStockTotal:160000,fundTotal:110000+i*1000,cryptoTotal:45000+i*700,cash:120000,cashRecorded:true}))};
   let page=execFileSync('python3',['redfish_page_test.py','--html'],{cwd:__dirname,maxBuffer:5*1024*1024}).toString();
+  page=page.replace('<head>', '<head><base href="/component/streamlit_app.ledger_quote_bridge/index.html">');
   page=page.replaceAll('stock-ledger-v1','redfish-preview-ledger').replaceAll('stock-ledger-theme','redfish-preview-theme');
   page=page.replace('<body>',`<body><script>localStorage.setItem('redfish-preview-ledger',${JSON.stringify(JSON.stringify(sample))});</script><p style="margin:0;padding:8px;text-align:center;background:#fff6d9;color:#422">隔離外觀預覽・僅測試資料</p>`);
   const bridge=fs.readFileSync(__dirname+'/quote_bridge/index.html','utf8');
   const embedded='<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}iframe{display:block;width:100%;border:0;height:1px}</style><iframe id="outer" src="/bridge"></iframe><script>const f=document.getElementById("outer");addEventListener("message",e=>{if(e.source!==f.contentWindow)return;if(e.data.type==="streamlit:setFrameHeight")f.style.height=e.data.height+"px";if(e.data.type==="streamlit:componentReady")f.contentWindow.postMessage({type:"streamlit:render",args:{html:'+JSON.stringify(page).replace(/</g,'\\u003c')+'}},"*")});</script>';
   http.createServer((req,res)=>{
     if(req.url.startsWith('/component/streamlit_app.ledger_assets/background.png')){res.writeHead(200,{'Content-Type':'image/png'});return res.end(fs.readFileSync(__dirname+'/assets/background.png'));}
-    const routes={'/':page,'/missing':page.replaceAll('/component/streamlit_app.ledger_assets/background.png','/missing-background.png'),'/embedded':embedded,'/bridge':bridge};
+    const routes={'/':page,'/missing':page.replaceAll('../streamlit_app.ledger_assets/background.png','/missing-background.png'),'/embedded':embedded,'/bridge':bridge};
     const body=routes[req.url];
     res.writeHead(body?200:404,{'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'none'"});
     res.end(body||'Not found');

@@ -29,14 +29,14 @@ def build_page() -> str:
     # Register only the public assets folder through the existing component
     # server. Unlike /app/static this works without a server-startup flag.
     # The PNG remains an independent URL; it is never embedded or decoded here.
-    base_path = str(st.get_option("server.baseUrlPath") or "").strip("/")
-    prefix = f"/{base_path}" if base_path else ""
     background_url = "none"
     if (ROOT / "assets").is_dir():
         assets = st.components.v1.declare_component("ledger_assets", path=str(ROOT / "assets"))
-        background_url = f'url("{prefix}/component/{assets.name}/background.png?v=L1.5.68")'
+        # srcdoc inherits the bridge document's URL. Resolve the sibling asset
+        # component relatively so Community Cloud's /~/+/ proxy prefix survives.
+        background_url = f'url("../{assets.name}/background.png?v=L1.5.69")'
     # An absent image/directory leaves the CSS fallback color, not a blank app.
-    css = css.replace('url("assets/background.png?v=L1.5.68")', background_url)
+    css = css.replace('url("assets/background.png?v=L1.5.69")', background_url)
     xlsx = read_text("xlsx.mini.min.js").replace("</script", "<\\/script")
     js = read_text("app.js")
 

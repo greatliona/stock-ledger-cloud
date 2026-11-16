@@ -1,5 +1,11 @@
 # 股票記帳本雲端版
 
+## L1.5.69 修正雲端 /~/+/ 圖片前綴
+
+- 已唯讀確認正式站的原圖存在於 `/~/+/component/streamlit_app.ledger_assets/background.png`，尺寸 1448 × 1086。
+- L1.5.68 的根目錄絕對路徑漏掉 Community Cloud 代理前綴。改用相對於帳本外層 iframe 的相鄰 component 路徑，保留 `/~/+/`、自訂子路徑及查詢參數的正確解析。
+- 本機子路徑驗證：`streamlit run redfish_streamlit_preview.py --server.baseUrlPath=ledger --server.enableStaticServing=false --server.fileWatcherType=none`。`redfish_page_test.py` 另驗證 `/~/+/` 等代理前綴不會遺失。
+
 ## L1.5.68 紅魚背景圖片路徑修正
 
 - 雲端圖片改由帳本既有的 Streamlit component 服務提供，不依賴啟動時的靜態檔案設定或符號連結。
