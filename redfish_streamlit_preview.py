@@ -26,7 +26,9 @@ page = page.replace("stock-ledger-v1", "redfish-streamlit-proof-ledger")
 page = page.replace("stock-ledger-theme", "redfish-streamlit-proof-theme")
 fixture = dict(holdings=[dict(id="test",symbol="2330.TW",name="台積電",shares=1000,
                avgCost=850,currentPrice=920,side="long")], usHoldings=[], funds=[],
-               cryptoContracts=[],history=[],tradeHistory=[],cash=120000,usdTwdRate=32)
+               cryptoContracts=[],tradeHistory=[],cash=120000,usdTwdRate=32,
+               history=[dict(date="2026-11-15",cash=100000,cashRecorded=True,stockTotal=900000,stockCost=850000),
+                        dict(date="2026-11-16",cash=120000,cashRecorded=True,stockTotal=920000,stockCost=850000)])
 seed = "<script>localStorage.setItem('redfish-streamlit-proof-theme','redfish');"
 seed += "localStorage.setItem('redfish-streamlit-proof-ledger'," + json.dumps(json.dumps(fixture)) + ");</script>"
 page = page.replace("<body>", "<body>" + seed, 1)

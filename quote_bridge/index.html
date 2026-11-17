@@ -8,72 +8,84 @@ const frame = document.getElementById("ledger");
 let mounted = false, reply = null, loaded = false;
 let activeRequestId = null;
 let resizeObserver, pendingResize = 0, lastHeight = 0;
-let themeObserver, hostWallpaperStyle, hostWallpaperFrame;
-const wallpaperScope = '.stApp:has(iframe[data-ledger-wallpaper])';
-function clearHostWallpaper() {
-  hostWallpaperFrame?.removeAttribute("data-ledger-wallpaper");
-  hostWallpaperStyle?.remove();
-  hostWallpaperFrame = hostWallpaperStyle = null;
+let themeObserver, hostThemeStyle, hostThemeFrame, activeHostTheme;
+const hostScope = '.stApp:has(iframe[data-ledger-theme])';
+const fishScope = '.stApp:has(iframe[data-ledger-theme="redfish"])';
+function clearHostTheme() {
+  hostThemeFrame?.removeAttribute("data-ledger-theme");
+  hostThemeStyle?.remove();
+  hostThemeFrame = hostThemeStyle = activeHostTheme = null;
   frame.contentDocument?.documentElement?.removeAttribute("data-host-wallpaper");
 }
-function syncHostWallpaper() {
+function syncHostTheme() {
   const doc = frame.contentDocument;
   const root = doc?.documentElement;
-  if (root?.dataset.theme !== "redfish") {
-    clearHostWallpaper();
+  const theme = root?.dataset.theme;
+  if (!["light", "dark", "redfish"].includes(theme)) {
+    clearHostTheme();
     return;
   }
-  // Put the wallpaper in the non-scrolling Streamlit host, not the tall iframe.
-  // No scroll listener, coordinate compensation or mobile visualViewport resize.
   try {
     const embedding = window.frameElement;
     const host = embedding?.ownerDocument;
     if (!embedding?.closest(".stApp") ||
         !host.defaultView.CSS.supports("selector(:has(iframe))")) return;
-    if (hostWallpaperStyle?.isConnected) return;
-    // getComputedStyle resolves the image URL against the ledger document, so
-    // the URL keeps its Cloud proxy prefix when used in the host document.
-    const image = frame.contentWindow.getComputedStyle(doc.body, "::before").backgroundImage;
-    hostWallpaperStyle = host.createElement("style");
-    hostWallpaperStyle.textContent = `
-      ${wallpaperScope} { background: #f4eddd !important; isolation: isolate; }
-      ${wallpaperScope}::before {
+    if (hostThemeStyle?.isConnected && activeHostTheme === theme) return;
+    const palette = frame.contentWindow.getComputedStyle(root);
+    if (!hostThemeStyle?.isConnected) {
+      hostThemeStyle = host.createElement("style");
+      hostThemeStyle.textContent = `
+      ${hostScope} { background: var(--ledger-host-bg) !important; }
+      ${fishScope} { isolation: isolate; }
+      ${fishScope}::before {
         content: ""; position: fixed; inset: 0; height: 100svh;
         z-index: -1; pointer-events: none;
         background-image: var(--ledger-fish-image, none);
         background-position: center; background-size: contain; background-repeat: no-repeat;
       }
-      ${wallpaperScope} :is([data-testid="stAppViewContainer"], [data-testid="stMain"]) {
+      ${hostScope} :is([data-testid="stAppViewContainer"], [data-testid="stMain"]) {
         background: transparent !important;
       }
-      ${wallpaperScope} [data-testid="stHeader"] {
-        background: rgba(244, 237, 221, .84) !important;
-        color: #30261f;
+      ${hostScope} [data-testid="stHeader"] {
+        background: var(--ledger-host-bg) !important;
+        color: var(--ledger-host-ink);
       }
-      ${wallpaperScope} [data-testid="stHeader"] button { color: #30261f; }
-    `;
-    host.head.append(hostWallpaperStyle);
-    hostWallpaperStyle.sheet.cssRules[0].style.setProperty("--ledger-fish-image", image);
-    hostWallpaperFrame = embedding;
-    embedding.setAttribute("data-ledger-wallpaper", "");
-    root.setAttribute("data-host-wallpaper", "");
+      ${fishScope} [data-testid="stHeader"] {
+        background: rgba(244, 237, 221, .84) !important;
+      }
+      ${hostScope} [data-testid="stHeader"] button { color: var(--ledger-host-ink); }
+      `;
+      host.head.append(hostThemeStyle);
+    }
+    const hostPalette = hostThemeStyle.sheet.cssRules[0].style;
+    hostPalette.setProperty("--ledger-host-bg", palette.getPropertyValue("--bg").trim());
+    hostPalette.setProperty("--ledger-host-ink", palette.getPropertyValue("--ink").trim());
+    // Computed image URL is absolute and retains Streamlit Cloud's proxy prefix.
+    root.removeAttribute("data-host-wallpaper");
+    const image = theme === "redfish"
+      ? frame.contentWindow.getComputedStyle(doc.body, "::before").backgroundImage : "none";
+    hostPalette.setProperty("--ledger-fish-image", image);
+    hostThemeFrame = embedding;
+    embedding.setAttribute("data-ledger-theme", theme);
+    if (theme === "redfish") root.setAttribute("data-host-wallpaper", "");
+    activeHostTheme = theme;
   } catch (_) {
     // If embedding restrictions prevent host styling, keep the local fallback.
-    clearHostWallpaper();
+    clearHostTheme();
   }
 }
 function observeTheme() {
   themeObserver?.disconnect();
   if (!frame.contentDocument?.documentElement) return;
-  themeObserver = new MutationObserver(syncHostWallpaper);
+  themeObserver = new MutationObserver(syncHostTheme);
   themeObserver.observe(frame.contentDocument.documentElement, {
     attributes: true, attributeFilter: ["data-theme"]
   });
-  syncHostWallpaper();
+  syncHostTheme();
 }
 window.addEventListener("pagehide", () => {
   themeObserver?.disconnect();
-  clearHostWallpaper();
+  clearHostTheme();
 });
 window.addEventListener("pageshow", observeTheme);
 function send(type, fields = {}) { parent.postMessage({isStreamlitMessage:true, type, ...fields}, "*"); }
@@ -103,7 +115,7 @@ function deliver() {
 frame.addEventListener("load", () => {
   loaded = true;
   resizeObserver?.disconnect();
-  clearHostWallpaper();
+  clearHostTheme();
   observeTheme();
   const doc = frame.contentDocument;
   if (doc?.body) {

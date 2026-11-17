@@ -59,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.71", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.72", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -839,7 +839,7 @@ els.settleBtn.addEventListener("click", () => {
     fundTotal,
     cryptoTotal,
     cash,
-    cashRecorded: cash > 0,
+    cashRecorded: true,
     stockCost,
     usStockCost,
     fundCost,
@@ -1103,7 +1103,8 @@ els.historyList.addEventListener("click", (event) => {
     const fundCost = toNumber(card.querySelector("[data-history-field='fundCost']").value);
     const cryptoTotal = toNumber(card.querySelector("[data-history-field='cryptoTotal']").value);
     const cryptoCost = toNumber(card.querySelector("[data-history-field='cryptoCost']").value);
-    const cash = toNumber(card.querySelector("[data-history-field='cash']").value);
+    const cashInputValue = card.querySelector("[data-history-field='cash']").value;
+    const cash = toNumber(cashInputValue);
     const note = card.querySelector("[data-history-field='note']").value.trim();
     record.date = nextDate;
     record.stockTotal = stockTotal;
@@ -1111,7 +1112,7 @@ els.historyList.addEventListener("click", (event) => {
     record.usStockMarketValue = usStockTotal - toNumber(record.usCashTwd);
     record.fundTotal = fundTotal;
     record.cash = cash;
-    record.cashRecorded = cash > 0;
+    record.cashRecorded = cashInputValue !== "";
     record.stockCost = stockCost;
     record.usStockCost = usStockCost;
     record.fundCost = fundCost;
@@ -2344,7 +2345,7 @@ function renderHistory() {
         </label>
         <label>
           現金
-          <input data-history-field="cash" type="number" min="0" step="1" value="${toNumber(item.cash)}" />
+          <input data-history-field="cash" type="number" min="0" step="1" value="${hasRecordedCash(item) ? toNumber(item.cash) : ""}" />
         </label>
         <label>
           台灣股市總和
@@ -2398,17 +2399,22 @@ function renderHistory() {
       const cryptoExtremaClasses = getHistoryExtremaClasses(historyExtrema, "cryptoTotal", item.date);
       const usStockExtremaClasses = getHistoryExtremaClasses(historyExtrema, "usStockTotal", item.date);
       const previousItem = index > 0 ? historyItems[index - 1] : null;
-      const dailyChange = (currentValue, previousValue) => {
+      const dailyChange = (currentValue, previousValue, isCash = false) => {
         if (!previousItem) return "";
         const change = toNumber(currentValue) - toNumber(previousValue);
         if (change === 0) return "";
         const previousBase = Math.abs(toNumber(previousValue));
         const percent = previousBase ? (change / previousBase) * 100 : 0;
         const roundedThousands = Math.round(Math.abs(change) / 1000);
-        const shortChange = `${change >= 0 ? "+" : "-"}$${formatNumber(roundedThousands)}K`;
+        const shortChange = isCash && Math.abs(change) < 1000
+          ? signedMoney(change) : `${change >= 0 ? "+" : "-"}$${formatNumber(roundedThousands)}K`;
+        const percentLabel = isCash && !previousBase
+          ? "—" : `${percent >= 0 ? "+" : ""}${formatNumber(percent, 2)}%`;
         const largeChangeClass = Math.abs(percent) > 15 ? " is-large-change" : "";
-        return `<small class="history-daily-pnl history-inline-daily${largeChangeClass}">${shortChange} ${percent >= 0 ? "+" : ""}${formatNumber(percent, 2)}%</small>`;
+        return `<small class="history-daily-pnl history-inline-daily${largeChangeClass}">${shortChange} ${percentLabel}</small>`;
       };
+      const cashChange = previousItem && hasRecordedCash(item) && hasRecordedCash(previousItem)
+        ? dailyChange(item.cash, previousItem.cash, true) : "";
       node.innerHTML = `
         <div class="history-card-head">
           <div class="history-date-line">
@@ -2430,7 +2436,7 @@ function renderHistory() {
           <strong>${money(item.total)}</strong>
           ${dailyChange(item.total, previousItem?.total)}
         </div>
-        <em class="history-value-row ${cashExtremaClasses}"><span>現金 ${money(item.cash || 0)}</span></em>
+        <em class="history-value-row ${cashExtremaClasses}"><span>現金 ${money(item.cash || 0)}</span>${cashChange}</em>
         <em class="history-value-row ${stockExtremaClasses}"><span>台股 ${money(item.stockTotal || 0)}</span>${dailyChange(item.stockTotal, previousItem?.stockTotal)}</em>
         <em class="history-value-row ${fundExtremaClasses}"><span>基金 ${money(item.fundTotal || 0)}</span>${dailyChange(item.fundTotal, previousItem?.fundTotal)}</em>
         <em class="history-value-row ${cryptoExtremaClasses}"><span>加密 ${money(item.cryptoTotal || 0)}</span>${dailyChange(item.cryptoTotal, previousItem?.cryptoTotal)}</em>

@@ -4,11 +4,11 @@ const vm = require('node:vm');
 const html = fs.readFileSync(__dirname + '/quote_bridge/index.html', 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 const handlers = new Map();
-const hostAttrs = new Set(), ledgerAttrs = new Set(), styles = new Set();
+const hostAttrs = new Map(), ledgerAttrs = new Set(), styles = new Set();
 const cssValues = {};
 const root = {dataset:{theme:'redfish'},
   setAttribute:name=>ledgerAttrs.add(name), removeAttribute:name=>ledgerAttrs.delete(name)};
-const image = 'url("https://ledger.example/~/+/component/streamlit_app.ledger_assets/background.png?v=L1.5.71")';
+const image = 'url("https://ledger.example/~/+/component/streamlit_app.ledger_assets/background.png?v=L1.5.72")';
 const host = {
   defaultView:{CSS:{supports:()=>true}},
   head:{append:style=>styles.add(style)},
@@ -19,10 +19,16 @@ const host = {
   })
 };
 const embedding = {ownerDocument:host, closest: selector=>selector === '.stApp',
-  setAttribute:name=>hostAttrs.add(name), removeAttribute:name=>hostAttrs.delete(name)};
+  setAttribute:(name,value)=>hostAttrs.set(name,value), removeAttribute:name=>hostAttrs.delete(name)};
+const palettes = {
+  redfish: {'--bg':'#f4eddd','--ink':'#30261f'},
+  dark: {'--bg':'#141a20','--ink':'#e8edf0'},
+  light: {'--bg':'#f6f7f4','--ink':'#17211c'},
+};
 const frame = {contentDocument:{documentElement:root, body:{}}, contentWindow:{
-  getComputedStyle:(body, pseudo)=>{
-    assert.equal(body,frame.contentDocument.body);
+  getComputedStyle:(element, pseudo)=>{
+    if (element === root) return {getPropertyValue:key=>palettes[root.dataset.theme][key]};
+    assert.equal(element,frame.contentDocument.body);
     assert.equal(pseudo,'::before');
     return {backgroundImage:image};
   }
@@ -46,20 +52,25 @@ assert.equal(cssValues['--ledger-fish-image'],image, 'absolute asset URL preserv
 const [sheet] = styles;
 assert.match(sheet.textContent,/position: fixed; inset: 0; height: 100svh/);
 assert.match(sheet.textContent,/background-repeat: no-repeat/);
-assert.match(sheet.textContent,/background: #f4eddd !important/);
+assert.match(sheet.textContent,/background: var\(--ledger-host-bg\) !important/);
+assert.match(sheet.textContent,/iframe\[data-ledger-theme="redfish"\]\)::before/);
 assert.match(sheet.textContent,/stAppViewContainer/);
-assert.equal(hostAttrs.has('data-ledger-wallpaper'),true);
+assert.equal(cssValues['--ledger-host-bg'],'#f4eddd');
+assert.equal(hostAttrs.get('data-ledger-theme'),'redfish');
 assert.equal(ledgerAttrs.has('data-host-wallpaper'),true);
 assert.doesNotMatch(script,/addEventListener\(["'](?:scroll|wheel)|getBoundingClientRect\(\)\.top|--redfish-viewport/);
 onTheme();
 assert.equal(styles.size,1, 'theme observation does not duplicate the layer');
-root.dataset.theme='dark';
-onTheme();
-assert.equal(styles.size,0);
-assert.equal(hostAttrs.size + ledgerAttrs.size,0);
-root.dataset.theme='light';
-onTheme();
-assert.equal(styles.size,0);
+for (const theme of ['dark','light']) {
+  root.dataset.theme=theme;
+  onTheme();
+  assert.deepEqual([...styles],[sheet]);
+  assert.equal(hostAttrs.get('data-ledger-theme'),theme);
+  assert.equal(ledgerAttrs.size,0);
+  assert.equal(cssValues['--ledger-fish-image'],'none');
+  assert.equal(cssValues['--ledger-host-bg'],palettes[theme]['--bg']);
+  assert.equal(cssValues['--ledger-host-ink'],palettes[theme]['--ink']);
+}
 root.dataset.theme='redfish';
 onTheme();
 assert.equal(styles.size,1);
@@ -81,4 +92,4 @@ assert.match(background,/background-size: contain/);
 assert.match(background,/assets\/background\.png/);
 assert.match(css,/\[data-host-wallpaper\] body::before \{ content: none; \}/);
 assert.match(css,/--panel: rgba\(255, 252, 244, 0\.48\)/);
-console.log('PASS: host-fixed single wallpaper, cream edges, no scroll compensation, theme cleanup and standalone fallback');
+console.log('PASS: matching outer background for all themes, fixed redfish only, cleanup and standalone fallback');
