@@ -2590,7 +2590,7 @@ button:disabled {
   pointer-events: none;
   inset: 0;
   height: 100svh;
-  background-image: url("assets/background.png?v=L1.5.72");
+  background-image: url("assets/background.png?v=1");
   background-position: center;
   background-size: contain;
   background-repeat: no-repeat;

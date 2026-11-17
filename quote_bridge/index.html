@@ -89,6 +89,24 @@ window.addEventListener("pagehide", () => {
 });
 window.addEventListener("pageshow", observeTheme);
 function send(type, fields = {}) { parent.postMessage({isStreamlitMessage:true, type, ...fields}, "*"); }
+function preloadBackground(path) {
+  const url = new URL(path, window.location.href);
+  if (url.origin !== window.location.origin) return;
+  let host = document;
+  // Use the same document as the final fixed background. Keep the hidden
+  // image during the component swap after login, even if the download is active.
+  try { host = window.frameElement?.ownerDocument || document; } catch (_) {}
+  const id = "ledger-background-preload-image";
+  const previous = host.getElementById(id);
+  if (previous?.src === url.href) return;
+  const image = host.createElement("img");
+  image.id = id;
+  image.hidden = true;
+  image.alt = "";
+  image.src = url.href;
+  if (previous) previous.replaceWith(image);
+  else host.body.append(image);
+}
 function syncHeight() {
   pendingResize = 0;
   const doc = frame.contentDocument;
@@ -131,6 +149,12 @@ window.addEventListener("resize", scheduleResize);
 window.addEventListener("message", event => {
   if (event.source === parent && event.data?.type === "streamlit:render") {
     const args = event.data.args;
+    if (typeof args.preloadBackground === "string") {
+      preloadBackground(args.preloadBackground);
+      frame.hidden = true;
+      send("streamlit:setFrameHeight", {height:0});
+      return;
+    }
     reply = args.reply;
     if (!mounted) { mounted = true; frame.srcdoc = args.html; }
     else deliver();

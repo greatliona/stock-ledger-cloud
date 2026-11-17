@@ -23,20 +23,31 @@ def read_text(filename: str) -> str:
     return (ROOT / filename).read_text(encoding="utf-8")
 
 
+def background_asset_path() -> str:
+    folder = ROOT / "assets"
+    filename = next((name for name in ("background.webp", "background.png") if (folder / name).is_file()), "")
+    if not filename:
+        return ""
+    # Only public artwork is registered here. Both the preloader and the ledger
+    # resolve the same sibling URL, including the Cloud /~/+/ prefix.
+    assets = st.components.v1.declare_component("ledger_assets", path=str(folder))
+    return f"../{assets.name}/{filename}?v=1"
+
+
+def ledger_component():
+    return st.components.v1.declare_component("ledger_quote_bridge", path=str(ROOT / "quote_bridge"))
+
+
+def preload_login_background():
+    if path := background_asset_path():
+        ledger_component()(preloadBackground=path, key="ledger-background-preload")
+
+
 def build_page() -> str:
     html = read_text("index.html")
     css = read_text("styles.css")
-    # Register only the public assets folder through the existing component
-    # server. Unlike /app/static this works without a server-startup flag.
-    # The PNG remains an independent URL; it is never embedded or decoded here.
-    background_url = "none"
-    if (ROOT / "assets").is_dir():
-        assets = st.components.v1.declare_component("ledger_assets", path=str(ROOT / "assets"))
-        # srcdoc inherits the bridge document's URL. Resolve the sibling asset
-        # component relatively so Community Cloud's /~/+/ proxy prefix survives.
-        background_url = f'url("../{assets.name}/background.png?v=L1.5.72")'
-    # An absent image/directory leaves the CSS fallback color, not a blank app.
-    css = css.replace('url("assets/background.png?v=L1.5.72")', background_url)
+    path = background_asset_path()
+    css = css.replace('url("assets/background.png?v=1")', f'url("{path}")' if path else "none")
     xlsx = read_text("xlsx.mini.min.js").replace("</script", "<\\/script")
     js = read_text("app.js")
 
@@ -113,7 +124,7 @@ def render_ledger():
     rejection = st.session_state.pop("quote_rejection", None)
     if rejection:
         st.session_state["quote_reply"] = rejection
-    ledger = st.components.v1.declare_component("ledger_quote_bridge", path=str(ROOT / "quote_bridge"))
+    ledger = ledger_component()
     request = ledger(html=st.session_state["ledger_html"], reply=st.session_state.get("quote_reply"), key="ledger")
     if isinstance(request, dict) and isinstance(request.get("symbols"), list) and isinstance(request.get("id"), str) and request["id"] != st.session_state.get("quote_request_id"):
         if job and job.snapshot().get("phase") == "running":
@@ -136,3 +147,5 @@ if check_password():
     }
     </style>""", unsafe_allow_html=True)
     render_ledger()
+else:
+    preload_login_background()

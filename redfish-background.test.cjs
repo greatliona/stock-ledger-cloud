@@ -8,7 +8,7 @@ const hostAttrs = new Map(), ledgerAttrs = new Set(), styles = new Set();
 const cssValues = {};
 const root = {dataset:{theme:'redfish'},
   setAttribute:name=>ledgerAttrs.add(name), removeAttribute:name=>ledgerAttrs.delete(name)};
-const image = 'url("https://ledger.example/~/+/component/streamlit_app.ledger_assets/background.png?v=L1.5.72")';
+const image = 'url("https://ledger.example/~/+/component/streamlit_app.ledger_assets/background.webp?v=1")';
 const host = {
   defaultView:{CSS:{supports:()=>true}},
   head:{append:style=>styles.add(style)},
