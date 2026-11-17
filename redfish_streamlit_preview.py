@@ -25,8 +25,7 @@ scope = dict(ROOT=ROOT, json=json, re=re, hmac=hmac, __name__=__name__,
                  text_input=st.text_input, error=st.error, rerun=st.rerun,
                  components=SimpleNamespace(v1=components)))
 exec(compile(functions, __file__, "exec"), scope)
-if st.query_params.get("login") == "1" and not scope["check_password"]():
-    scope["preload_login_background"]()
+if st.query_params.get("login") == "1" and not scope["check_password"]("redfish-streamlit-proof-theme"):
     st.stop()
 page = scope["build_page"]()
 page = page.replace("stock-ledger-v1", "redfish-streamlit-proof-ledger")

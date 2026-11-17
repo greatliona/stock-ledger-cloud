@@ -8,41 +8,27 @@ const frame = document.getElementById("ledger");
 let mounted = false, reply = null, loaded = false;
 let activeRequestId = null;
 let resizeObserver, pendingResize = 0, lastHeight = 0;
-let themeObserver, hostThemeStyle, hostThemeFrame, activeHostTheme;
-const hostScope = '.stApp:has(iframe[data-ledger-theme])';
-const fishScope = '.stApp:has(iframe[data-ledger-theme="redfish"])';
-function clearHostTheme() {
-  hostThemeFrame?.removeAttribute("data-ledger-theme");
-  hostThemeStyle?.remove();
-  hostThemeFrame = hostThemeStyle = activeHostTheme = null;
-  frame.contentDocument?.documentElement?.removeAttribute("data-host-wallpaper");
+let themeObserver, activeHost, activeHostTheme, loginReady;
+const themeColors = {
+  dark: ["#141a20", "#e8edf0"], light: ["#f6f7f4", "#17211c"], redfish: ["#f4eddd", "#30261f"],
+};
+const includesTheme = theme => Object.hasOwn(themeColors, theme);
+const hostScope = 'html[data-stock-ledger-theme]';
+const fishScope = 'html[data-stock-ledger-theme="redfish"]';
+const backgroundId = "ledger-background-preload-image";
+const styleId = "stock-ledger-host-theme-style";
+function getHost() {
+  const embedding = window.frameElement;
+  return embedding?.closest(".stApp") ? embedding.ownerDocument : null;
 }
-function syncHostTheme() {
-  const doc = frame.contentDocument;
-  const root = doc?.documentElement;
-  const theme = root?.dataset.theme;
-  if (!["light", "dark", "redfish"].includes(theme)) {
-    clearHostTheme();
-    return;
-  }
-  try {
-    const embedding = window.frameElement;
-    const host = embedding?.ownerDocument;
-    if (!embedding?.closest(".stApp") ||
-        !host.defaultView.CSS.supports("selector(:has(iframe))")) return;
-    if (hostThemeStyle?.isConnected && activeHostTheme === theme) return;
-    const palette = frame.contentWindow.getComputedStyle(root);
-    if (!hostThemeStyle?.isConnected) {
-      hostThemeStyle = host.createElement("style");
-      hostThemeStyle.textContent = `
-      ${hostScope} { background: var(--ledger-host-bg) !important; }
-      ${fishScope} { isolation: isolate; }
-      ${fishScope}::before {
-        content: ""; position: fixed; inset: 0; height: 100svh;
-        z-index: -1; pointer-events: none;
-        background-image: var(--ledger-fish-image, none);
-        background-position: center; background-size: contain; background-repeat: no-repeat;
-      }
+function applyHostTheme(host, theme, bg, ink) {
+  let style = host.getElementById(styleId);
+  if (!style) {
+    style = host.createElement("style");
+    style.id = styleId;
+    style.textContent = `
+      ${hostScope} body { background: var(--ledger-host-bg); }
+      ${hostScope} .stApp { background: var(--ledger-host-bg) !important; color: var(--ledger-host-ink); }
       ${hostScope} :is([data-testid="stAppViewContainer"], [data-testid="stMain"]) {
         background: transparent !important;
       }
@@ -50,24 +36,50 @@ function syncHostTheme() {
         background: var(--ledger-host-bg) !important;
         color: var(--ledger-host-ink);
       }
-      ${fishScope} [data-testid="stHeader"] {
-        background: rgba(244, 237, 221, .84) !important;
-      }
       ${hostScope} [data-testid="stHeader"] button { color: var(--ledger-host-ink); }
-      `;
-      host.head.append(hostThemeStyle);
-    }
-    const hostPalette = hostThemeStyle.sheet.cssRules[0].style;
-    hostPalette.setProperty("--ledger-host-bg", palette.getPropertyValue("--bg").trim());
-    hostPalette.setProperty("--ledger-host-ink", palette.getPropertyValue("--ink").trim());
-    // Computed image URL is absolute and retains Streamlit Cloud's proxy prefix.
+      ${hostScope} [data-testid="stWidgetLabel"] p { color: var(--ledger-host-ink); }
+      ${fishScope} body { isolation: isolate; }
+      ${fishScope} .stApp { background: transparent !important; }
+      ${fishScope} [data-testid="stHeader"] { background: rgba(244, 237, 221, .84) !important; }
+      #${backgroundId} { display: none; }
+      ${fishScope} #${backgroundId}[data-ready] {
+        display: block; position: fixed; inset: 0; width: 100%; height: 100vh; height: 100svh;
+        z-index: -1; pointer-events: none; object-fit: contain;
+      }
+    `;
+    host.head.append(style);
+  }
+  // This style and the image belong to the outer document, so Streamlit
+  // swapping the login component for the ledger does not remove either.
+  const palette = style.sheet.cssRules[0].style;
+  palette.setProperty("--ledger-host-bg", bg);
+  palette.setProperty("--ledger-host-ink", ink);
+  host.documentElement.dataset.stockLedgerTheme = theme;
+}
+function clearHostTheme() {
+  if (activeHost) delete activeHost.documentElement.dataset.stockLedgerTheme;
+  activeHost = activeHostTheme = null;
+  frame.contentDocument?.documentElement?.removeAttribute("data-host-wallpaper");
+}
+function syncHostTheme() {
+  const doc = frame.contentDocument;
+  const root = doc?.documentElement;
+  const theme = root?.dataset.theme;
+  if (!includesTheme(theme) || activeHostTheme === theme) return;
+  try {
+    const host = getHost();
+    if (!host) return;
+    const palette = frame.contentWindow.getComputedStyle(root);
     root.removeAttribute("data-host-wallpaper");
-    const image = theme === "redfish"
-      ? frame.contentWindow.getComputedStyle(doc.body, "::before").backgroundImage : "none";
-    hostPalette.setProperty("--ledger-fish-image", image);
-    hostThemeFrame = embedding;
-    embedding.setAttribute("data-ledger-theme", theme);
-    if (theme === "redfish") root.setAttribute("data-host-wallpaper", "");
+    if (theme === "redfish") {
+      const image = frame.contentWindow.getComputedStyle(doc.body, "::before").backgroundImage;
+      const path = image.match(/^url\("(.*)"\)$/)?.[1];
+      if (path) preloadBackground(host, path);
+      else host.getElementById(backgroundId)?.remove();
+      root.setAttribute("data-host-wallpaper", "");
+    }
+    applyHostTheme(host, theme, palette.getPropertyValue("--bg").trim(), palette.getPropertyValue("--ink").trim());
+    activeHost = host;
     activeHostTheme = theme;
   } catch (_) {
     // If embedding restrictions prevent host styling, keep the local fallback.
@@ -76,7 +88,7 @@ function syncHostTheme() {
 }
 function observeTheme() {
   themeObserver?.disconnect();
-  if (!frame.contentDocument?.documentElement) return;
+  if (!mounted || !frame.contentDocument?.documentElement) return;
   themeObserver = new MutationObserver(syncHostTheme);
   themeObserver.observe(frame.contentDocument.documentElement, {
     attributes: true, attributeFilter: ["data-theme"]
@@ -89,23 +101,40 @@ window.addEventListener("pagehide", () => {
 });
 window.addEventListener("pageshow", observeTheme);
 function send(type, fields = {}) { parent.postMessage({isStreamlitMessage:true, type, ...fields}, "*"); }
-function preloadBackground(path) {
+function preloadBackground(host, path) {
   const url = new URL(path, window.location.href);
-  if (url.origin !== window.location.origin) return;
-  let host = document;
-  // Use the same document as the final fixed background. Keep the hidden
-  // image during the component swap after login, even if the download is active.
-  try { host = window.frameElement?.ownerDocument || document; } catch (_) {}
-  const id = "ledger-background-preload-image";
-  const previous = host.getElementById(id);
-  if (previous?.src === url.href) return;
+  if (url.origin !== window.location.origin) return null;
+  const previous = host.getElementById(backgroundId);
+  if (previous?.src === url.href) return previous;
   const image = host.createElement("img");
-  image.id = id;
-  image.hidden = true;
+  image.id = backgroundId;
   image.alt = "";
+  image.addEventListener("load", () => { image.dataset.ready = ""; }, {once:true});
   image.src = url.href;
   if (previous) previous.replaceWith(image);
   else host.body.append(image);
+  return image;
+}
+async function prepareLogin(path, themeStorageKey) {
+  try {
+    const host = getHost();
+    if (!host) return;
+    let savedTheme;
+    try { savedTheme = window.localStorage.getItem(themeStorageKey); } catch (_) {}
+    const theme = includesTheme(savedTheme) ? savedTheme : "dark";
+    applyHostTheme(host, theme, ...themeColors[theme]);
+    const image = preloadBackground(host, path);
+    if (image && theme === "redfish") {
+      // Fail open on a broken or stalled public asset, never lock out login.
+      let timer;
+      try {
+        await Promise.race([
+          image.decode().then(() => { image.dataset.ready = ""; }),
+          new Promise(resolve => { timer = setTimeout(resolve, 5000); }),
+        ]);
+      } finally { clearTimeout(timer); }
+    }
+  } catch (_) {}
 }
 function syncHeight() {
   pendingResize = 0;
@@ -131,10 +160,11 @@ function deliver() {
   activeRequestId = null;
 }
 frame.addEventListener("load", () => {
+  if (!mounted) return;
   loaded = true;
   resizeObserver?.disconnect();
-  clearHostTheme();
   observeTheme();
+  frame.style.visibility = "";
   const doc = frame.contentDocument;
   if (doc?.body) {
     resizeObserver = new ResizeObserver(scheduleResize);
@@ -150,13 +180,18 @@ window.addEventListener("message", event => {
   if (event.source === parent && event.data?.type === "streamlit:render") {
     const args = event.data.args;
     if (typeof args.preloadBackground === "string") {
-      preloadBackground(args.preloadBackground);
+      if (!loginReady) loginReady = prepareLogin(args.preloadBackground, args.themeStorageKey)
+        .then(() => send("streamlit:setComponentValue", {value:true, dataType:"json"}));
       frame.hidden = true;
       send("streamlit:setFrameHeight", {height:0});
       return;
     }
     reply = args.reply;
-    if (!mounted) { mounted = true; frame.srcdoc = args.html; }
+    if (!mounted) {
+      mounted = true;
+      frame.style.visibility = "hidden";
+      frame.srcdoc = args.html;
+    }
     else deliver();
     scheduleResize();
   } else if (event.source === frame.contentWindow && event.data?.type === "ledger-us-quotes-request") {

@@ -38,7 +38,8 @@ assert 'id="themeSelect"' in page and 'value="redfish"' in page
 assert 'background-color: var(--bg)' in page
 scope["preload_login_background"]()
 assert invocations == [("streamlit_app.ledger_quote_bridge", {
-    "preloadBackground": relative_url, "key": "ledger-background-preload",
+    "preloadBackground": relative_url, "themeStorageKey": "stock-ledger-theme",
+    "key": "ledger-background-preload", "default": False,
 })], "password screen must not send ledger HTML, quote data, config or password"
 # Test both server-configured paths and proxy prefixes unknown to the server.
 for prefix in ("", "/ledger", "/~/+", "/nested/~/+"):

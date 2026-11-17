@@ -38,9 +38,11 @@ def ledger_component():
     return st.components.v1.declare_component("ledger_quote_bridge", path=str(ROOT / "quote_bridge"))
 
 
-def preload_login_background():
+def preload_login_background(theme_storage_key="stock-ledger-theme"):
     if path := background_asset_path():
-        ledger_component()(preloadBackground=path, key="ledger-background-preload")
+        return ledger_component()(preloadBackground=path, themeStorageKey=theme_storage_key,
+                                  key="ledger-background-preload", default=False) is True
+    return True
 
 
 def build_page() -> str:
@@ -86,7 +88,7 @@ def build_page() -> str:
     return html
 
 
-def check_password() -> bool:
+def check_password(theme_storage_key="stock-ledger-theme") -> bool:
     app_config = st.secrets.get("app", {})
     expected_password = app_config.get("password", "")
 
@@ -97,7 +99,8 @@ def check_password() -> bool:
     if st.session_state.get("password_ok"):
         return True
 
-    password = st.text_input("Ledger, passwords please!", type="password")
+    background_ready = preload_login_background(theme_storage_key)
+    password = st.text_input("Ledger, passwords please!", type="password", disabled=not background_ready)
     if not password:
         return False
 
@@ -147,5 +150,3 @@ if check_password():
     }
     </style>""", unsafe_allow_html=True)
     render_ledger()
-else:
-    preload_login_background()
