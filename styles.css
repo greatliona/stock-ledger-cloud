@@ -2578,9 +2578,7 @@ button:disabled {
 :root:not([data-theme="light"]) .note-toggle[aria-expanded="true"],
 :root:not([data-theme="light"]) .history-item.is-editing { background: var(--field); }
 
-/* One uncropped fish, sized to the visible window (not the long iframe).
-   The bridge supplies the host viewport offset as its foreground scrolls.
-   Standalone pages use the native fixed viewport without JavaScript. */
+/* Standalone fallback. Streamlit mounts the fixed wallpaper in the host. */
 :root[data-theme="redfish"] body {
   background-color: var(--bg);
   isolation: isolate;
@@ -2590,15 +2588,16 @@ button:disabled {
   position: fixed;
   z-index: -1;
   pointer-events: none;
-  top: var(--redfish-viewport-top, 0px);
-  left: 0;
-  width: 100%;
-  height: var(--redfish-viewport-height, 100vh);
-  background-image: url("assets/background.png?v=L1.5.70");
+  inset: 0;
+  height: 100svh;
+  background-image: url("assets/background.png?v=L1.5.71");
   background-position: center;
   background-size: contain;
   background-repeat: no-repeat;
 }
+:root[data-theme="redfish"][data-host-wallpaper],
+:root[data-theme="redfish"][data-host-wallpaper] body { background: transparent; }
+:root[data-theme="redfish"][data-host-wallpaper] body::before { content: none; }
 :root[data-theme="redfish"] .theme-toggle,
 :root[data-theme="redfish"] input,
 :root[data-theme="redfish"] select,

@@ -3,71 +3,82 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const html = fs.readFileSync(__dirname + '/quote_bridge/index.html', 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-function events(extra = {}) {
-  const listeners = new Map();
-  return Object.assign({listeners,
-    addEventListener(type, fn) {
-      if (!listeners.has(type)) listeners.set(type, new Set());
-      listeners.get(type).add(fn);
-    },
-    removeEventListener(type, fn) { listeners.get(type)?.delete(fn); }
-  }, extra);
-}
-const values = new Map();
-const style = {getPropertyValue: key => values.get(key), setProperty: (key, value) => values.set(key, value)};
-const body = {scrollHeight:6000, getBoundingClientRect:()=>({height:6000})};
-const frame = events({clientTop:0, style:{}, getBoundingClientRect:()=>({top:0}),
-  contentDocument:{documentElement:{style}, body}, contentWindow:{postMessage(){}}});
-const top = events({innerHeight:900, visualViewport:events({height:900, offsetTop:0})});
-top.parent = top;
-let componentTop = 120;
-const app = events({innerHeight:900, parent:top,
-  frameElement:{clientTop:0, getBoundingClientRect:()=>({top:0})}});
-const bridge = events({innerHeight:6000, parent:app,
-  frameElement:{clientTop:0, getBoundingClientRect:()=>({top:componentTop})}});
-let messages = 0;
-app.postMessage = () => messages++;
-const scheduled = [];
-const scope = {window:bridge, parent:app, document:{getElementById:()=>frame},
-  requestAnimationFrame:fn=>(scheduled.push(fn),scheduled.length), cancelAnimationFrame(){}};
-vm.createContext(scope);
-vm.runInContext(script, scope);
-const run = code => vm.runInContext(code, scope);
-run('syncBackground()');
-assert.equal(values.get('--redfish-viewport-height'),'900px');
-assert.equal(values.get('--redfish-viewport-top'),'-120px');
-assert.equal(body.scrollHeight,6000);
-assert.equal(app.listeners.get('scroll').size,1);
-assert.equal(top.listeners.get('scroll').size,1);
-// The foreground moves 2,000px, but background top in the host stays exactly zero.
-componentTop = -1880;
-for (const fn of app.listeners.get('scroll')) fn();
-scheduled.splice(0).forEach(fn=>fn());
-assert.equal(values.get('--redfish-viewport-top'),'1880px');
-assert.equal(componentTop + parseFloat(values.get('--redfish-viewport-top')),0);
-assert.equal(body.scrollHeight,6000);
-run('syncBackground(); syncBackground()');
-assert.equal(app.listeners.get('scroll').size,1, 'no duplicate host listeners');
-top.visualViewport.height=640;
-top.visualViewport.offsetTop=20;
-run('syncBackground()');
-assert.equal(values.get('--redfish-viewport-height'),'640px');
-assert.equal(componentTop + parseFloat(values.get('--redfish-viewport-top')),20);
-assert.equal(messages,2,'background updates never send quote or ledger changes');
-for (const fn of bridge.listeners.get('pagehide')) fn();
-assert.equal(top.listeners.get('scroll').size,0,'remove ancestor listeners on unload');
-// Cross-origin boundaries cannot throw or prevent the ledger from loading.
-Object.defineProperty(app,'frameElement',{get(){throw new Error('cross-origin');}});
-run('syncBackground()');
-assert.equal(values.get('--redfish-viewport-height'),'900px');
+const handlers = new Map();
+const hostAttrs = new Set(), ledgerAttrs = new Set(), styles = new Set();
+const cssValues = {};
+const root = {dataset:{theme:'redfish'},
+  setAttribute:name=>ledgerAttrs.add(name), removeAttribute:name=>ledgerAttrs.delete(name)};
+const image = 'url("https://ledger.example/~/+/component/streamlit_app.ledger_assets/background.png?v=L1.5.71")';
+const host = {
+  defaultView:{CSS:{supports:()=>true}},
+  head:{append:style=>styles.add(style)},
+  createElement:()=>({
+    sheet:{cssRules:[{style:{setProperty:(key,value)=>cssValues[key]=value}}]},
+    get isConnected(){return styles.has(this);},
+    remove(){styles.delete(this);}
+  })
+};
+const embedding = {ownerDocument:host, closest: selector=>selector === '.stApp',
+  setAttribute:name=>hostAttrs.add(name), removeAttribute:name=>hostAttrs.delete(name)};
+const frame = {contentDocument:{documentElement:root, body:{}}, contentWindow:{
+  getComputedStyle:(body, pseudo)=>{
+    assert.equal(body,frame.contentDocument.body);
+    assert.equal(pseudo,'::before');
+    return {backgroundImage:image};
+  }
+}, addEventListener(){}};
+let onTheme, disconnected = 0;
+const messages = [];
+const window = {frameElement:embedding, addEventListener:(name,fn)=>handlers.set(name,fn)};
+vm.runInNewContext(script, {window, document:{getElementById:()=>frame},
+  parent:{postMessage:m=>messages.push(m)},
+  MutationObserver:class {
+    constructor(fn){onTheme=fn;}
+    observe(target, options){
+      assert.equal(target,root);
+      assert.equal(options.attributeFilter.join(','),'data-theme');
+    }
+    disconnect(){disconnected++;}
+  }});
+handlers.get('pageshow')();
+assert.equal(styles.size,1);
+assert.equal(cssValues['--ledger-fish-image'],image, 'absolute asset URL preserves Cloud prefix');
+const [sheet] = styles;
+assert.match(sheet.textContent,/position: fixed; inset: 0; height: 100svh/);
+assert.match(sheet.textContent,/background-repeat: no-repeat/);
+assert.match(sheet.textContent,/background: #f4eddd !important/);
+assert.match(sheet.textContent,/stAppViewContainer/);
+assert.equal(hostAttrs.has('data-ledger-wallpaper'),true);
+assert.equal(ledgerAttrs.has('data-host-wallpaper'),true);
+assert.doesNotMatch(script,/addEventListener\(["'](?:scroll|wheel)|getBoundingClientRect\(\)\.top|--redfish-viewport/);
+onTheme();
+assert.equal(styles.size,1, 'theme observation does not duplicate the layer');
+root.dataset.theme='dark';
+onTheme();
+assert.equal(styles.size,0);
+assert.equal(hostAttrs.size + ledgerAttrs.size,0);
+root.dataset.theme='light';
+onTheme();
+assert.equal(styles.size,0);
+root.dataset.theme='redfish';
+onTheme();
+assert.equal(styles.size,1);
+handlers.get('pagehide')();
+assert.equal(disconnected,1);
+assert.equal(styles.size,0);
+assert.equal(hostAttrs.size + ledgerAttrs.size,0);
+Object.defineProperty(window,'frameElement',{get(){throw new Error('cross-origin');}});
+handlers.get('pageshow')();
+assert.equal(styles.size,0);
+assert.equal(ledgerAttrs.has('data-host-wallpaper'),false, 'unavailable host keeps local fallback');
+assert.equal(messages.length,2, 'wallpaper never sends quote or ledger changes');
+
 const css=fs.readFileSync(__dirname+'/styles.css','utf8');
 const background=css.match(/:root\[data-theme="redfish"\] body::before\s*\{([^}]+)\}/)[1];
 assert.match(background,/position: fixed/);
 assert.match(background,/background-repeat: no-repeat/);
 assert.match(background,/background-size: contain/);
-assert.match(background,/pointer-events: none/);
 assert.match(background,/assets\/background\.png/);
-assert.doesNotMatch(background,/base64|repeat-y|100% auto/);
+assert.match(css,/\[data-host-wallpaper\] body::before \{ content: none; \}/);
 assert.match(css,/--panel: rgba\(255, 252, 244, 0\.48\)/);
-assert.match(css,/textarea \{ background: rgba\(255, 253, 247, 0\.34\)/);
-console.log('PASS: single fixed fish; outer scroll/resize/visual viewport; no height or data mutation; cleanup; transparent fields');
+console.log('PASS: host-fixed single wallpaper, cream edges, no scroll compensation, theme cleanup and standalone fallback');
