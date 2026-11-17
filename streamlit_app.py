@@ -119,6 +119,14 @@ st.set_page_config(
     layout="wide",
 )
 
+# Hide before the component mounts; the persistent outer-document button can
+# reveal the original toolbar without rebuilding its controls.
+st.markdown('''<style>
+html:not([data-ledger-toolbar-open]) [data-testid="stHeader"] {
+  visibility: hidden !important; pointer-events: none !important;
+}
+</style>''', unsafe_allow_html=True)
+
 @st.fragment(run_every=1)
 def render_ledger():
     job = st.session_state.get("quote_job")

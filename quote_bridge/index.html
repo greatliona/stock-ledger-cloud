@@ -22,6 +22,7 @@ function getHost() {
   return embedding?.closest(".stApp") ? embedding.ownerDocument : null;
 }
 function applyHostTheme(host, theme, bg, ink) {
+  installToolbarToggle(host);
   let style = host.getElementById(styleId);
   if (!style) {
     style = host.createElement("style");
@@ -55,6 +56,31 @@ function applyHostTheme(host, theme, bg, ink) {
   palette.setProperty("--ledger-host-bg", bg);
   palette.setProperty("--ledger-host-ink", ink);
   host.documentElement.dataset.stockLedgerTheme = theme;
+}
+function installToolbarToggle(host) {
+  if (!host.querySelector || host.getElementById("ledger-toolbar-toggle")) return;
+  const style = host.createElement("style");
+  style.textContent = `
+    html:not([data-ledger-toolbar-open]) [data-testid="stHeader"] { visibility:hidden !important; pointer-events:none !important; }
+    html[data-ledger-toolbar-open] [data-testid="stHeader"] { visibility:visible !important; padding-right:52px !important; }
+    #ledger-toolbar-toggle { position:fixed; top:8px; right:8px; z-index:2147483647; width:40px; height:40px; border:0; border-radius:8px; background:transparent; color:var(--ledger-host-ink, #777); font-size:26px; cursor:pointer; }
+    #ledger-toolbar-toggle:focus-visible { outline:2px solid currentColor; }
+  `;
+  host.head.append(style);
+  const button = host.createElement("button");
+  button.id = "ledger-toolbar-toggle";
+  button.type = "button";
+  button.textContent = "⋯";
+  const update = open => {
+    host.documentElement.toggleAttribute("data-ledger-toolbar-open", open);
+    button.setAttribute("aria-expanded", String(open));
+    button.setAttribute("aria-label", open ? "收起工具列" : "展開工具列");
+    button.title = open ? "收起工具列" : "展開工具列";
+  };
+  update(false);
+  button.addEventListener("click", () => update(button.getAttribute("aria-expanded") !== "true"));
+  button.addEventListener("keydown", event => { if (event.key === "Escape") { update(false); button.focus(); } });
+  host.body.append(button);
 }
 function clearHostTheme() {
   if (activeHost) delete activeHost.documentElement.dataset.stockLedgerTheme;
