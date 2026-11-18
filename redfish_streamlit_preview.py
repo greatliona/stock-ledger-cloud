@@ -7,6 +7,8 @@ import ast
 import hmac
 import json
 import re
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from types import SimpleNamespace
 import streamlit as st
@@ -35,6 +37,19 @@ fixture = dict(holdings=[dict(id="test",symbol="2330.TW",name="台積電",shares
                cryptoContracts=[],tradeHistory=[],cash=120000,usdTwdRate=32,
                history=[dict(date="2026-11-15",cash=100000,cashRecorded=True,stockTotal=900000,stockCost=850000),
                         dict(date="2026-11-16",cash=120000,cashRecorded=True,stockTotal=920000,stockCost=850000)])
+if st.query_params.get("daily") == "1":
+    yesterday = (datetime.now(ZoneInfo("Asia/Taipei")) - timedelta(days=1)).date().isoformat()
+    fixture.update(
+        usHoldings=[dict(id="us-test", symbol="VOO", shares=2, avgCost=500, currentPrice=550, side="long")],
+        funds=[dict(id="fund-test", name="測試基金", cost=167000, currentValue=350000)],
+        cryptoContracts=[dict(id="crypto-test", name="BTCUSDT", side="short", leverage=4,
+            marginUsdt=5000, quantity=.2, entryPrice=67000, currentPrice=64000)],
+        dailyPriceHistory=[dict(date=yesterday, prices={
+            json.dumps(["tw", "test", "2330.TW"], separators=(",", ":")): dict(price=900),
+            json.dumps(["us", "us-test", "VOO"], separators=(",", ":")): dict(price=540),
+            json.dumps(["fund", "fund-test", ""], separators=(",", ":")): dict(price=340000, cost=167000),
+            json.dumps(["crypto", "crypto-test", "BTCUSDT"], separators=(",", ":")): dict(price=66000),
+        })])
 seed = "<script>localStorage.setItem('redfish-streamlit-proof-theme','redfish');"
 seed += "localStorage.setItem('redfish-streamlit-proof-ledger'," + json.dumps(json.dumps(fixture)) + ");</script>"
 page = page.replace("<body>", "<body>" + seed, 1)

@@ -59,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.75", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.76", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -1210,7 +1210,7 @@ function renderHoldings() {
         <input data-price-id="${holding.id}" type="number" min="0" step="0.01" value="${holding.currentPrice ?? ""}" aria-label="${escapeHTML(holding.symbol)} 現價" />
       </td>
       <td class="amount-cell">${money(costValue)}</td>
-      <td class="amount-cell">${money(marketValue)}</td>
+      <td class="amount-cell">${money(marketValue)}${dailyChangeMarkup("tw", holding)}</td>
       <td class="pnl-cell ${pnl >= 0 ? "gain" : "loss"}">
         ${signedMoney(pnl)}
         <span class="stock-name">${formatNumber(pnlPct)}%</span>
@@ -1284,7 +1284,7 @@ function renderUsHoldings() {
       <td class="cost-cell">${usdMoney(holding.avgCost)}</td>
       <td class="price-cell"><input data-us-price-id="${escapeHTML(holding.id)}" type="number" min="0" step="0.01" value="${holding.currentPrice ?? ""}" aria-label="${escapeHTML(holding.symbol)} 現價" /></td>
       <td class="amount-cell">${money(costValue)}</td>
-      <td class="amount-cell">${money(marketValue)}</td>
+      <td class="amount-cell">${money(marketValue)}${dailyChangeMarkup("us", holding)}</td>
       <td class="pnl-cell ${pnl >= 0 ? "gain" : "loss"}">${signedMoney(pnl)}<span class="stock-name">${signedPercent(pnlPct)}</span></td>
       <td><div class="row-actions"><button class="mini-btn" data-edit-us-id="${escapeHTML(holding.id)}" type="button" aria-label="修改 ${escapeHTML(holding.symbol)}">${editIcon()}</button><button class="mini-btn" data-delete-us-id="${escapeHTML(holding.id)}" type="button" aria-label="刪除 ${escapeHTML(holding.symbol)}">x</button></div></td>
     `;
@@ -1323,7 +1323,7 @@ function renderFunds() {
         ${editing ? `<label>基金名稱<input data-edit-fund-field="name" value="${escapeHTML(fund.name)}" required /></label>` : ""}
         <div class="fund-card-fields">
           <label>成本${editing ? `<input data-edit-fund-field="cost" type="number" min="0" step="any" required value="${fund.cost}" />` : `<strong>${money(fund.cost)}</strong>`}</label>
-          <label>目前總額${editing ? `<input data-edit-fund-field="currentValue" type="number" min="0" step="any" required value="${fund.currentValue}" />` : `<strong>${money(fund.currentValue)}</strong>`}</label>
+          <label>目前總額${editing ? `<input data-edit-fund-field="currentValue" type="number" min="0" step="any" required value="${fund.currentValue}" />` : `<span class="fund-current-line"><strong>${money(fund.currentValue)}</strong>${dailyChangeMarkup("fund", fund)}</span>`}</label>
         </div>
         <div class="card-edit-actions">
           ${editing ? `<button type="button" class="secondary-btn" data-edit-fund-save-id="${escapeHTML(fund.id)}">儲存</button><button type="button" class="secondary-btn" data-edit-fund-cancel-id="${escapeHTML(fund.id)}">取消</button>` : `<button type="button" class="secondary-btn" data-edit-fund-id="${escapeHTML(fund.id)}">修改</button><button type="button" class="mini-btn" data-delete-fund-id="${escapeHTML(fund.id)}" aria-label="刪除 ${escapeHTML(fund.name)}">x</button>`}
@@ -1406,6 +1406,7 @@ function renderCryptoContracts() {
             <span class="crypto-pnl-label">成本</span>
             <span>${money(position.costTwd)}</span>
           </div>
+          ${dailyChangeMarkup("crypto", contract)}
         </div>
         <div class="fund-bottom-line">
           <div class="row-actions">
@@ -4053,6 +4054,129 @@ function stockBookValue(holding) {
   return cost + holding.shares * (price - holding.avgCost) * (holding.side === "short" ? -1 : 1);
 }
 
+// These are the user's last saved observations, not exchange closing prices.
+// Date boundaries are always Taiwan midnight, regardless of device time zone.
+function dailyPriceDate(now = new Date()) {
+  return new Intl.DateTimeFormat("sv-SE", {timeZone:"Asia/Taipei", year:"numeric", month:"2-digit", day:"2-digit"}).format(now);
+}
+
+function previousPriceDate(date) {
+  const day = new Date(date + "T00:00:00Z");
+  day.setUTCDate(day.getUTCDate() - 1);
+  return day.toISOString().slice(0, 10);
+}
+
+function dailyPriceKey(market, item) {
+  // A renamed/replaced ticker must not inherit an unrelated price baseline.
+  return JSON.stringify([market, String(item.id), market === "fund" ? "" : normalizeSymbol(item.symbol || item.name || "")]);
+}
+
+function migrateDailyPriceHistory(history) {
+  if (!Array.isArray(history)) return [];
+  const days = new Map();
+  for (const record of history) {
+    if (!record || !/^\d{4}-\d{2}-\d{2}$/.test(record.date) || !record.prices || typeof record.prices !== "object") continue;
+    const prices = days.get(record.date) || {};
+    for (const [key, value] of Object.entries(record.prices)) {
+      if (!value || typeof value !== "object") continue;
+      try { const parts = JSON.parse(key); if (!Array.isArray(parts) || parts.length !== 3 || !["tw", "us", "crypto", "fund"].includes(parts[0])) continue; } catch (_) { continue; }
+      if (typeof value.price !== "number" || !Number.isFinite(value.price) || value.price < 0) continue;
+      prices[key] = {price:value.price};
+      if (typeof value.cost === "number" && Number.isFinite(value.cost) && value.cost >= 0) prices[key].cost = value.cost;
+    }
+    days.set(record.date, prices);
+  }
+  return [...days].sort(([a], [b]) => a.localeCompare(b)).map(([date, prices]) => ({date, prices}));
+}
+
+function captureDailyPrices(now = new Date()) {
+  const date = dailyPriceDate(now);
+  state.dailyPriceHistory ||= [];
+  let day = state.dailyPriceHistory.find(item => item.date === date);
+  let changed = false;
+  for (const [market, items] of [["tw", state.holdings], ["us", state.usHoldings], ["crypto", state.cryptoContracts], ["fund", state.funds]]) {
+    for (const item of items) {
+      const price = market === "fund" ? item.currentValue : item.currentPrice;
+      // Missing prices must not silently turn into zero or the purchase cost.
+      if (typeof price !== "number" || !Number.isFinite(price) || (market === "fund" ? price < 0 : price <= 0)) continue;
+      if (!day) { day = {date, prices:{}}; state.dailyPriceHistory.push(day); }
+      const key = dailyPriceKey(market, item);
+      const value = market === "fund" ? {price, cost:toNumber(item.cost)} : {price};
+      if (day.prices[key]?.price === value.price && day.prices[key]?.cost === value.cost) continue;
+      day.prices[key] = value;
+      changed = true;
+    }
+  }
+  if (changed) state.dailyPriceHistory.sort((a, b) => a.date.localeCompare(b.date));
+  return changed;
+}
+
+function getDailyPriceBaseline(market, item, date) {
+  const day = state.dailyPriceHistory?.find(day => day.date === date);
+  const recorded = day?.prices[dailyPriceKey(market, item)];
+  if (recorded) return recorded;
+  if (day && Object.keys(day.prices).some(key => {
+    const [type, id] = JSON.parse(key);
+    return type === market && id === String(item.id);
+  })) return null;
+  // Old settlement data contains exact per-position stock prices and fund
+  // amounts. Crypto equity alone cannot be used to reconstruct a trade price.
+  const old = state.history?.find(day => day.date === date);
+  const price = market === "tw" ? old?.prices?.[item.id]
+    : market === "us" ? old?.usPrices?.[item.id]?.price
+    : market === "fund" ? old?.fundValues?.[item.id] : undefined;
+  return typeof price === "number" && Number.isFinite(price) && price >= 0 ? {price, legacy:true} : null;
+}
+
+function getDailyChange(market, item, now = new Date()) {
+  const date = previousPriceDate(dailyPriceDate(now));
+  const previous = getDailyPriceBaseline(market, item, date);
+  const missing = reason => ({available:false, date, reason});
+  if (!previous || previous.price <= 0) return missing("無前一日最後紀錄" + (market === "fund" ? "總額" : "價"));
+  const current = market === "fund" ? item.currentValue : item.currentPrice;
+  if (typeof current !== "number" || !Number.isFinite(current) || (market === "fund" ? current < 0 : current <= 0)) return missing("目前價格尚未設定");
+  if (market === "fund") {
+    // No units/NAV exist in this app. Cost changes cannot be separated from
+    // subscriptions/redemptions, so never present those cash flows as gains.
+    if (previous.cost === undefined || Math.abs(previous.cost - toNumber(item.cost)) > 1e-8) return missing("基金缺少可比成本或成本已變動，無法分辨申贖與漲跌");
+    return {available:true, date, amount:current - previous.price, pct:(current / previous.price - 1) * 100};
+  }
+  const quantity = market === "crypto" ? item.quantity : item.shares;
+  const fxRate = market === "tw" ? 1 : state.usdTwdRate;
+  if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(fxRate) || fxRate <= 0) return missing("缺少有效持倉數量或台幣匯率");
+  const direction = item.side === "short" ? -1 : 1;
+  const move = (current - previous.price) * direction;
+  return {available:true, date, amount:move * quantity * fxRate, pct:move / previous.price * 100};
+}
+
+function dailyChangeContent(market, item, now = new Date()) {
+  const change = getDailyChange(market, item, now);
+  const title = `比較 ${change.date} 最後紀錄；` + (change.available
+    ? market === "fund" ? "總額變動（成本不變）" : "金額為目前持倉數量的台幣價格損益，不含加減碼、已實現損益與匯率變動；%為價格變動，空單反向，不是槓桿報酬率"
+    : change.reason);
+  const text = change.available ? `今日 ${signedMoney(change.amount)} ${signedPercent(change.pct, 2)}` : "今日 —";
+  return {title, text, className:"daily-change " + (change.available ? change.amount > 0 ? "gain" : change.amount < 0 ? "loss" : "daily-neutral" : "daily-neutral")};
+}
+
+function dailyChangeMarkup(market, item, now = new Date()) {
+  const content = dailyChangeContent(market, item, now);
+  return `<span class="${content.className}" data-daily-market="${market}" data-daily-id="${escapeHTML(item.id)}" title="${escapeHTML(content.title)}">${escapeHTML(content.text)}</span>`;
+}
+
+function refreshDailyChangeLabels() {
+  // Update only the labels on date rollover; do not rebuild open edit forms.
+  for (const node of document.querySelectorAll("[data-daily-market]")) {
+    const market = node.dataset.dailyMarket;
+    const items = {tw:state.holdings, us:state.usHoldings, crypto:state.cryptoContracts, fund:state.funds}[market];
+    const item = items?.find(item => item.id === node.dataset.dailyId);
+    if (!item) continue;
+    const content = dailyChangeContent(market, item);
+    node.textContent = content.text;
+    node.title = content.title;
+    node.className = content.className;
+  }
+}
+
 function getPortfolioTotals() {
   const stockCost = state.holdings.reduce((sum, item) => sum + item.shares * item.avgCost, 0);
   const stockTotal = state.holdings.reduce(
@@ -4196,7 +4320,7 @@ function setStatus(message) {
 }
 
 function loadState() {
-  const fallback = { holdings: [], usHoldings: [], funds: [], cryptoContracts: [], history: [], tradeHistory: [], currentFundTotal: 0, cash: 0, cryptoCashUsdt: 0, usdTwdRate: 0, usCashUsd: 0 };
+  const fallback = { holdings: [], usHoldings: [], funds: [], cryptoContracts: [], history: [], tradeHistory: [], dailyPriceHistory: [], currentFundTotal: 0, cash: 0, cryptoCashUsdt: 0, usdTwdRate: 0, usCashUsd: 0 };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? migrateState(JSON.parse(raw)) : fallback;
@@ -4206,7 +4330,9 @@ function loadState() {
 }
 
 function persistLocalState() {
+  const dailyPricesChanged = captureDailyPrices();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  return dailyPricesChanged;
 }
 
 async function initCloudSync() {
@@ -4230,7 +4356,7 @@ async function initCloudSync() {
 
     if (data?.data) {
       replaceState(migrateState(data.data));
-      persistLocalState();
+      if (persistLocalState()) queueCloudSave();
       render();
       setStatus("已載入雲端資料。");
       return;
@@ -4245,6 +4371,7 @@ async function initCloudSync() {
 }
 
 function replaceState(nextState) {
+  state.dailyPriceHistory = nextState.dailyPriceHistory;
   state.holdings = nextState.holdings;
   state.usHoldings = nextState.usHoldings;
   state.funds = nextState.funds;
@@ -4494,6 +4621,7 @@ function migrateState(value) {
     cryptoContracts,
     history,
     tradeHistory,
+    dailyPriceHistory: migrateDailyPriceHistory(value.dailyPriceHistory),
     currentFundTotal: funds.reduce((sum, fund) => sum + fund.currentValue, 0),
     cash: toNumber(value.cash),
     cryptoCashUsdt: Math.max(0, toNumber(value.cryptoCashUsdt)),
@@ -4607,8 +4735,8 @@ function signedNumber(value, digits = 2) {
   return `${value >= 0 ? "+" : "-"}${formatNumber(Math.abs(value), digits)}`;
 }
 
-function signedPercent(value) {
-  return `${value >= 0 ? "+" : "-"}${formatNumber(Math.abs(value))}%`;
+function signedPercent(value, digits = 0) {
+  return `${value >= 0 ? "+" : "-"}${formatNumber(Math.abs(value), digits)}%`;
 }
 
 function shortMoney(value) {
@@ -4659,5 +4787,9 @@ function escapeHTML(value) {
 }
 
 backfillHistoryCosts();
+if (captureDailyPrices()) persistLocalState();
 render();
 initCloudSync();
+window.setInterval(() => { if (!document.hidden) refreshDailyChangeLabels(); }, 60000);
+document.addEventListener("visibilitychange", refreshDailyChangeLabels);
+window.addEventListener("focus", refreshDailyChangeLabels);

@@ -50,7 +50,8 @@ class QuoteJobTests(unittest.TestCase):
             def snapshot(self): return {'id':self.id,'phase':'running'}
         def component(**kw): replies.append(kw['reply']); return request
         st=NS(session_state={'ledger_html':'test'},secrets={},components=NS(v1=NS(declare_component=lambda *a,**k:component)))
-        ns=dict(st=st,ROOT=Path('.'),QuoteJob=FakeJob,quote_backend=NS(fetch_us_quotes=None,QUOTE_PROGRESS=None))
+        ns=dict(st=st,ROOT=Path('.'),QuoteJob=FakeJob,ledger_component=lambda:component,
+                quote_backend=NS(fetch_us_quotes=None,QUOTE_PROGRESS=None))
         exec(compile(ast.Module(body=[method],type_ignores=[]),'test','exec'),ns)
         run=ns['render_ledger']
         run(); run()

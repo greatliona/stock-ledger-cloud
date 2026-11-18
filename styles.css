@@ -2528,6 +2528,12 @@ button:disabled {
 .crypto-card .crypto-card-bottom { display: flex; align-items: center; justify-content: space-between; padding: 8px 0 0; border-top: 1px solid var(--line); gap: 8px; }
 .crypto-card .crypto-card-metrics { display: block; min-width: 0; }
 .crypto-card .crypto-cost-metric { display: flex; align-items: baseline; gap: 8px; font-size: .84rem; }
+.daily-change { display: block; margin-top: 4px; font-size: .68rem; font-weight: 500; line-height: 1.5; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.daily-change.daily-neutral { color: var(--muted); }
+.crypto-card .crypto-card-metrics { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+.crypto-card-metrics .daily-change { margin-top: 0; }
+.fund-current-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
+.fund-current-line .daily-change { margin-top: 0; }
 .crypto-card .crypto-card-bottom .fund-bottom-line { width: auto; display: block; flex-shrink: 0; }
 .crypto-card .crypto-card-bottom .row-actions { position: static; }
 .crypto-card .crypto-card-toggle { flex-wrap: wrap; gap: 4px 8px; }
