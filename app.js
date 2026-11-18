@@ -59,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.76", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.77", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -4154,7 +4154,7 @@ function dailyChangeContent(market, item, now = new Date()) {
   const title = `比較 ${change.date} 最後紀錄；` + (change.available
     ? market === "fund" ? "總額變動（成本不變）" : "金額為目前持倉數量的台幣價格損益，不含加減碼、已實現損益與匯率變動；%為價格變動，空單反向，不是槓桿報酬率"
     : change.reason);
-  const text = change.available ? `今日 ${signedMoney(change.amount)} ${signedPercent(change.pct, 2)}` : "今日 —";
+  const text = change.available ? `Today ${signedMoney(change.amount)} ${signedPercent(change.pct, 2)}` : "Today —";
   return {title, text, className:"daily-change " + (change.available ? change.amount > 0 ? "gain" : change.amount < 0 ? "loss" : "daily-neutral" : "daily-neutral")};
 }
 
