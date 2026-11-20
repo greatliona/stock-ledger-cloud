@@ -59,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.78", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.79", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -243,7 +243,14 @@ async function refreshAllCryptoPrices() {
       cryptoRefreshMessages.set(contract.id, "成交時間 · " + new Date(quote.time).toLocaleString("zh-TW", {hour12:false}));
       updated++;
     });
-    if (updated) saveAndRender("已更新加密合約現價與損益。");
+    if (updated) {
+      persistLocalState();
+      renderSummary();
+      renderSettlementRows();
+      queueCloudSave();
+      setStatus("已更新加密合約現價與損益。");
+      window.requestAnimationFrame(drawCharts);
+    }
     status.textContent = "已更新 " + updated + " 筆合約" + (skipped ? " · " + skipped + " 筆資料已變更，未覆寫" : "") + (failed.length ? " · " + [...new Set(failed)].join("、") + " 未更新，保留原價" : "") + " · 幣安最新成交價";
   } catch (error) {
     const message = error.name === "AbortError" ? "連線逾時，保留原現價。" : (error instanceof TypeError ? "行情連線失敗，保留原現價；請檢查網路或地區限制。" : error.message);

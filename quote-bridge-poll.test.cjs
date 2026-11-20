@@ -22,6 +22,10 @@ const context = {
   clearTimeout: id => timers.delete(id),
 };
 vm.runInNewContext(script, context);
+context.requestAnimationFrame = cb => { cb(); return 0; };
+handlers.message({source:parent,data:{type:'streamlit:render',args:{html:'<p>ledger</p>',reply:null}}});
+assert.equal(messages.filter(m=>m.type==='streamlit:setFrameHeight').length,1,'no measurement of unloaded empty document');
+context.requestAnimationFrame = () => 1;
 handlers.message({source: parent, data: {type: 'streamlit:render', args: {html: '<p>ledger</p>', reply: null}}});
 handlers['frame:load']();
 handlers.message({source: frameWindow, data: {type: 'ledger-us-quotes-request', id: 'one', symbols: ['SOXL']}});

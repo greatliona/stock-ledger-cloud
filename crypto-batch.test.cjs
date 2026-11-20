@@ -11,7 +11,10 @@ function harness(contracts, payload, statusCode=200) {
     document:{querySelector:s=>s==='#cryptoQuoteStatus'?status:button},
     fetch:async(url,options)=>{calls++;assert.equal(url,'https://fapi.binance.com/fapi/v2/ticker/price');assert.equal(options.credentials,'omit');return {ok:statusCode===200,status:statusCode,json:async()=>typeof payload==='function'?await payload():payload};},
     state:{cryptoContracts:contracts,usdTwdRate:32},normalizeSymbol:s=>s.trim().toUpperCase(),toNumber:v=>Number(v)||0,
-    findCryptoContract:id=>contracts.find(c=>c.id===id),renderCryptoContracts(){},saveAndRender(){saveCount++;}});
+    findCryptoContract:id=>contracts.find(c=>c.id===id),renderCryptoContracts(){},
+    persistLocalState(){saveCount++;},renderSummary(){},renderSettlementRows(){},queueCloudSave(){},setStatus(){},
+    drawCharts(){},window:{requestAnimationFrame(){}},
+    saveAndRender(){throw Error('quote refresh must not rebuild the whole page');}});
   vm.runInContext('let refreshingAllCrypto=false,editingCryptoId="";const refreshingCryptoIds=new Set(),cryptoRefreshMessages=new Map();'+code+pnl,ctx);
   return {ctx,status,button,run:()=>ctx.refreshAllCryptoPrices(),calls:()=>calls,saves:()=>saveCount};
 }

@@ -39,6 +39,14 @@ function applyHostTheme(host, theme, bg, ink) {
       }
       ${hostScope} [data-testid="stHeader"] button { color: var(--ledger-host-ink); }
       ${hostScope} [data-testid="stWidgetLabel"] p { color: var(--ledger-host-ink); }
+      ${fishScope} [data-testid="stTextInput"] [data-baseweb="input"],
+      ${fishScope} [data-testid="stTextInput"] [data-baseweb="base-input"] {
+        background: rgba(255, 250, 240, .24) !important;
+      }
+      ${fishScope} [data-testid="stTextInput"] input {
+        background: transparent !important; color: var(--ledger-host-ink) !important;
+      }
+      ${fishScope} [data-testid="stTextInput"] button { background: transparent !important; color: var(--ledger-host-ink) !important; }
       ${fishScope} body { isolation: isolate; }
       ${fishScope} .stApp { background: transparent !important; }
       ${fishScope} [data-testid="stHeader"] { background: rgba(244, 237, 221, .84) !important; }
@@ -164,6 +172,9 @@ async function prepareLogin(path, themeStorageKey) {
 }
 function syncHeight() {
   pendingResize = 0;
+  // Do not collapse the mounted component to the empty about:blank document
+  // while srcdoc is loading or Streamlit is delivering a quote response.
+  if (!loaded) return;
   const doc = frame.contentDocument;
   if (!doc?.body) return;
   // Measure content, not documentElement.scrollHeight (which includes the old viewport).
@@ -171,6 +182,10 @@ function syncHeight() {
   if (height === lastHeight) return;
   lastHeight = height;
   frame.style.height = height + "px";
+  try {
+    const container = window.frameElement?.closest('[data-testid="stCustomComponentV1"], [data-testid="stElementContainer"]');
+    if (container) container.style.minHeight = height + "px";
+  } catch (_) {}
   send("streamlit:setFrameHeight", {height});
 }
 function scheduleResize() {

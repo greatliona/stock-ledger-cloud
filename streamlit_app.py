@@ -148,13 +148,22 @@ def render_ledger():
 
 
 if check_password():
-    st.session_state["ledger_html"] = build_page()
+    # Keep the component input byte-identical across quote-triggered reruns.
+    # Rebuild on a release change, not on every price refresh.
+    if st.session_state.get("ledger_page_version") != "L1.5.79":
+        st.session_state["ledger_html"] = build_page()
+        st.session_state["ledger_page_version"] = "L1.5.79"
     # Keep the mounted ledger visible while its read-only quote request runs.
     # Streamlit normally dims stale components during a rerun.
     st.markdown("""<style>
     [data-testid="stCustomComponentV1"] { opacity: 1 !important; }
     [data-testid="stElementContainer"]:has([data-testid="stCustomComponentV1"]) {
       opacity: 1 !important;
+    }
+    [data-stale="true"]:has([data-testid="stCustomComponentV1"]),
+    [data-testid="stCustomComponentV1"][data-stale="true"] {
+      opacity: 1 !important; visibility: visible !important;
+      animation: none !important; transition: none !important;
     }
     </style>""", unsafe_allow_html=True)
     render_ledger()
