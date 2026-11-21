@@ -2635,10 +2635,10 @@ button:disabled {
 :root[data-theme="redfish"] .history-item,
 :root[data-theme="redfish"] .history-month-list,
 :root[data-theme="redfish"] .settlement-summary { background: rgba(255, 253, 247, 0.03); }
-/* Restore only each daily card to L1.5.81. Do not change the enclosing panel
-   or month container, whose current transparency is intentionally retained. */
+/* Daily small cards: 80% transparent. Keep the enclosing panel and month
+   container independent; their existing appearance must not change here. */
 :root[data-theme="redfish"] .history-item {
-  background: rgba(255, 253, 247, 0.08);
+  background: rgba(255, 253, 247, 0.20);
   border-color: rgba(91, 64, 43, 0.23);
 }
 :root[data-theme="redfish"] .holdings-panel th { background: transparent; }
