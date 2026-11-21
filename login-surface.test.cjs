@@ -9,7 +9,7 @@ for(const source of [python,bridge]) {
   assert.match(source,/\[data-baseweb="input"\]/);
   assert.match(source,/background-image: none !important/);
   assert.match(source,/box-shadow: none !important/);
-  assert.match(source,/rgba\(255, 253, 247, \.10\)/);
+  assert.match(source,/rgba\(255, 253, 247, \.20\)/);
   assert.match(source,/:focus-within/);
   assert.match(source,/transition: border-color \.18s ease, box-shadow \.18s ease, background-color \.18s ease/);
   assert.match(source,/prefers-reduced-motion: reduce/);

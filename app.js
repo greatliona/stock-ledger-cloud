@@ -59,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.83", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.84", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -1404,7 +1404,7 @@ function renderCryptoContracts() {
       </div>
       <div class="crypto-position-details">
         <span>開倉部位 <strong>${formatNumber(position.notionalUsdt, 2)}</strong></span>
-        <span>未實現損益 <strong>${signedNumber(position.pnlUsdt, 2)}</strong></span>
+        <span>未實現損益 <strong class="${position.pnlUsdt >= 0 ? "gain" : "loss"}">${signedNumber(position.pnlUsdt, 2)}</strong></span>
         <span>目前權益 <strong>${formatNumber(position.equityUsdt, 2)}</strong></span>
       </div>
       <div class="crypto-card-bottom">
@@ -1828,6 +1828,7 @@ function renderTradeHistory() {
   els.tradeHistorySummary.textContent = allTrades.length
     ? `${allTrades.length} 筆 · ${signedMoney(totalPnl)} · ${signedPercent(totalPnlPct)}`
     : "尚無交易紀錄";
+  els.tradeHistorySummary.className = "trade-history-summary" + (allTrades.length ? (totalPnl >= 0 ? " gain" : " loss") : "");
   els.exportTradesBtn.disabled = allTrades.length === 0;
 
   const marketFilter = els.tradeMarketFilter.value || "all";
@@ -1837,6 +1838,7 @@ function renderTradeHistory() {
     && (!monthFilter || trade.sellDate.startsWith(monthFilter))
   );
   els.tradeFilterStats.textContent = formatTradeFilterStats(visibleTrades);
+  els.tradeFilterStats.innerHTML = formatTradeFilterStatsMarkup(visibleTrades);
 
   els.tradeHistoryList.innerHTML = "";
   if (!visibleTrades.length) {
@@ -1959,6 +1961,14 @@ function formatTradeFilterStats(trades) {
   const average = trades.reduce((sum, trade) => sum + toNumber(trade.pnlPct), 0) / trades.length;
   const averageText = `${average > 0 ? "+" : ""}${average.toFixed(2)}%`;
   return `勝率 ${winRate}%（${wins}／${trades.length}） · 平均獲利率 ${averageText}`;
+}
+
+function formatTradeFilterStatsMarkup(trades) {
+  const text = formatTradeFilterStats(trades);
+  if (!trades.length) return escapeHTML(text);
+  const [winRate, averageLabel] = text.split(" · ");
+  const average = trades.reduce((sum, trade) => sum + toNumber(trade.pnlPct), 0) / trades.length;
+  return `${escapeHTML(winRate)} · <span class="${average >= 0 ? "gain" : "loss"}">${escapeHTML(averageLabel)}</span>`;
 }
 
 function compareTradeRecords(a, b) {

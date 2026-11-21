@@ -36,10 +36,18 @@ if(process.argv.includes('--serve')) {
   const http=require('node:http');
   const sample={holdings:[{id:'t1',symbol:'2330.TW',name:'台積電',shares:1000,avgCost:850,currentPrice:920,side:'long'}],
     usHoldings:[{id:'u1',symbol:'VOO',shares:10,avgCost:500,currentPrice:530,side:'long'}],
-    funds:[{id:'f1',name:'測試基金',cost:100000,currentValue:125000}],
-    cryptoContracts:[{id:'c1',name:'BTCUSDT',side:'long',leverage:4,marginUsdt:1000,quantity:.05,entryPrice:80000,currentPrice:84000}],
+    funds:[{id:'f1',name:'測試基金',cost:100000,currentValue:125000},{id:'f2',name:'虧損測試基金',cost:50000,currentValue:48000}],
+    cryptoContracts:[{id:'c1',name:'BTCUSDT',side:'long',leverage:4,marginUsdt:1000,quantity:.05,entryPrice:80000,currentPrice:84000},
+      {id:'c2',name:'ETHUSDT',side:'short',leverage:4,marginUsdt:1000,quantity:1,entryPrice:2000,currentPrice:2200}],
     cash:120000,cryptoCashUsdt:500,usdTwdRate:32,usCashUsd:0,tradeHistory:[],
     history:Array.from({length:12},(_,i)=>({date:`2026-11-${String(i+1).padStart(2,'0')}`,stockTotal:800000+i*9000,usStockTotal:160000,fundTotal:110000+i*1000,cryptoTotal:45000+i*700,cash:120000,cashRecorded:true}))};
+  sample.tradeHistory=[{market:'tw',id:'trade-win',symbol:'TESTWIN',name:'獲利測試',shares:10,avgCost:100,sellPrice:110,buyDate:'2026-11-01',sellDate:'2026-11-20'},
+    {market:'tw',id:'trade-loss',symbol:'TESTLOSS',name:'虧損測試',shares:10,avgCost:100,sellPrice:90,buyDate:'2026-11-01',sellDate:'2026-11-20'}];
+  const yesterday=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(Date.now()-86400000));
+  sample.dailyPriceHistory=[{date:yesterday,prices:{
+    '["tw","t1","2330.TW"]':{price:930},'["us","u1","VOO"]':{price:520},
+    '["crypto","c1","BTCUSDT"]':{price:82000},'["crypto","c2","ETHUSDT"]':{price:2100},
+  }}];
   let page=execFileSync('python3',['redfish_page_test.py','--html'],{cwd:__dirname,maxBuffer:5*1024*1024}).toString();
   page=page.replace('<head>', '<head><base href="/component/streamlit_app.ledger_quote_bridge/index.html">');
   page=page.replaceAll('stock-ledger-v1','redfish-preview-ledger').replaceAll('stock-ledger-theme','redfish-preview-theme');

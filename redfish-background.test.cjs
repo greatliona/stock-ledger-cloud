@@ -91,5 +91,5 @@ assert.match(background,/background-repeat: no-repeat/);
 assert.match(background,/background-size: contain/);
 assert.match(background,/assets\/background\.png/);
 assert.match(css,/\[data-host-wallpaper\] body::before \{ content: none; \}/);
-assert.match(css,/--panel: rgba\(255, 252, 244, 0\.10\)/);
+assert.match(css,/--panel: rgba\(255, 252, 244, 0\.20\)/);
 console.log('PASS: matching outer background for all themes, fixed redfish only, cleanup and standalone fallback');
