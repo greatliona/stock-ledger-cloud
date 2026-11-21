@@ -52,23 +52,23 @@
 :root[data-theme="redfish"] {
   color-scheme: light;
   --bg: #f4eddd;
-  --panel: rgba(255, 252, 244, 0.48);
-  --field: rgba(255, 253, 247, 0.22);
-  --subtle: rgba(255, 253, 247, 0.24);
+  --panel: rgba(255, 252, 244, 0.10);
+  --field: rgba(255, 253, 247, 0.10);
+  --subtle: rgba(255, 253, 247, 0.04);
   --ink: #30261f;
   --muted: #594a40;
-  --line: rgba(91, 64, 43, 0.23);
+  --line: rgba(91, 64, 43, 0.10);
   --green: #096143;
   --red: #a12436;
   --blue: #963526;
   --amber: #895512;
-  --button-bg: rgba(255, 244, 225, 0.44);
-  --button-hover: rgba(255, 246, 228, 0.68);
-  --button-border: rgba(126, 69, 45, 0.42);
+  --button-bg: rgba(255, 244, 225, 0.12);
+  --button-hover: rgba(255, 246, 228, 0.24);
+  --button-border: rgba(126, 69, 45, 0.20);
   --button-text: #582a21;
-  --shadow: 0 5px 18px rgba(80, 47, 29, 0.07);
+  --shadow: none;
   --chart-label: #30261f;
-  --chart-summary: rgba(255, 252, 244, 0.24);
+  --chart-summary: rgba(255, 252, 244, 0.10);
   --chart-line: rgba(68, 43, 26, 0.55);
   --chart-grid: rgba(68, 43, 26, 0.18);
   --chart-marker: #fff3df;
@@ -2607,20 +2607,20 @@ button:disabled {
 :root[data-theme="redfish"] .theme-toggle,
 :root[data-theme="redfish"] input,
 :root[data-theme="redfish"] select,
-:root[data-theme="redfish"] textarea { background: rgba(255, 253, 247, 0.34); }
+:root[data-theme="redfish"] textarea { background: var(--field); }
 :root[data-theme="redfish"] option { background: #fbf5e9; color: var(--ink); }
 :root[data-theme="redfish"] .crypto-card,
 :root[data-theme="redfish"] .trade-record,
 :root[data-theme="redfish"] .history-item,
 :root[data-theme="redfish"] .history-month-list,
-:root[data-theme="redfish"] .settlement-summary { background: rgba(255, 253, 247, 0.08); }
+:root[data-theme="redfish"] .settlement-summary { background: rgba(255, 253, 247, 0.03); }
 :root[data-theme="redfish"] .holdings-panel th { background: transparent; }
 :root[data-theme="redfish"] .asset-chart-slide canvas,
 :root[data-theme="redfish"] #assetChart,
 :root[data-theme="redfish"] #stockPieChart,
 :root[data-theme="redfish"] #categoryPieChart,
 :root[data-theme="redfish"] #cryptoPieChart,
-:root[data-theme="redfish"] #usStockPieChart { background: rgba(255, 253, 247, 0.06); }
+:root[data-theme="redfish"] #usStockPieChart { background: rgba(255, 253, 247, 0.02); }
 :root[data-theme="redfish"] .asset-chart-tooltip { background: rgba(255, 252, 244, 0.84); border-radius: 6px; padding: 6px 8px; }
 :root[data-theme="redfish"] .trade-dialog { background: rgba(255, 252, 244, 0.86); }
 :root[data-theme="redfish"] .trade-dialog::backdrop { background: rgba(65, 36, 22, 0.22); }
