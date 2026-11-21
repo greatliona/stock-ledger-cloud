@@ -59,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.86", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.87", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -2310,6 +2310,10 @@ function getHistoryExtremaBadges(extrema, date) {
   `;
 }
 
+function getHistoryDailyChangeClass(change, percent) {
+  return Math.abs(percent) > 15 ? " is-large-change " + (change > 0 ? "is-up" : "is-down") : "";
+}
+
 function renderHistory() {
   els.historyList.innerHTML = "";
   const historyItems = [...state.history].sort((a, b) => a.date.localeCompare(b.date));
@@ -2428,7 +2432,7 @@ function renderHistory() {
           ? signedMoney(change) : `${change >= 0 ? "+" : "-"}$${formatNumber(roundedThousands)}K`;
         const percentLabel = isCash && !previousBase
           ? "—" : `${percent >= 0 ? "+" : ""}${formatNumber(percent, 2)}%`;
-        const largeChangeClass = Math.abs(percent) > 15 ? " is-large-change" : "";
+        const largeChangeClass = getHistoryDailyChangeClass(change, percent);
         return `<small class="history-daily-pnl history-inline-daily${largeChangeClass}">${shortChange} ${percentLabel}</small>`;
       };
       const cashChange = previousItem && hasRecordedCash(item) && hasRecordedCash(previousItem)

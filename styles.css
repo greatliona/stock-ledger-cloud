@@ -9,6 +9,7 @@
   --line: #3b4853;
   --green: #58d49a;
   --history-low: #36ef93;
+  --history-daily-neutral: #a8b0ab;
   --red: #ff818a;
   --blue: #82b2ff;
   --amber: #e6b96e;
@@ -62,6 +63,7 @@
   --line: rgba(91, 64, 43, 0.20);
   --green: #096143;
   --history-low: #00853f;
+  --history-daily-neutral: #514a45;
   --red: #a12436;
   --blue: #963526;
   --amber: #895512;
@@ -1402,16 +1404,15 @@ tbody tr:last-child td {
 .history-daily-pnl {
   display: block;
   margin-top: 3px;
-  color: #a8b0ab;
+  color: var(--history-daily-neutral);
   font-size: 0.62rem;
   font-weight: 800;
   line-height: 1.1;
   white-space: nowrap;
 }
 
-.history-daily-pnl.is-large-change {
-  color: #d97706;
-}
+.history-daily-pnl.is-large-change.is-up { color: var(--red); }
+.history-daily-pnl.is-large-change.is-down { color: var(--green); }
 
 .history-inline-daily {
   display: inline-block;

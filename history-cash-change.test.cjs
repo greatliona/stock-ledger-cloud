@@ -28,9 +28,12 @@ const cards = Object.fromEntries(historyList.children.slice(1)
     card.innerHTML.match(/<span>現金 .*?<\/em>/s)[0]])));
 assert.doesNotMatch(cards['2026-10-31'],/history-inline-daily/);
 assert.match(cards['2026-11-01'],/\+\$2K \+20%/);
+assert.match(cards['2026-11-01'],/is-large-change is-up/);
 assert.match(cards['2026-11-03'],/[−-]\$500 -4\.17%/);
+assert.doesNotMatch(cards['2026-11-03'],/is-large-change/);
 assert.doesNotMatch(cards['2026-11-04'],/history-inline-daily/);
 assert.match(cards['2026-11-05'],/-\$12K -100%/);
+assert.match(cards['2026-11-05'],/is-large-change is-down/);
 assert.match(cards['2026-11-06'],/\+\$8K —/);
 assert.doesNotMatch(cards['2026-11-07'],/history-inline-daily/);
 assert.doesNotMatch(cards['2026-11-08'],/history-inline-daily/);

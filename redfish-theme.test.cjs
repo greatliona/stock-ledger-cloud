@@ -41,6 +41,7 @@ if(process.argv.includes('--serve')) {
       {id:'c2',name:'ETHUSDT',side:'short',leverage:4,marginUsdt:1000,quantity:1,entryPrice:2000,currentPrice:2200}],
     cash:120000,cryptoCashUsdt:500,usdTwdRate:32,usCashUsd:0,tradeHistory:[],
     history:Array.from({length:12},(_,i)=>({date:`2026-11-${String(i+1).padStart(2,'0')}`,stockTotal:800000+i*9000,usStockTotal:160000,fundTotal:110000+i*1000,cryptoTotal:45000+i*700,cash:120000,cashRecorded:true}))};
+  sample.history[1].stockTotal=1000000; // >15% up, followed by >15% down
   sample.tradeHistory=[{market:'tw',id:'trade-win',symbol:'TESTWIN',name:'獲利測試',shares:10,avgCost:100,sellPrice:110,buyDate:'2026-11-01',sellDate:'2026-11-20'},
     {market:'tw',id:'trade-loss',symbol:'TESTLOSS',name:'虧損測試',shares:10,avgCost:100,sellPrice:90,buyDate:'2026-11-01',sellDate:'2026-11-20'}];
   const yesterday=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(Date.now()-86400000));
