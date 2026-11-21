@@ -6,9 +6,11 @@ for(const percent of [-15,-4,0,4,15]) assert.equal(scope.getHistoryDailyChangeCl
 assert.equal(scope.getHistoryDailyChangeClass(20,15.01),' is-large-change is-up');
 assert.equal(scope.getHistoryDailyChangeClass(-20,-15.01),' is-large-change is-down');
 const css=fs.readFileSync(__dirname+'/styles.css','utf8');
-assert.match(css,/:root\[data-theme="redfish"\] \{[^}]*--history-daily-neutral: #514a45;/);
+assert.match(css,/:root\[data-theme="redfish"\] \{[^}]*--history-daily-neutral: #7b8790;/);
 assert.match(css,/--history-daily-neutral: #a8b0ab;/,'other themes keep the previous grey');
 assert.match(css,/\.history-daily-pnl.is-large-change.is-up \{ color: var\(--red\); \}/);
 assert.match(css,/\.history-daily-pnl.is-large-change.is-down \{ color: var\(--green\); \}/);
 assert.match(css,/:root\[data-theme="redfish"\] \.history-item \{\s+background: rgba\(255, 253, 247, 0\.20\);/);
-console.log('PASS: darker redfish neutral text, >15% positive red / negative green, threshold and card transparency unchanged');
+assert.match(css,/\.note-toggle \{\s+color: #b77900;/);
+assert.match(css,/\.note-toggle\[aria-expanded="true"\] \{\s+color: #8f5d00;/);
+console.log('PASS: medium cool-grey daily text, deeper amber stars, >15% positive red / negative green, unchanged threshold and transparency');

@@ -63,7 +63,7 @@
   --line: rgba(91, 64, 43, 0.20);
   --green: #096143;
   --history-low: #00853f;
-  --history-daily-neutral: #514a45;
+  --history-daily-neutral: #7b8790;
   --red: #a12436;
   --blue: #963526;
   --amber: #895512;
@@ -1520,15 +1520,15 @@ tbody tr:last-child td {
 }
 
 .note-toggle {
-  color: #f2b705;
-  border-color: rgba(242, 183, 5, 0.35);
+  color: #b77900;
+  border-color: rgba(183, 121, 0, 0.45);
   background: white;
 }
 
 .note-toggle:hover,
 .note-toggle[aria-expanded="true"] {
-  color: #d99b00;
-  border-color: rgba(217, 155, 0, 0.55);
+  color: #8f5d00;
+  border-color: rgba(143, 93, 0, 0.65);
   background: white;
 }
 
