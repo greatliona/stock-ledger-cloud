@@ -39,8 +39,13 @@ function applyHostTheme(host, theme, bg, ink) {
       }
       ${hostScope} [data-testid="stHeader"] button { color: var(--ledger-host-ink); }
       ${hostScope} [data-testid="stWidgetLabel"] p { color: var(--ledger-host-ink); }
+      ${fishScope} [data-testid="stTextInput"],
+      ${fishScope} [data-testid="stTextInput"] :is(div, input, button) {
+        background: transparent !important; background-image: none !important;
+        box-shadow: none !important; color: var(--ledger-host-ink) !important;
+      }
       ${fishScope} [data-testid="stTextInput"] [data-baseweb="input"],
-      ${fishScope} [data-testid="stTextInput"] [data-baseweb="base-input"] {
+      ${fishScope} [data-testid="stTextInput"] [data-testid="stTextInputRootElement"] {
         background: rgba(255, 250, 240, .24) !important;
       }
       ${fishScope} [data-testid="stTextInput"] input {

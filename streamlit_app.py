@@ -125,6 +125,17 @@ st.markdown('''<style>
 html:not([data-ledger-toolbar-open]) [data-testid="stHeader"] {
   visibility: hidden !important; pointer-events: none !important;
 }
+/* Both BaseWeb and newer native Streamlit input structures. Clear every
+   nested surface first, then tint exactly the outer input wrapper once. */
+html[data-stock-ledger-theme="redfish"] [data-testid="stTextInput"],
+html[data-stock-ledger-theme="redfish"] [data-testid="stTextInput"] :is(div, input, button) {
+  background: transparent !important; background-image: none !important;
+  box-shadow: none !important; color: #30261f !important;
+}
+html[data-stock-ledger-theme="redfish"] [data-testid="stTextInput"] [data-testid="stTextInputRootElement"],
+html[data-stock-ledger-theme="redfish"] [data-testid="stTextInput"] [data-baseweb="input"] {
+  background: rgba(255, 250, 240, .24) !important;
+}
 </style>''', unsafe_allow_html=True)
 
 @st.fragment(run_every=1)
@@ -150,9 +161,9 @@ def render_ledger():
 if check_password():
     # Keep the component input byte-identical across quote-triggered reruns.
     # Rebuild on a release change, not on every price refresh.
-    if st.session_state.get("ledger_page_version") != "L1.5.79":
+    if st.session_state.get("ledger_page_version") != "L1.5.80":
         st.session_state["ledger_html"] = build_page()
-        st.session_state["ledger_page_version"] = "L1.5.79"
+        st.session_state["ledger_page_version"] = "L1.5.80"
     # Keep the mounted ledger visible while its read-only quote request runs.
     # Streamlit normally dims stale components during a rerun.
     st.markdown("""<style>
