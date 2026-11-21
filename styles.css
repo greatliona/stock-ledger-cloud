@@ -1455,8 +1455,9 @@ tbody tr:last-child td {
 .history-item .history-value-row.is-atl,
 .history-total-line.is-atl > strong {
   color: var(--history-low);
-  font-weight: 800;
 }
+.history-item .history-value-row.is-atl:not(.is-ath),
+.history-total-line.is-atl:not(.is-ath) > strong { font-weight: 400; }
 
 .history-item .history-value-row.is-ath.is-atl,
 .history-total-line.is-ath.is-atl > strong {
@@ -2634,6 +2635,12 @@ button:disabled {
 :root[data-theme="redfish"] .history-item,
 :root[data-theme="redfish"] .history-month-list,
 :root[data-theme="redfish"] .settlement-summary { background: rgba(255, 253, 247, 0.03); }
+/* Restore only each daily card to L1.5.81. Do not change the enclosing panel
+   or month container, whose current transparency is intentionally retained. */
+:root[data-theme="redfish"] .history-item {
+  background: rgba(255, 253, 247, 0.08);
+  border-color: rgba(91, 64, 43, 0.23);
+}
 :root[data-theme="redfish"] .holdings-panel th { background: transparent; }
 :root[data-theme="redfish"] .asset-chart-slide canvas,
 :root[data-theme="redfish"] #assetChart,
