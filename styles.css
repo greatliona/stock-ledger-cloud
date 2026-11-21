@@ -696,6 +696,13 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.13);
 }
 
+:root[data-theme="redfish"] :is(input, select, textarea) {
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme="redfish"] :is(input, select, textarea) { transition: none; }
+}
+
 .table-wrap {
   width: 100%;
   max-width: 100%;

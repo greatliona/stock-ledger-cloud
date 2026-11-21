@@ -46,7 +46,18 @@ function applyHostTheme(host, theme, bg, ink) {
       }
       ${fishScope} [data-testid="stTextInput"] [data-baseweb="input"],
       ${fishScope} [data-testid="stTextInput"] [data-testid="stTextInputRootElement"] {
-        background: rgba(255, 250, 240, .24) !important;
+        background: rgba(255, 253, 247, .10) !important;
+        border: 1px solid rgba(91, 64, 43, .10) !important;
+        border-radius: 8px !important;
+        transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease !important;
+      }
+      ${fishScope} [data-testid="stTextInput"] :is([data-baseweb="input"], [data-testid="stTextInputRootElement"]):focus-within {
+        border-color: #963526 !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .13) !important;
+        outline: 2px solid #963526; outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        ${fishScope} [data-testid="stTextInput"] :is([data-baseweb="input"], [data-testid="stTextInputRootElement"]) { transition: none !important; }
       }
       ${fishScope} [data-testid="stTextInput"] input {
         background: transparent !important; color: var(--ledger-host-ink) !important;

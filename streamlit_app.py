@@ -134,7 +134,18 @@ html[data-stock-ledger-theme="redfish"] [data-testid="stTextInput"] :is(div, inp
 }
 html[data-stock-ledger-theme="redfish"] [data-testid="stTextInput"] [data-testid="stTextInputRootElement"],
 html[data-stock-ledger-theme="redfish"] [data-testid="stTextInput"] [data-baseweb="input"] {
-  background: rgba(255, 250, 240, .24) !important;
+  background: rgba(255, 253, 247, .10) !important;
+  border: 1px solid rgba(91, 64, 43, .10) !important;
+  border-radius: 8px !important;
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease !important;
+}
+html[data-stock-ledger-theme="redfish"] [data-testid="stTextInput"] :is([data-baseweb="input"], [data-testid="stTextInputRootElement"]):focus-within {
+  border-color: #963526 !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .13) !important;
+  outline: 2px solid #963526; outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-stock-ledger-theme="redfish"] [data-testid="stTextInput"] :is([data-baseweb="input"], [data-testid="stTextInputRootElement"]) { transition: none !important; }
 }
 </style>''', unsafe_allow_html=True)
 
@@ -161,9 +172,9 @@ def render_ledger():
 if check_password():
     # Keep the component input byte-identical across quote-triggered reruns.
     # Rebuild on a release change, not on every price refresh.
-    if st.session_state.get("ledger_page_version") != "L1.5.82":
+    if st.session_state.get("ledger_page_version") != "L1.5.83":
         st.session_state["ledger_html"] = build_page()
-        st.session_state["ledger_page_version"] = "L1.5.82"
+        st.session_state["ledger_page_version"] = "L1.5.83"
     # Keep the mounted ledger visible while its read-only quote request runs.
     # Streamlit normally dims stale components during a rerun.
     st.markdown("""<style>
