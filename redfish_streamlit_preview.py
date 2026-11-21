@@ -50,6 +50,12 @@ if st.query_params.get("daily") == "1":
             json.dumps(["fund", "fund-test", ""], separators=(",", ":")): dict(price=340000, cost=167000),
             json.dumps(["crypto", "crypto-test", "BTCUSDT"], separators=(",", ":")): dict(price=66000),
         })])
+if "pieCount" in st.query_params:
+    count = min(40, max(0, int(st.query_params["pieCount"])))
+    fixture["holdings"] = [dict(id=f"pie-{i}", symbol=f"TEST{i}", name=f"測試公司{i+1}",
+        shares=1000, avgCost=100, currentPrice=100 + 20*i, side="long") for i in range(count)]
+    fixture["usHoldings"] = [dict(id=f"us-pie-{i}", symbol=f"US{i}",
+        shares=10, avgCost=100, currentPrice=100 + 20*i, side="long") for i in range(count)]
 seed = "<script>localStorage.setItem('redfish-streamlit-proof-theme','redfish');"
 seed += "localStorage.setItem('redfish-streamlit-proof-ledger'," + json.dumps(json.dumps(fixture)) + ");</script>"
 page = page.replace("<body>", "<body>" + seed, 1)

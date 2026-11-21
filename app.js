@@ -59,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.80", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.81", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -2789,6 +2789,19 @@ function formatChartDateLabel(date, index, firstDate, previousDate) {
   return `${month}${day}`;
 }
 
+function getStockPieLayout(width, holdingCount) {
+  const compact = width < 720;
+  const large = holdingCount <= 5;
+  const chartHeight = large
+    ? (compact ? Math.max(320, width) : Math.max(620, Math.min(760, width * 0.62)))
+    : (compact ? 640 : 880);
+  const labelRoom = compact ? (large ? 12 : 104) : 180;
+  const radius = compact
+    ? Math.min((width - labelRoom * 2) / 2, large ? 180 : 76)
+    : Math.min((width - labelRoom * 2) / 2, chartHeight * 0.34, 210);
+  return {large, chartHeight, radius:Math.max(12, radius)};
+}
+
 function drawPieChart() {
   const canvas = els.pieChart;
   const context = canvas.getContext("2d");
@@ -2838,7 +2851,8 @@ function drawPieChart() {
   slices.splice(0, slices.length, ...coloredSlices);
   const total = slices.reduce((sum, slice) => sum + slice.value, 0);
   const summaryRows = buildPieGroupSummary(slices, groupNames, groupColorFamilies, total);
-  const chartHeight = compactPie ? 640 : 880;
+  const layout = getStockPieLayout(width, slices.filter(slice => !slice.isCash).length);
+  const chartHeight = layout.chartHeight;
   const summaryHeight = getPieGroupSummaryHeight(summaryRows, width, compactPie);
   const height = chartHeight + summaryHeight;
   canvas.style.height = `${height}px`;
@@ -2855,8 +2869,7 @@ function drawPieChart() {
     return;
   }
 
-  const labelRoom = compactPie ? 104 : 180;
-  const radius = compactPie ? Math.min((width - labelRoom * 2) / 2, 76) : Math.min((width - labelRoom * 2) / 2, chartHeight * 0.34, 210);
+  const radius = layout.radius;
   const centerX = width / 2;
   const centerY = chartHeight / 2;
   const cashAngle = slices[0]?.isCash ? (slices[0].value / total) * Math.PI * 2 : 0;
@@ -2878,6 +2891,7 @@ function drawPieChart() {
     start += angle;
   }
 
+  const insideLabels = [];
   const outsideLabels = [];
   const insideLabelMids = slices
     .filter((slice) => (slice.value / total) * 100 >= (compactPie ? 16 : 12))
@@ -2886,7 +2900,11 @@ function drawPieChart() {
     const percent = (slice.value / total) * 100;
     const mid = (slice.start + slice.end) / 2;
     const lines = [slice.label, `${formatNumber(percent)}%`, money(slice.value)];
-    if (percent >= (compactPie ? 16 : 12)) {
+    if (compactPie && layout.large) {
+      // Match the other large pies: keep labels inside the circle, using the
+      // existing collision-aware label placement instead of reserving gutters.
+      insideLabels.push({lines, mid, angle:slice.end - slice.start, percent});
+    } else if (percent >= (compactPie ? 16 : 12)) {
       const labelRadius = radius * getInsidePieLabelRadiusFactor(
         mid,
         slice.end - slice.start,
@@ -2914,6 +2932,9 @@ function drawPieChart() {
     }
   }
 
+  if (compactPie && layout.large) {
+    drawSeparatedInsidePieLabels(context, insideLabels, centerX, centerY, radius, "700 8.5px sans-serif", 10);
+  }
   if (compactPie) {
     drawMobileOutsidePieLabels(context, outsideLabels, centerX, centerY, radius, chartHeight, width);
   } else {
