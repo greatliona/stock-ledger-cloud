@@ -59,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.90", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.91", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -1154,6 +1154,10 @@ function renderSummary() {
   const totals = getPortfolioTotals();
   document.querySelectorAll("[data-category-total]").forEach((node) => {
     node.textContent = `目前總值 ${money(totals[node.dataset.categoryTotal])}`;
+  });
+  const pieTotals = getPieChartTotals(totals);
+  document.querySelectorAll("[data-pie-total]").forEach((node) => {
+    node.textContent = `目前總值 ${money(pieTotals[node.dataset.pieTotal])}`;
   });
   renderCategoryDailyChanges();
   els.totalValue.textContent = money(totals.value);
@@ -2479,6 +2483,20 @@ function drawCharts() {
   drawCategoryPieChart();
   drawCryptoPieChart();
   drawUsStockPieChart();
+}
+
+function getPieChartTotals(totals = getPortfolioTotals()) {
+  // Match each pie's existing positive-value slices, including its own cash
+  // rules. In particular, the US holdings pie does not contain USD cash.
+  const positive = value => Math.max(0, toNumber(value));
+  return {
+    stock: state.holdings.reduce((sum, item) => sum + positive(stockBookValue(item)), 0) + positive(state.cash),
+    category: [totals.cash, totals.stockTotal, totals.usStockTotal, totals.fundTotal, totals.cryptoTotal]
+      .reduce((sum, value) => sum + positive(value), 0),
+    crypto: state.cryptoContracts.reduce((sum, item) => sum + positive(calculateCryptoPosition(item).currentValueTwd), 0)
+      + positive(toNumber(state.cryptoCashUsdt) * (state.usdTwdRate || 0)),
+    usStock: state.usHoldings.reduce((sum, item) => sum + positive(stockBookValue(item) * (state.usdTwdRate || 0)), 0),
+  };
 }
 
 function drawAssetCharts() {
@@ -4219,6 +4237,8 @@ function getCategoryDailyChange(market, now = new Date()) {
 }
 
 function categoryDailyChangeContent(market, now = new Date()) {
+  if (market === "cash") return {text:"DPnL —", title:"現金水位變動包含資金轉入轉出，不等於交易損益，因此不計 DPnL。",
+    className:"category-daily-change daily-change daily-neutral"};
   const change = getCategoryDailyChange(market, now);
   const text = change.available
     ? `DPnL ${dailyChangeMoney(change.amount)} ${signedPercent(change.pct, 2)}${change.partial ? "（部分）" : ""}`

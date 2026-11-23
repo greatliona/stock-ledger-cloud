@@ -69,7 +69,7 @@ assert.equal(ctx.categoryDailyChangeContent('all',now).text,'DPnL —','empty to
 add('tw',{id:'no-yesterday',symbol:'N',shares:1,currentPrice:100});
 assert.equal(ctx.categoryDailyChangeContent('all',now).text,'DPnL —','all missing data stays unavailable');
 const html=fs.readFileSync(__dirname+'/index.html','utf8'),css=fs.readFileSync(__dirname+'/styles.css','utf8');
-assert.equal((html.match(/data-category-daily=/g)||[]).length,5,'four main classification headings plus portfolio total');
+assert.equal((html.match(/data-category-daily=/g)||[]).length,15,'four categories, portfolio total, six line charts and four pies');
 assert.match(html,/id="totalValue">[^<]+<\/strong>\s*<small[^>]+data-category-daily="all"/);
 assert.match(css,/\.summary-asset-values \{[^}]*flex-wrap: wrap;/);
 for(const market of ['tw','us','fund','crypto']) assert.match(html,new RegExp('data-category-total="[^"]+">[^<]+</small><small[^>]+data-category-daily="'+market+'"'));
