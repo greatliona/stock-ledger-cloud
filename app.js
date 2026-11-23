@@ -59,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.89", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.90", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -4193,6 +4193,17 @@ function getDailyChange(market, item, now = new Date()) {
 }
 
 function getCategoryDailyChange(market, now = new Date()) {
+  if (market === "all") {
+    // Sum the same unrounded price P&L shown by the four categories; cash
+    // transfers and margin deposits must not become daily trading gains.
+    const categories = ["tw", "us", "fund", "crypto"].map(key => getCategoryDailyChange(key, now));
+    const amount = categories.reduce((sum, item) => sum + item.amount, 0);
+    const basis = categories.reduce((sum, item) => sum + item.basis, 0);
+    const missing = categories.flatMap(item => item.missing);
+    return {available:categories.some(item => item.available), amount, basis, pct:basis > 0 ? amount / basis * 100 : 0,
+      count:categories.reduce((sum, item) => sum + item.count, 0),
+      compared:categories.reduce((sum, item) => sum + item.compared, 0), missing, partial:missing.length > 0};
+  }
   const holdings = {tw:state.holdings, us:state.usHoldings, fund:state.funds, crypto:state.cryptoContracts}[market] || [];
   const items = holdings.filter(item => market === "fund" || (market === "crypto" ? item.quantity : item.shares) > 0);
   const valid = [], missing = [];

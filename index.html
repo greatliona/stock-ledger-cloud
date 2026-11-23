@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stock Ledger!</title>
-    <link rel="icon" type="image/png" href="favicon.png?v=L1.5.89" />
-    <link rel="stylesheet" href="styles.css?v=L1.5.89" />
+    <link rel="icon" type="image/png" href="favicon.png?v=L1.5.90" />
+    <link rel="stylesheet" href="styles.css?v=L1.5.90" />
   </head>
   <body>
     <main class="app-shell">
@@ -14,7 +14,7 @@
           <p class="eyebrow">Portfolio Ledger！</p>
           <div class="title-line">
             <h1>Stock Ledger!</h1>
-            <span class="app-version">L1.5.89</span>
+            <span class="app-version">L1.5.90</span>
           </div>
         </div>
         <select id="themeSelect" class="theme-toggle" aria-label="外觀主題">
@@ -27,7 +27,10 @@
       <section class="summary-grid" aria-label="投資組合摘要">
         <article class="summary-card top-summary-card">
           <span>資產總和</span>
-          <strong id="totalValue">$0</strong>
+          <div class="summary-asset-values">
+            <strong id="totalValue">$0</strong>
+            <small class="category-daily-change daily-change daily-neutral" data-category-daily="all">DPnL —</small>
+          </div>
         </article>
         <article class="summary-card top-summary-card">
           <span>總投入成本</span>
@@ -511,6 +514,6 @@
     </template>
 
     <script src="xlsx.mini.min.js?v=0.20.3"></script>
-    <script src="app.js?v=L1.5.89"></script>
+    <script src="app.js?v=L1.5.90"></script>
   </body>
 </html>
