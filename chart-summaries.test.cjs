@@ -19,7 +19,7 @@ assert.match(scope.categoryDailyChangeContent('cash').className,/daily-neutral/)
 scope.renderSummary();
 for(const n of pieNodes) assert.equal(n.textContent,'目前總值 '+scope.money(pies[n.dataset.pieTotal]));
 for(const n of dailyNodes) assert.equal(n.textContent,'DPnL —','missing prior price is never fabricated');
-for(const [id,key,market] of [['stockPieChart','stock','tw'],['categoryPieChart','category','all'],['cryptoPieChart','crypto','crypto'],['usStockPieChart','usStock','us']]) {
+for(const [id,key,market] of [['stockPieChart','stock','pie-stock'],['categoryPieChart','category','pie-category'],['cryptoPieChart','crypto','pie-crypto'],['usStockPieChart','usStock','pie-usStock']]) {
   const article=html.slice(html.lastIndexOf('<article',html.indexOf('id="'+id+'"')),html.indexOf('</article>',html.indexOf('id="'+id+'"')));
   assert.match(article,new RegExp('data-pie-total="'+key+'"'));
   assert.match(article,new RegExp('data-category-daily="'+market+'"'));
