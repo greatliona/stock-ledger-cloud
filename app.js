@@ -59,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.91", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.92", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -4236,9 +4236,26 @@ function getCategoryDailyChange(market, now = new Date()) {
     count:items.length, compared:valid.length, missing, partial:missing.length > 0};
 }
 
+function getCashDailyChange(now = new Date()) {
+  const date = previousPriceDate(dailyPriceDate(now));
+  const previous = (state.history || []).find(item => item.date === date);
+  const missing = reason => ({available:false, date, reason});
+  if (!previous || !hasRecordedCash(previous) || !Number.isFinite(previous.cash) || previous.cash < 0) return missing("無前一日最後紀錄現金");
+  if (!Number.isFinite(state.cash) || state.cash < 0) return missing("目前現金金額無效");
+  const amount = state.cash - previous.cash;
+  // A recorded zero is valid cash, but growth from zero has no finite %.
+  const pct = previous.cash > 0 ? amount / previous.cash * 100 : amount === 0 ? 0 : null;
+  return {available:true, date, amount, basis:previous.cash, pct};
+}
+
 function categoryDailyChangeContent(market, now = new Date()) {
-  if (market === "cash") return {text:"DPnL —", title:"現金水位變動包含資金轉入轉出，不等於交易損益，因此不計 DPnL。",
-    className:"category-daily-change daily-change daily-neutral"};
+  if (market === "cash") {
+    const change = getCashDailyChange(now);
+    const text = change.available ? `DPnL ${dailyChangeMoney(change.amount)} ${change.pct === null ? "—" : signedPercent(change.pct, 2)}` : "DPnL —";
+    const title = `比較 ${change.date} 最後紀錄現金；${change.available ? "目前現金減前一日現金" : change.reason}。僅比較現金水位，含資金轉入轉出，不含台股市值；不等於交易獲利。`;
+    const tone = change.available && change.amount !== 0 ? (change.amount > 0 ? "gain" : "loss") : "daily-neutral";
+    return {text, title, className:"category-daily-change daily-change " + tone};
+  }
   const change = getCategoryDailyChange(market, now);
   const text = change.available
     ? `DPnL ${dailyChangeMoney(change.amount)} ${signedPercent(change.pct, 2)}${change.partial ? "（部分）" : ""}`

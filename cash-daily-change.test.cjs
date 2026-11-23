@@ -1,0 +1,42 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync(__dirname+'/app.js','utf8');
+const now=new Date('2026-11-23T02:00:00Z');
+const state={cash:120000,usdTwdRate:32,usCashUsd:500,cryptoCashUsdt:500,
+  holdings:[{id:'a',symbol:'A',shares:1000,avgCost:850,currentPrice:920}],usHoldings:[],funds:[],cryptoContracts:[],
+  history:[{date:'2026-11-21',cash:999999,cashRecorded:true},{date:'2026-11-22',cash:180000,cashRecorded:true}],
+  dailyPriceHistory:[{date:'2026-11-22',prices:{'["tw","a","A"]':{price:930}}}]};
+const cashNode={dataset:{categoryDaily:'cash'}},twNode={dataset:{categoryDaily:'tw'}};
+const scope=vm.createContext({state,document:{querySelectorAll:()=>[cashNode,twNode]}});
+vm.runInContext(source.match(/^function \w+\([^]*?^}/gm).join('\n'),scope);
+assert.equal(scope.getCashDailyChange(now).amount,-60000);
+assert.ok(Math.abs(scope.getCashDailyChange(now).pct+100/3)<1e-10);
+assert.equal(scope.categoryDailyChangeContent('cash',now).text,'DPnL -$60.0K -33.33%');
+assert.match(scope.categoryDailyChangeContent('cash',now).className,/loss/);
+scope.renderCategoryDailyChanges(now);assert.equal(cashNode.textContent,'DPnL -$60.0K -33.33%');
+assert.equal(twNode.textContent,'DPnL -$10.0K -1.08%');
+const stockBefore=JSON.stringify(scope.getCategoryDailyChange('tw',now));
+const allBefore=JSON.stringify(scope.getCategoryDailyChange('all',now));
+state.cash=200000;state.usCashUsd=99999;state.cryptoCashUsdt=99999;
+assert.equal(scope.categoryDailyChangeContent('cash',now).text,'DPnL +$20.0K +11.11%');
+assert.match(scope.categoryDailyChangeContent('cash',now).className,/gain/);
+assert.equal(JSON.stringify(scope.getCategoryDailyChange('tw',now)),stockBefore,'cash does not change TW line DPnL');
+assert.equal(JSON.stringify(scope.getCategoryDailyChange('all',now)),allBefore,'cash movements do not alter portfolio trading DPnL');
+assert.equal(scope.getPortfolioTotals().stockTotal,920000,'stock line total excludes cash');
+assert.equal(scope.getPieChartTotals().stock,1120000,'stock pie continues to include TWD cash');
+state.holdings[0].currentPrice=950;
+assert.equal(scope.categoryDailyChangeContent('cash',now).text,'DPnL +$20.0K +11.11%','stock prices do not change cash DPnL');
+state.history[1].cash=0;
+assert.equal(scope.categoryDailyChangeContent('cash',now).text,'DPnL +$200.0K —','zero base never creates Infinity');
+state.cash=0;
+assert.equal(scope.categoryDailyChangeContent('cash',now).text,'DPnL +$0.0K +0%');
+assert.match(scope.categoryDailyChangeContent('cash',now).className,/daily-neutral/);
+state.history[1].cashRecorded=false;
+assert.equal(scope.categoryDailyChangeContent('cash',now).text,'DPnL —','unrecorded zero is not a valid baseline');
+state.history.pop();
+assert.equal(scope.categoryDailyChangeContent('cash',now).text,'DPnL —','do not fall back to an earlier day');
+state.history.push({date:'2026-11-22',cash:100,cashRecorded:true});state.cash=0;
+assert.equal(scope.categoryDailyChangeContent('cash',new Date('2026-11-22T16:00:00Z')).text,'DPnL -$0.1K -100%','Taiwan midnight rollover');
+assert.equal(scope.getCashDailyChange(new Date('2026-11-22T15:59:59Z')).date,'2026-11-21');
+state.cash=NaN;assert.equal(scope.getCashDailyChange(now).available,false);
+state.cash=1;state.history[1].cash=NaN;assert.equal(scope.getCashDailyChange(now).available,false);
+console.log('PASS: cash and TW line DPnL/total independent, TW pie still includes cash, zero/missing baseline, Taiwan rollover, red/green and refresh');
