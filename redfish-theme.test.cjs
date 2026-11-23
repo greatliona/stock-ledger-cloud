@@ -45,7 +45,7 @@ if(process.argv.includes('--serve')) {
   sample.tradeHistory=[{market:'tw',id:'trade-win',symbol:'TESTWIN',name:'獲利測試',shares:10,avgCost:100,sellPrice:110,buyDate:'2026-11-01',sellDate:'2026-11-20'},
     {market:'tw',id:'trade-loss',symbol:'TESTLOSS',name:'虧損測試',shares:10,avgCost:100,sellPrice:90,buyDate:'2026-11-01',sellDate:'2026-11-20'}];
   const yesterday=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(Date.now()-86400000));
-  sample.history.push({date:yesterday,cash:180000,cashRecorded:true,stockTotal:930000,usStockTotal:166400,fundTotal:169000,cryptoTotal:80000});
+  sample.history.push({date:yesterday,cash:180000,cashRecorded:true,stockTotal:920000,usStockTotal:166400,usCashUsd:0,usCashTwd:0,fundTotal:169000,cryptoTotal:80000,cryptoCashUsdt:500,cryptoCashTwd:16000});
   sample.dailyPriceHistory=[{date:yesterday,prices:{
     '["tw","t1","2330.TW"]':{price:930},'["us","u1","VOO"]':{price:520},
     '["crypto","c1","BTCUSDT"]':{price:82000},'["crypto","c2","ETHUSDT"]':{price:2100},

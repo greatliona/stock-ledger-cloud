@@ -59,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.93", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.94", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -4248,43 +4248,52 @@ function getCashDailyChange(now = new Date()) {
   return {available:true, date, amount, basis:previous.cash, pct};
 }
 
-function getPieDailyChange(kind, now = new Date()) {
+function getCurrencyCashDailyChange(currency, now = new Date()) {
   const date = previousPriceDate(dailyPriceDate(now));
   const previous = (state.history || []).find(item => item.date === date);
+  const field = currency === "USDT" ? "cryptoCashUsdt" : "usCashUsd";
   const missing = reason => ({available:false, date, reason});
-  if (!previous) return missing("無前一日圓餅範圍的最後紀錄");
-  const positive = value => Math.max(0, value);
-  const validCash = hasRecordedCash(previous) && Number.isFinite(previous.cash) && previous.cash >= 0;
-  let basis;
-  if (kind === "stock") {
-    if (!validCash || !Number.isFinite(previous.stockTotal)) return missing("缺少前一日台股或台幣現金紀錄");
-    basis = positive(previous.stockTotal) + previous.cash;
-  } else if (kind === "category") {
-    const values = [previous.stockTotal, previous.usStockTotal, previous.fundTotal, previous.cryptoTotal];
-    if (!validCash || !values.every(Number.isFinite)) return missing("缺少前一日完整分類或台幣現金紀錄");
-    basis = previous.cash + values.reduce((sum, value) => sum + positive(value), 0);
-  } else if (kind === "crypto") {
-    // The daily crypto total already includes idle USDT; never add it twice.
-    if (!Number.isFinite(previous.cryptoTotal) || previous.cryptoTotal < 0) return missing("缺少前一日加密合約及 USDT 總額紀錄");
-    basis = previous.cryptoTotal;
-  } else if (kind === "usStock") {
-    if (Number.isFinite(previous.usStockMarketValue)) basis = positive(previous.usStockMarketValue);
-    else if (Number.isFinite(previous.usStockTotal) && Number.isFinite(previous.usCashTwd)) basis = positive(previous.usStockTotal - previous.usCashTwd);
-    else return missing("缺少前一日美股持股總值或美元現金紀錄");
-  } else return missing("未知圓餅圖範圍");
+  if (!previous || !Number.isFinite(previous[field]) || previous[field] < 0) return missing(`缺少前一日 ${currency} 現金紀錄`);
+  if (state[field] === 0 && previous[field] === 0) return {available:true, date, amount:0, basis:0};
+  if (!Number.isFinite(state[field]) || state[field] < 0 || !Number.isFinite(state.usdTwdRate) || state.usdTwdRate <= 0) return missing(`${currency} 現金或台幣匯率無效`);
+  // Use the same current FX as the position DPnL, not a different settlement FX.
+  return {available:true, date, amount:(state[field] - previous[field]) * state.usdTwdRate,
+    basis:previous[field] * state.usdTwdRate};
+}
+
+function getPieDailyChange(kind, now = new Date()) {
+  const date = previousPriceDate(dailyPriceDate(now));
+  const positionPart = (market, label) => {
+    const change = getCategoryDailyChange(market, now);
+    return {...change, label, available:change.count === 0 || change.available};
+  };
+  const cashPart = () => ({...getCashDailyChange(now), label:"台幣現金"});
+  const currencyPart = currency => ({...getCurrencyCashDailyChange(currency, now), label:currency + " 現金"});
+  let parts;
+  if (kind === "stock") parts = [positionPart("tw", "台股"), cashPart()];
+  else if (kind === "crypto") parts = [positionPart("crypto", "加密合約"), currencyPart("USDT")];
+  else if (kind === "usStock") parts = [positionPart("us", "美股")];
+  else if (kind === "category") parts = [positionPart("tw", "台股"), positionPart("us", "美股"),
+    positionPart("fund", "基金"), positionPart("crypto", "加密合約"), cashPart(), currencyPart("USD"), currencyPart("USDT")];
+  else return {available:false, date, reason:"未知圓餅圖範圍"};
+  const missing = parts.filter(part => !part.available || part.partial);
+  if (missing.length) return {available:false, date, parts, reason:"缺少完整分項比較基準：" + missing.map(part => part.label + "（" + (part.reason || "部分標的缺少昨價") + "）").join("；")};
   const current = getPieChartTotals()[kind];
-  if (!Number.isFinite(current) || current < 0) return missing("目前圓餅總額無效");
-  const amount = current - basis;
+  if (!Number.isFinite(current) || current < 0) return {available:false, date, parts, reason:"目前圓餅總額無效"};
+  // Reconcile exactly to the displayed components before formatting/truncation.
+  // Never mix per-position last prices with an independent settlement total.
+  const amount = parts.reduce((sum, part) => sum + part.amount, 0);
+  const basis = current - amount;
   const pct = basis > 0 ? amount / basis * 100 : amount === 0 ? 0 : null;
-  return {available:true, date, current, amount, basis, pct};
+  return {available:true, date, current, amount, basis, pct, parts};
 }
 
 function pieDailyChangeContent(kind, now = new Date()) {
   const change = getPieDailyChange(kind, now);
   const text = change.available ? `DPnL ${dailyChangeMoney(change.amount)} ${change.pct === null ? "—" : signedPercent(change.pct, 2)}` : "DPnL —";
   const scope = {stock:"台股＋台幣現金",category:"圓餅圖內全部資產與現金",crypto:"合約權益＋USDT",usStock:"美股持股，不含美元現金"}[kind] || "未知範圍";
-  const title = `圓餅圖獨立比較 ${change.date} 最後紀錄；${scope}。` + (change.available
-    ? "目前圖內總額減前一日同範圍總額，%以該前日總額計算；包含該範圍入出金、持倉及匯率變動，不等於純價格交易損益。"
+  const title = `圓餅圖比較 ${change.date} 的相同分項基準；${scope}。` + (change.available
+    ? "DPnL 為分項未截尾金額加總；%＝合計 DPnL／（目前圖內總額－合計 DPnL），不使用另一份每日結帳總額。分項：" + change.parts.map(part => part.label + " " + signedMoney(part.amount)).join("；") + "。包含現金轉入轉出；不是單純資產總額變動。"
     : change.reason);
   const tone = change.available && change.amount !== 0 ? (change.amount > 0 ? "gain" : "loss") : "daily-neutral";
   return {text, title, className:"category-daily-change daily-change " + tone};

@@ -1,13 +1,15 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const source=fs.readFileSync(__dirname+'/app.js','utf8');
 const now=new Date('2026-11-23T02:00:00Z');
-const previous={date:'2026-11-22',cash:180000,cashRecorded:true,stockTotal:930000,usStockTotal:182400,usStockMarketValue:166400,usCashTwd:16000,fundTotal:169000,cryptoTotal:80000,cryptoCashTwd:16000};
+// Settlement stock total deliberately differs from last recorded per-position
+// prices. This reproduces the mixed-baseline bug without personal ledger data.
+const previous={date:'2026-11-22',cash:180000,cashRecorded:true,stockTotal:920000,usStockTotal:182400,usStockMarketValue:166400,usCashUsd:500,usCashTwd:16000,fundTotal:169000,cryptoTotal:80000,cryptoCashUsdt:500,cryptoCashTwd:16000};
 const state={cash:120000,usdTwdRate:32,usCashUsd:500,cryptoCashUsdt:500,
  holdings:[{id:'t',symbol:'TW',shares:1000,avgCost:850,currentPrice:920}],
  usHoldings:[{id:'u',symbol:'US',shares:10,avgCost:500,currentPrice:530}],
  funds:[{id:'f',cost:150000,currentValue:173000}],
  cryptoContracts:[{id:'c',name:'TESTUSDT',quantity:1,entryPrice:100,currentPrice:100,marginUsdt:2000,leverage:1}],
- history:[previous],dailyPriceHistory:[{date:'2026-11-22',prices:{'["tw","t","TW"]':{price:930}}}]};
+ history:[previous],dailyPriceHistory:[{date:'2026-11-22',prices:{'["tw","t","TW"]':{price:930},'["us","u","US"]':{price:520},'["fund","f",""]':{price:169000,cost:150000},'["crypto","c","TESTUSDT"]':{price:100}}}]};
 const nodes=['pie-stock','pie-category','pie-crypto','pie-usStock','tw','cash'].map(market=>({dataset:{categoryDaily:market}}));
 const scope=vm.createContext({state,document:{querySelectorAll:()=>nodes}});
 vm.runInContext(source.match(/^function \w+\([^]*?^}/gm).join('\n'),scope);
@@ -17,15 +19,21 @@ assert.equal(scope.categoryDailyChangeContent('pie-stock',now).text,'DPnL -$70.0
 assert.equal(scope.categoryDailyChangeContent('tw',now).text,'DPnL -$10.0K -1.08%','line remains pure stock');
 assert.equal(scope.categoryDailyChangeContent('cash',now).text,'DPnL -$60.0K -33.33%');
 assert.notEqual(scope.categoryDailyChangeContent('pie-stock',now).text,scope.categoryDailyChangeContent('tw',now).text);
-state.holdings[0].shares-=10;state.cash+=9200;
-assert.equal(scope.getPieDailyChange('stock',now).amount,-70000,'selling stock into cash does not change the combined pie');
-state.holdings[0].shares+=10;state.cash-=9200;
+assert.equal(pie.amount,scope.getCategoryDailyChange('tw',now).amount+scope.getCashDailyChange(now).amount,'pie equals exact untruncated components');
+assert.notEqual(pie.amount,pie.current-previous.stockTotal-previous.cash,'never substitute the unrelated settlement stock snapshot');
+previous.stockTotal=123456;
+assert.equal(scope.getPieDailyChange('stock',now).amount,-70000,'settlement aggregate edits cannot change price-based component DPnL');
 const category=scope.getPieDailyChange('category',now);
 assert.equal(category.amount,-62800,'asset pie includes TWD cash once');
 assert.ok(Math.abs(category.pct-category.amount/1541400*100)<1e-10);
 assert.equal(scope.getPieDailyChange('usStock',now).amount,3200);
+previous.usCashTwd=987654321;previous.cryptoCashTwd=123456789;
+assert.equal(scope.getCurrencyCashDailyChange('USD',now).amount,0,'native USD balance and current FX, not settlement TWD snapshot');
+assert.equal(scope.getCurrencyCashDailyChange('USDT',now).amount,0,'native USDT counted once using current FX');
 state.usCashUsd=99999;
 assert.equal(scope.getPieDailyChange('usStock',now).amount,3200,'holdings-only US pie excludes USD cash');
+const categoryWithCash=scope.getPieDailyChange('category',now);
+assert.equal(categoryWithCash.amount,category.amount+(99999-500)*32,'USD cash counted once in the category pie only');
 state.cryptoCashUsdt=600;
 assert.equal(scope.getPieDailyChange('crypto',now).amount,3200,'USDT movement included exactly once');
 assert.equal(scope.categoryDailyChangeContent('pie-crypto',now).text,'DPnL +$3.2K +4%');
@@ -39,11 +47,12 @@ previous.cashRecorded=false;previous.cash=0;
 assert.equal(scope.getPieDailyChange('stock',now).available,false,'missing cash never masquerades as stock-only pie change');
 assert.equal(scope.getPieDailyChange('category',now).available,false);
 previous.cashRecorded=true;previous.stockTotal=0;
-assert.equal(scope.categoryDailyChangeContent('pie-stock',now).text,'DPnL +$1040.0K —');
-state.cash=0;state.holdings=[];
+state.cash=200000;state.holdings=[];
+assert.equal(scope.categoryDailyChangeContent('pie-stock',now).text,'DPnL +$200.0K —');
+state.cash=0;
 assert.equal(scope.categoryDailyChangeContent('pie-stock',now).text,'DPnL +$0.0K +0%');
 previous.date='2026-11-21';
 assert.equal(scope.getPieDailyChange('stock',now).available,false,'strict previous Taiwan day, no older fallback');
 const html=fs.readFileSync(__dirname+'/index.html','utf8');
 assert.equal((html.match(/data-category-daily="pie-/g)||[]).length,4,'four independently bound pie labels');
-console.log('PASS: pie DPnL independently includes cash/USDT, correct combined %, no double counts, internal transfers cancel, line unchanged, missing/zero baselines and live labels');
+console.log('PASS: mismatched settlement/per-position baselines reconcile to exact component DPnL; cash/USD/USDT once, consistent %, line unchanged, missing/zero baselines and live labels');
