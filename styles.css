@@ -2521,6 +2521,13 @@ button:disabled {
   line-height: 1.4;
   white-space: nowrap;
 }
+.category-heading .category-daily-change {
+  display: inline-block;
+  margin-top: 0;
+  font-size: .72rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
 .fund-card-list { display: grid; gap: 8px; }
 .fund-card-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .fund-card-fields strong, .contract-readonly-value { display: block; font-size: 0.9rem; overflow-wrap: anywhere; }

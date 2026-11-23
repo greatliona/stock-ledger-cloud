@@ -59,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.88", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.89", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -1155,6 +1155,7 @@ function renderSummary() {
   document.querySelectorAll("[data-category-total]").forEach((node) => {
     node.textContent = `目前總值 ${money(totals[node.dataset.categoryTotal])}`;
   });
+  renderCategoryDailyChanges();
   els.totalValue.textContent = money(totals.value);
   els.cashTotal.textContent = money(totals.cash);
   els.cryptoCashUsdtTotal.textContent = formatNumber(toNumber(state.cryptoCashUsdt));
@@ -4181,14 +4182,50 @@ function getDailyChange(market, item, now = new Date()) {
     // No units/NAV exist in this app. Cost changes cannot be separated from
     // subscriptions/redemptions, so never present those cash flows as gains.
     if (previous.cost === undefined || Math.abs(previous.cost - toNumber(item.cost)) > 1e-8) return missing("基金缺少可比成本或成本已變動，無法分辨申贖與漲跌");
-    return {available:true, date, amount:current - previous.price, pct:(current / previous.price - 1) * 100};
+    return {available:true, date, amount:current - previous.price, basis:previous.price, pct:(current / previous.price - 1) * 100};
   }
   const quantity = market === "crypto" ? item.quantity : item.shares;
   const fxRate = market === "tw" ? 1 : state.usdTwdRate;
   if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(fxRate) || fxRate <= 0) return missing("缺少有效持倉數量或台幣匯率");
   const direction = item.side === "short" ? -1 : 1;
   const move = (current - previous.price) * direction;
-  return {available:true, date, amount:move * quantity * fxRate, pct:move / previous.price * 100};
+  return {available:true, date, amount:move * quantity * fxRate, basis:previous.price * quantity * fxRate, pct:move / previous.price * 100};
+}
+
+function getCategoryDailyChange(market, now = new Date()) {
+  const holdings = {tw:state.holdings, us:state.usHoldings, fund:state.funds, crypto:state.cryptoContracts}[market] || [];
+  const items = holdings.filter(item => market === "fund" || (market === "crypto" ? item.quantity : item.shares) > 0);
+  const valid = [], missing = [];
+  for (const item of items) {
+    const change = getDailyChange(market, item, now);
+    if (change.available && Number.isFinite(change.amount) && Number.isFinite(change.basis) && change.basis > 0) valid.push(change);
+    else missing.push({name:item.name || item.symbol || "未命名", reason:change.reason || "缺少可比較資料"});
+  }
+  const amount = valid.reduce((sum, item) => sum + item.amount, 0);
+  const basis = valid.reduce((sum, item) => sum + item.basis, 0);
+  return {available:valid.length > 0, amount, basis, pct:basis > 0 ? amount / basis * 100 : 0,
+    count:items.length, compared:valid.length, missing, partial:missing.length > 0};
+}
+
+function categoryDailyChangeContent(market, now = new Date()) {
+  const change = getCategoryDailyChange(market, now);
+  const text = change.available
+    ? `DPnL ${dailyChangeMoney(change.amount)} ${signedPercent(change.pct, 2)}${change.partial ? "（部分）" : ""}`
+    : "DPnL —";
+  const detail = change.count ? `已比較 ${change.compared}/${change.count} 筆` : "目前無持倉可比較";
+  const title = `比較 ${previousPriceDate(dailyPriceDate(now))} 最後紀錄；${detail}。金額加總標的 DPnL，%以昨價部位金額加權，不直接平均。加密%不是保證金報酬率。不含現金／USDT、加減碼、匯率變動或已實現損益。`
+    + (change.missing.length ? "\n" + change.missing.map(item => item.name + "：" + item.reason).join("；") : "");
+  const tone = change.available && change.amount !== 0 ? (change.amount > 0 ? "gain" : "loss") : "daily-neutral";
+  return {text, title, className:"category-daily-change daily-change " + tone};
+}
+
+function renderCategoryDailyChanges(now = new Date()) {
+  for (const node of document.querySelectorAll("[data-category-daily]")) {
+    const content = categoryDailyChangeContent(node.dataset.categoryDaily, now);
+    node.textContent = content.text;
+    node.title = content.title;
+    node.className = content.className;
+  }
 }
 
 function dailyChangeMoney(value) {
@@ -4223,6 +4260,7 @@ function refreshDailyChangeLabels() {
     node.title = content.title;
     node.className = content.className;
   }
+  renderCategoryDailyChanges();
 }
 
 function getPortfolioTotals() {

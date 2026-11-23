@@ -48,6 +48,7 @@ if(process.argv.includes('--serve')) {
   sample.dailyPriceHistory=[{date:yesterday,prices:{
     '["tw","t1","2330.TW"]':{price:930},'["us","u1","VOO"]':{price:520},
     '["crypto","c1","BTCUSDT"]':{price:82000},'["crypto","c2","ETHUSDT"]':{price:2100},
+    '["fund","f1",""]':{price:120000,cost:100000},'["fund","f2",""]':{price:49000,cost:50000},
   }}];
   let page=execFileSync('python3',['redfish_page_test.py','--html'],{cwd:__dirname,maxBuffer:5*1024*1024}).toString();
   page=page.replace('<head>', '<head><base href="/component/streamlit_app.ledger_quote_bridge/index.html">');
