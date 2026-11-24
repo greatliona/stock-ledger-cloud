@@ -59,7 +59,7 @@ function refreshUsPrices() {
   if (!symbols.length) { status.textContent = "目前沒有美股持倉。"; return; }
   if (symbols.length > 50) { status.textContent = "一次最多更新 50 個代號。"; return; }
   const id = crypto.randomUUID();
-  quoteDiagnostic = {version:"L1.5.94", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
+  quoteDiagnostic = {version:"L1.5.95", id, startedAt:new Date().toISOString(), stage:"sent", trace:[]};
   showQuoteDiagnostic();
   const button = document.querySelector("#reloadUsPrices");
   button.disabled = true;
@@ -4253,9 +4253,10 @@ function getCurrencyCashDailyChange(currency, now = new Date()) {
   const previous = (state.history || []).find(item => item.date === date);
   const field = currency === "USDT" ? "cryptoCashUsdt" : "usCashUsd";
   const missing = reason => ({available:false, date, reason});
-  if (!previous || !Number.isFinite(previous[field]) || previous[field] < 0) return missing(`缺少前一日 ${currency} 現金紀錄`);
+  const validBalance = value => Number.isFinite(value) && (currency === "USD" || value >= 0);
+  if (!previous || !validBalance(previous[field])) return missing(`缺少前一日 ${currency} 現金紀錄`);
   if (state[field] === 0 && previous[field] === 0) return {available:true, date, amount:0, basis:0};
-  if (!Number.isFinite(state[field]) || state[field] < 0 || !Number.isFinite(state.usdTwdRate) || state.usdTwdRate <= 0) return missing(`${currency} 現金或台幣匯率無效`);
+  if (!validBalance(state[field]) || !Number.isFinite(state.usdTwdRate) || state.usdTwdRate <= 0) return missing(`${currency} 現金或台幣匯率無效`);
   // Use the same current FX as the position DPnL, not a different settlement FX.
   return {available:true, date, amount:(state[field] - previous[field]) * state.usdTwdRate,
     basis:previous[field] * state.usdTwdRate};
@@ -4277,12 +4278,21 @@ function getPieDailyChange(kind, now = new Date()) {
     positionPart("fund", "基金"), positionPart("crypto", "加密合約"), cashPart(), currencyPart("USD"), currencyPart("USDT")];
   else return {available:false, date, reason:"未知圓餅圖範圍"};
   const missing = parts.filter(part => !part.available || part.partial);
-  if (missing.length) return {available:false, date, parts, reason:"缺少完整分項比較基準：" + missing.map(part => part.label + "（" + (part.reason || "部分標的缺少昨價") + "）").join("；")};
+  // Empty positions and unchanged zero cash balances must not create a
+  // misleading +0.0K subtotal when nothing with exposure was comparable.
+  const compared = parts.filter(part => part.available &&
+    (part.compared > 0 || (part.count === undefined && (part.basis !== 0 || part.amount !== 0))));
+  const reason = missing.length ? "缺少完整分項比較基準：" + missing.map(part =>
+    part.label + "（" + (part.reason || part.missing?.map(item => item.name + "：" + item.reason).join("；") || "部分標的缺少昨價") + "）").join("；") : "";
+  const partial = missing.length > 0;
+  if (partial && (kind !== "category" || !compared.length)) return {available:false, date, parts, reason};
   const current = getPieChartTotals()[kind];
   if (!Number.isFinite(current) || current < 0) return {available:false, date, parts, reason:"目前圓餅總額無效"};
   // Reconcile exactly to the displayed components before formatting/truncation.
   // Never mix per-position last prices with an independent settlement total.
-  const amount = parts.reduce((sum, part) => sum + part.amount, 0);
+  const amount = (partial ? compared : parts).reduce((sum, part) => sum + part.amount, 0);
+  // The full current pie total is not a valid denominator for a partial sum.
+  if (partial) return {available:true, date, current, amount, pct:null, partial:true, parts:compared, reason};
   const basis = current - amount;
   const pct = basis > 0 ? amount / basis * 100 : amount === 0 ? 0 : null;
   return {available:true, date, current, amount, basis, pct, parts};
@@ -4290,9 +4300,13 @@ function getPieDailyChange(kind, now = new Date()) {
 
 function pieDailyChangeContent(kind, now = new Date()) {
   const change = getPieDailyChange(kind, now);
-  const text = change.available ? `DPnL ${dailyChangeMoney(change.amount)} ${change.pct === null ? "—" : signedPercent(change.pct, 2)}` : "DPnL —";
+  const text = change.available
+    ? `DPnL ${dailyChangeMoney(change.amount)}${change.partial ? "（部分）" : " " + (change.pct === null ? "—" : signedPercent(change.pct, 2))}`
+    : "DPnL —";
   const scope = {stock:"台股＋台幣現金",category:"圓餅圖內全部資產與現金",crypto:"合約權益＋USDT",usStock:"美股持股，不含美元現金"}[kind] || "未知範圍";
-  const title = `圓餅圖比較 ${change.date} 的相同分項基準；${scope}。` + (change.available
+  const title = `圓餅圖比較 ${change.date} 的相同分項基準；${scope}。` + (change.partial
+    ? "僅加總有基準的分項，不計整體百分比。已計入：" + change.parts.map(part => part.label + " " + signedMoney(part.amount)).join("；") + "。\n" + change.reason
+    : change.available
     ? "DPnL 為分項未截尾金額加總；%＝合計 DPnL／（目前圖內總額－合計 DPnL），不使用另一份每日結帳總額。分項：" + change.parts.map(part => part.label + " " + signedMoney(part.amount)).join("；") + "。包含現金轉入轉出；不是單純資產總額變動。"
     : change.reason);
   const tone = change.available && change.amount !== 0 ? (change.amount > 0 ? "gain" : "loss") : "daily-neutral";
