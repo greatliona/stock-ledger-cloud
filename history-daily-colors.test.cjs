@@ -11,6 +11,9 @@ assert.match(css,/--history-daily-neutral: #a8b0ab;/,'other themes keep the prev
 assert.match(css,/\.history-daily-pnl.is-large-change.is-up \{ color: var\(--red\); \}/);
 assert.match(css,/\.history-daily-pnl.is-large-change.is-down \{ color: var\(--green\); \}/);
 assert.match(css,/:root\[data-theme="redfish"\] \.history-item \{\s+background: rgba\(255, 253, 247, 0\.20\);/);
-assert.match(css,/\.note-toggle \{\s+color: #b77900;/);
-assert.match(css,/\.note-toggle\[aria-expanded="true"\] \{\s+color: #8f5d00;/);
-console.log('PASS: medium cool-grey daily text, deeper amber stars, >15% positive red / negative green, unchanged threshold and transparency');
+assert.match(css,/--history-selection: #d97706;/);
+assert.match(css,/\.history-month-tab\.is-active \{[^}]*background: var\(--history-selection\);/);
+assert.match(css,/\.note-toggle \{\s+color: var\(--history-selection\);/);
+assert.match(css,/\.note-toggle\[aria-expanded="true"\] \{\s+color: var\(--history-selection\);/);
+assert.match(css,/\.note-toggle svg \{[^}]*fill: currentColor;[^}]*stroke: currentColor;/);
+console.log('PASS: month tab and stars share orange, daily grey and >15% red/green threshold and transparency unchanged');

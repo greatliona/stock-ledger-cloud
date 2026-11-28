@@ -10,6 +10,7 @@
   --green: #58d49a;
   --history-low: #36ef93;
   --history-daily-neutral: #a8b0ab;
+  --history-selection: #d97706;
   --red: #ff818a;
   --blue: #82b2ff;
   --amber: #e6b96e;
@@ -1275,7 +1276,7 @@ tbody tr:last-child td {
 
 .history-month-tab.is-active {
   border-color: #b45309;
-  background: #d97706;
+  background: var(--history-selection);
   color: #111;
 }
 
@@ -1520,15 +1521,15 @@ tbody tr:last-child td {
 }
 
 .note-toggle {
-  color: #b77900;
-  border-color: rgba(183, 121, 0, 0.45);
+  color: var(--history-selection);
+  border-color: rgba(217, 119, 6, 0.45);
   background: white;
 }
 
 .note-toggle:hover,
 .note-toggle[aria-expanded="true"] {
-  color: #8f5d00;
-  border-color: rgba(143, 93, 0, 0.65);
+  color: var(--history-selection);
+  border-color: rgba(217, 119, 6, 0.65);
   background: white;
 }
 
